@@ -29,29 +29,91 @@ export interface Lead {
   name: string;
   company: string;
   email: string;
+  phone?: string;
   website: string;
   status: LeadStatus;
   score: number;
+  source?: string;
+  notes?: string;
   lastContactedAt?: string;
   value: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Client {
   id: string;
   name: string;
+  contactName?: string;
+  email?: string;
+  phone?: string;
   industry: string;
   healthScore: 'green' | 'yellow' | 'red';
   activeProjects: number;
   totalValue: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Campaign {
   id: string;
   name: string;
-  status: 'active' | 'paused' | 'draft';
+  description?: string;
+  status: 'active' | 'paused' | 'draft' | 'completed';
+  type?: 'email' | 'social' | 'ads' | 'content';
   openRate: number;
   clickRate: number;
   sent: number;
+  replies?: number;
+  clientId?: string;
+  startDate?: string;
+  endDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  email?: string;
+  role: string;
+  status: 'active' | 'away' | 'offline';
+  workload: number;
+  avatar: string;
+  createdAt: string;
+}
+
+export interface Activity {
+  id: string;
+  userId?: string;
+  user: string;
+  action: string;
+  target: string;
+  targetType?: 'lead' | 'client' | 'campaign' | 'asset' | 'system';
+  time: string;
+  createdAt: string;
+}
+
+export interface Asset {
+  id: string;
+  name: string;
+  type: 'image' | 'document' | 'video' | 'audio' | 'other';
+  size: number;
+  url?: string;
+  clientId?: string;
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Integration {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  connected: boolean;
+  lastSyncedAt?: string;
 }
 
 export interface Agent {
@@ -80,7 +142,6 @@ export interface ChatMessage {
   thought?: string;
 }
 
-// Fix: Added Tool interface to resolve Module '"./types.ts"' has no exported member 'Tool'
 export interface Tool {
   id: string;
   name: string;
@@ -92,7 +153,6 @@ export interface Tool {
   promptExamples?: string[] | ((user: UserProfile) => string[]);
 }
 
-// Fix: Added Recipe interface to resolve Module '"./types.ts"' has no exported member 'Recipe'
 export interface Recipe {
   id: string;
   name: string;
@@ -100,4 +160,27 @@ export interface Recipe {
   icon: React.ReactElement;
   gradient: string;
   toolIds: string[];
+}
+
+// Data store types for persistence
+export interface AppData {
+  leads: Lead[];
+  clients: Client[];
+  campaigns: Campaign[];
+  team: TeamMember[];
+  activities: Activity[];
+  assets: Asset[];
+  integrations: Integration[];
+}
+
+// Stats types for dashboard
+export interface DashboardStats {
+  totalLeads: number;
+  leadsChange: number;
+  pipelineValue: number;
+  pipelineChange: number;
+  activeCampaigns: number;
+  campaignsChange: number;
+  conversionRate: number;
+  conversionChange: number;
 }

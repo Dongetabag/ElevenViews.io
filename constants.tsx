@@ -1,9 +1,9 @@
 import React from 'react';
-import { 
+import {
   Home, Users, Briefcase, Mail, MessageSquare, Palette, Folder, Layout, BarChart, Settings, Search, Plus, Zap,
   Compass, Sparkles, Target, Brain, FlaskConical, ClipboardList, PenTool, FileText, Share2, Award, Zap as ZapIcon, Eye, MousePointer2, TrendingUp, Presentation, Users2
 } from 'lucide-react';
-import { Lead, Client, Campaign, Tool, Recipe } from './types.ts';
+import { Tool, Recipe } from './types.ts';
 
 export const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
@@ -19,37 +19,32 @@ export const NAV_ITEMS = [
   { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
 ];
 
-export const MOCK_LEADS: Lead[] = [
-  { id: '1', name: 'John Doe', company: 'TechFlow', email: 'john@techflow.com', website: 'techflow.com', status: 'new', score: 85, value: 5000 },
-  { id: '2', name: 'Sarah Smith', company: 'GreenLife', email: 'sarah@greenlife.io', website: 'greenlife.io', status: 'contacted', score: 72, value: 12000 },
-  { id: '3', name: 'Mike Ross', company: 'Z-Global', email: 'mike@zglobal.com', website: 'z-global.com', status: 'qualified', score: 94, value: 25000 },
-  { id: '4', name: 'Emma Vance', company: 'CloudScale', email: 'emma@cloudscale.net', website: 'cloudscale.net', status: 'proposal', score: 60, value: 8000 },
+// Default integrations configuration
+export const DEFAULT_INTEGRATIONS = [
+  { id: 'slack', name: 'Slack', description: 'Real-time agency notifications and lead alerts.', icon: 'slack', connected: false },
+  { id: 'hubspot', name: 'HubSpot', description: 'Sync leads and client CRM data automatically.', icon: 'hubspot', connected: false },
+  { id: 'google-drive', name: 'Google Drive', description: 'Direct asset storage and collaboration.', icon: 'drive', connected: false },
+  { id: 'notion', name: 'Notion', description: 'Project documentation and agency wiki sync.', icon: 'notion', connected: false },
 ];
 
-export const MOCK_CLIENTS: Client[] = [
-  { id: 'c1', name: 'Apex Corp', industry: 'SaaS', healthScore: 'green', activeProjects: 3, totalValue: 45000 },
-  { id: 'c2', name: 'Nexus IT', industry: 'Finance', healthScore: 'green', activeProjects: 2, totalValue: 32000 },
+// Lead status columns for Kanban
+export const LEAD_STATUS_COLUMNS = [
+  { id: 'new', label: 'New Leads' },
+  { id: 'contacted', label: 'Contacted' },
+  { id: 'qualified', label: 'Qualified' },
+  { id: 'proposal', label: 'Proposal' },
 ];
 
-export const MOCK_CAMPAIGNS: Campaign[] = [
-  { id: 'camp1', name: 'Q1 Outreach', status: 'active', openRate: 24.5, clickRate: 3.2, sent: 1200 },
+// Media style presets
+export const MEDIA_STYLE_PRESETS = [
+  { id: 'photorealistic', name: 'Photorealistic', prompt: 'highly detailed, studio photography, 8k, cinematic lighting, sharp focus' },
+  { id: 'minimalist-3d', name: 'Minimalist 3D', prompt: 'minimalist 3d render, blender style, soft global illumination, pastel gradients' },
+  { id: 'noir-agency', name: 'Noir Agency', prompt: 'film noir style, high contrast, dramatic shadows, black and white cinematic' },
+  { id: 'fluid-abstract', name: 'Fluid Abstract', prompt: 'abstract liquid metal, fluid dynamics, vibrant iridescence, futuristic' },
+  { id: 'high-end-corp', name: 'High-End Corp', prompt: 'professional corporate photography, premium glass textures, bright airy aesthetic' },
 ];
 
-export const MOCK_TEAM = [
-  { id: 't1', name: 'Sarah Connor', role: 'Senior Strategist', status: 'active', workload: 85, avatar: 'SC' },
-  { id: 't2', name: 'James Smith', role: 'Content Lead', status: 'away', workload: 40, avatar: 'JS' },
-  { id: 't3', name: 'Elena Rodriguez', role: 'Art Director', status: 'active', workload: 95, avatar: 'ER' },
-  { id: 't4', name: 'Marcus Wong', role: 'Account Manager', status: 'active', workload: 60, avatar: 'MW' },
-];
-
-export const MOCK_ACTIVITY = [
-  { id: 'a1', user: 'Elena Rodriguez', action: 'generated a new visual asset', target: 'Apex Corp', time: '12m ago' },
-  { id: 'a2', user: 'Sarah Connor', action: 'moved lead to Proposal', target: 'Z-Global', time: '1h ago' },
-  { id: 'a3', user: 'System', action: 'automated email sequence triggered', target: 'Q1 Outreach', time: '2h ago' },
-  { id: 'a4', user: 'Marcus Wong', action: 'added a new client', target: 'Nexus IT', time: '4h ago' },
-];
-
-// Added ALL_TOOLS export
+// AI Tools
 export const ALL_TOOLS: Tool[] = [
   {
     id: 'market-insight-ai',
@@ -197,7 +192,7 @@ export const ALL_TOOLS: Tool[] = [
   }
 ];
 
-// Added ALL_RECIPES export
+// Recipes (workflow automations)
 export const ALL_RECIPES: Recipe[] = [
   {
     id: 'brand-launch',

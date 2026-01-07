@@ -15,12 +15,16 @@ import IntegrationsModule from './components/IntegrationsModule.tsx';
 import SettingsModule from './components/SettingsModule.tsx';
 import IntakeModal, { IntakeData } from './components/IntakeModal.tsx';
 import { UserProfile } from './types.ts';
+import { useDataStore } from './hooks/useDataStore.ts';
 
 const App: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [activeModule, setActiveModule] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showIntake, setShowIntake] = useState(false);
+
+  // Data store for all app data
+  const dataStore = useDataStore();
 
   useEffect(() => {
     const savedUser = localStorage.getItem('agency_user_profile');
@@ -61,18 +65,65 @@ const App: React.FC = () => {
   const renderModule = () => {
     if (!userProfile) return null;
     switch (activeModule) {
-      case 'dashboard': return <DashboardHome user={userProfile} onNavigate={setActiveModule} />;
-      case 'leads': return <LeadsModule />;
-      case 'clients': return <ClientsModule />;
-      case 'campaigns': return <CampaignsModule />;
+      case 'dashboard':
+        return (
+          <DashboardHome
+            user={userProfile}
+            stats={dataStore.getStats()}
+            onNavigate={setActiveModule}
+          />
+        );
+      case 'leads':
+        return (
+          <LeadsModule
+            leads={dataStore.data.leads}
+            addLead={dataStore.addLead}
+            updateLead={dataStore.updateLead}
+            deleteLead={dataStore.deleteLead}
+          />
+        );
+      case 'clients':
+        return (
+          <ClientsModule
+            clients={dataStore.data.clients}
+            addClient={dataStore.addClient}
+            updateClient={dataStore.updateClient}
+            deleteClient={dataStore.deleteClient}
+          />
+        );
+      case 'campaigns':
+        return (
+          <CampaignsModule
+            campaigns={dataStore.data.campaigns}
+            addCampaign={dataStore.addCampaign}
+            updateCampaign={dataStore.updateCampaign}
+            deleteCampaign={dataStore.deleteCampaign}
+          />
+        );
       case 'ai-tools': return <AIToolsModule user={userProfile} />;
       case 'media': return <MediaModule user={userProfile} />;
       case 'assets': return <AssetsModule />;
-      case 'team': return <TeamModule />;
+      case 'team':
+        return (
+          <TeamModule
+            team={dataStore.data.team}
+            activities={dataStore.data.activities}
+            addTeamMember={dataStore.addTeamMember}
+            updateTeamMember={dataStore.updateTeamMember}
+            deleteTeamMember={dataStore.deleteTeamMember}
+          />
+        );
       case 'reports': return <ReportsModule />;
       case 'integrations': return <IntegrationsModule />;
       case 'settings': return <SettingsModule user={userProfile} onUpdate={setUserProfile} />;
-      default: return <DashboardHome user={userProfile} onNavigate={setActiveModule} />;
+      default:
+        return (
+          <DashboardHome
+            user={userProfile}
+            stats={dataStore.getStats()}
+            onNavigate={setActiveModule}
+          />
+        );
     }
   };
 
