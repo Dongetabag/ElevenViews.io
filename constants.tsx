@@ -1,21 +1,22 @@
 import React from 'react';
 import {
   Home, Users, Briefcase, Mail, MessageSquare, Palette, Folder, Layout, BarChart, Settings, Search, Plus, Zap,
-  Compass, Sparkles, Target, Brain, FlaskConical, ClipboardList, PenTool, FileText, Share2, Award, Zap as ZapIcon, Eye, MousePointer2, TrendingUp, Presentation, Users2, Send
+  Compass, Sparkles, Target, Brain, FlaskConical, ClipboardList, PenTool, FileText, Share2, Award, Zap as ZapIcon, Eye, MousePointer2, TrendingUp, Presentation, Users2, Send,
+  Music, Video, Camera, Headphones, Film
 } from 'lucide-react';
 import { Tool, Recipe } from './types.ts';
 
 export const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
-  { id: 'leads', label: 'Leads', icon: <Layout className="w-5 h-5" /> },
+  { id: 'ar-hub', label: 'A&R Hub', icon: <Headphones className="w-5 h-5" /> },
+  { id: 'production', label: 'Production', icon: <Film className="w-5 h-5" /> },
   { id: 'clients', label: 'Clients', icon: <Briefcase className="w-5 h-5" /> },
-  { id: 'campaigns', label: 'Campaigns', icon: <Mail className="w-5 h-5" /> },
-  { id: 'email-builder', label: 'Email Builder', icon: <Send className="w-5 h-5" /> },
+  { id: 'campaigns', label: 'Campaigns', icon: <Camera className="w-5 h-5" /> },
   { id: 'ai-tools', label: 'AI Tools', icon: <MessageSquare className="w-5 h-5" /> },
-  { id: 'media', label: 'Media', icon: <Palette className="w-5 h-5" /> },
-  { id: 'assets', label: 'Assets', icon: <Folder className="w-5 h-5" /> },
+  { id: 'media', label: 'Media Studio', icon: <Video className="w-5 h-5" /> },
+  { id: 'assets', label: 'Media Vault', icon: <Folder className="w-5 h-5" /> },
   { id: 'team', label: 'Team', icon: <Users2 className="w-5 h-5" /> },
-  { id: 'reports', label: 'Reports', icon: <BarChart className="w-5 h-5" /> },
+  { id: 'reports', label: 'Analytics', icon: <BarChart className="w-5 h-5" /> },
   { id: 'integrations', label: 'Integrations', icon: <Zap className="w-5 h-5" /> },
   { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
 ];

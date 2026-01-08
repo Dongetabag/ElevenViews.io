@@ -14,6 +14,9 @@ import TeamModule from './components/TeamModule.tsx';
 import ReportsModule from './components/ReportsModule.tsx';
 import IntegrationsModule from './components/IntegrationsModule.tsx';
 import SettingsModule from './components/SettingsModule.tsx';
+import ARHubModule from './components/ARHubModule.tsx';
+import ProductionModule from './components/ProductionModule.tsx';
+import MusicPlayer from './components/MusicPlayer.tsx';
 import IntakeModal, { IntakeData } from './components/IntakeModal.tsx';
 import LoginModal from './components/LoginModal.tsx';
 import { UserProfile } from './types.ts';
@@ -166,7 +169,8 @@ const App: React.FC = () => {
             deleteCampaign={dataStore.deleteCampaign}
           />
         );
-      case 'email-builder': return <EmailBuilderModule user={userProfile} />;
+      case 'ar-hub': return <ARHubModule />;
+      case 'production': return <ProductionModule />;
       case 'ai-tools': return <AIToolsModule user={userProfile} />;
       case 'media': return <MediaModule user={userProfile} />;
       case 'assets': return <AssetsModule />;
@@ -214,10 +218,10 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-brand-dark selection:bg-brand-gold selection:text-black">
-      <Sidebar 
-        activeModule={activeModule} 
-        setActiveModule={setActiveModule} 
-        collapsed={sidebarCollapsed} 
+      <Sidebar
+        activeModule={activeModule}
+        setActiveModule={setActiveModule}
+        collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed}
         onLogout={() => {
           appStore.logout();
@@ -228,10 +232,12 @@ const App: React.FC = () => {
       />
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar user={userProfile} />
-        <main className="flex-1 overflow-y-auto bg-brand-dark scrollbar-hide">
+        <main className="flex-1 overflow-y-auto bg-brand-dark scrollbar-hide pb-20">
           {renderModule()}
         </main>
       </div>
+      {/* Global Music Player */}
+      <MusicPlayer minimized={true} />
     </div>
   );
 };
