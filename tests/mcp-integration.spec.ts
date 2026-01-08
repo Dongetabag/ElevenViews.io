@@ -71,8 +71,8 @@ test('AI Tools - Executive Assistant with MCP', async ({ page }) => {
   const execAssistantVisible = await execAssistant.isVisible({ timeout: 5000 }).catch(() => false);
   console.log('Executive Assistant visible:', execAssistantVisible);
 
-  // Check for "25 Years at Recipe Labs"
-  const yearsText = page.locator('text=25 Years at Recipe Labs').first();
+  // Check for "25 Years at Eleven Views"
+  const yearsText = page.locator('text=25 Years at Eleven Views').first();
   const yearsVisible = await yearsText.isVisible({ timeout: 3000 }).catch(() => false);
   console.log('25 Years text visible:', yearsVisible);
 
@@ -81,10 +81,10 @@ test('AI Tools - Executive Assistant with MCP', async ({ page }) => {
   const quickStartVisible = await quickStart.isVisible({ timeout: 3000 }).catch(() => false);
   console.log('Quick Start visible:', quickStartVisible);
 
-  // Check for Recipe Labs Systems (MCP)
-  const systemsPanel = page.locator('text=Recipe Labs Systems').first();
+  // Check for Eleven Views Systems (MCP)
+  const systemsPanel = page.locator('text=Eleven Views Systems').first();
   const systemsVisible = await systemsPanel.isVisible({ timeout: 3000 }).catch(() => false);
-  console.log('Recipe Labs Systems visible:', systemsVisible);
+  console.log('Eleven Views Systems visible:', systemsVisible);
 
   // Check for "How can I help you today?"
   const helpText = page.locator('text=How can I help you today').first();

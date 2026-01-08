@@ -35,7 +35,7 @@ interface MediaSession {
 const MAX_ASSETS_PER_SESSION = 25;
 const STORAGE_KEY = 'recipe-labs-media-studio-sessions';
 
-// Official Recipe Labs Brand Colors
+// Official Eleven Views Brand Colors
 const BRAND_COLORS = {
   lemon: '#F5D547',           // Vibrant Lemon Yellow - Primary Accent
   lemonLight: '#F7E07A',      // Light Lemon - Hover States
@@ -48,11 +48,11 @@ const BRAND_COLORS = {
   bgTertiary: '#1a211c'       // Tertiary Dark Background
 };
 
-// Official Recipe Labs branded style presets (matching backend)
+// Official Eleven Views branded style presets (matching backend)
 const STYLE_PRESETS = [
   {
     id: 'recipe-labs-premium',
-    name: 'Recipe Labs Premium',
+    name: 'Eleven Views Premium',
     description: 'Official brand design with gold and green',
     preset: 'recipe-labs-premium',
     colors: { primary: '#F5D547', secondary: '#D4B83A', tertiary: '#4A7C4E', background: '#0f1410' },
@@ -255,7 +255,7 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
       type: 'image',
       content: saveModalAsset.url,
       prompt: saveModalAsset.prompt,
-      model: 'Recipe Labs Media Studio',
+      model: 'Eleven Views Media Studio',
       tags: saveTags.split(',').map(t => t.trim()).filter(Boolean),
       isShared: true
     });
@@ -304,7 +304,7 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
 
     try {
       // Call backend API for image generation with brand preset
-      // The backend will apply the full Recipe Labs brand specifications
+      // The backend will apply the full Eleven Views brand specifications
       const response = await fetch('/api/v1/media/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -606,7 +606,7 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder={activeReference ? "Describe the changes you want..." : "Describe your Recipe Labs branded design..."}
+                placeholder={activeReference ? "Describe the changes you want..." : "Describe your Eleven Views branded design..."}
                 className="w-full h-20 bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/30 transition-all resize-none"
               />
 
@@ -667,7 +667,7 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
                 </div>
               </div>
               <div className="mt-6 space-y-2">
-                <h4 className="text-xl font-bold text-white">Create Recipe Labs Branded Assets</h4>
+                <h4 className="text-xl font-bold text-white">Create Eleven Views Branded Assets</h4>
                 <p className="text-sm text-gray-500 max-w-md">
                   Generate premium marketing visuals with our brand styles. Describe your concept above.
                 </p>
@@ -760,7 +760,7 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Recipe Labs Media Engine</span>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Eleven Views Media Engine</span>
             </div>
             <div className="h-3 w-px bg-white/10"></div>
             <span className="text-[10px] font-mono text-gray-600">SESSION ASSETS: {generatedImages.length}</span>

@@ -1,5 +1,5 @@
-// Recipe Labs Agent API Service
-// Integrates with the operational Recipe Labs Agent at http://72.61.72.94:5000
+// Eleven Views Agent API Service
+// Integrates with the operational Eleven Views Agent at http://72.61.72.94:5000
 
 const AGENT_API_URL = import.meta.env.VITE_AGENT_API_URL || 'http://72.61.72.94:5000';
 
@@ -31,7 +31,7 @@ export interface AgentService {
   streamChat?(message: string, context: AgentContext): AsyncGenerator<AgentResponse>;
 }
 
-class RecipeLabsAgentService implements AgentService {
+class ElevenViewsAgentService implements AgentService {
   private baseUrl: string;
 
   constructor(baseUrl: string = AGENT_API_URL) {
@@ -94,5 +94,5 @@ class RecipeLabsAgentService implements AgentService {
   }
 }
 
-export const agentService = new RecipeLabsAgentService();
+export const agentService = new ElevenViewsAgentService();
 

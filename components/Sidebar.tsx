@@ -16,10 +16,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeModule, setActiveModule, collap
       <div className="p-6 flex items-center justify-between">
         {!collapsed && (
           <h1 className="text-xl font-bold font-orbitron tracking-widest text-brand-gold">
-            RCPE <span className="text-xs text-gray-500 font-sans block tracking-normal">LABS</span>
+            11 <span className="text-xs text-gray-500 font-sans block tracking-normal">VIEWS</span>
           </h1>
         )}
-        {collapsed && <div className="w-8 h-8 bg-brand-gold rounded-lg flex items-center justify-center text-black font-bold">R</div>}
+        {collapsed && <div className="w-8 h-8 bg-brand-gold rounded-lg flex items-center justify-center text-black font-bold text-sm">11</div>}
       </div>
 
       <nav className="flex-grow px-3 space-y-1 mt-4">

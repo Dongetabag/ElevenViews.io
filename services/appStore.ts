@@ -1,4 +1,4 @@
-// Recipe Labs App Store - Unified state management with persistence
+// Eleven Views App Store - Unified state management with persistence
 // Handles users, team, chat, documents, and AI assets
 
 const STORAGE_KEYS = {
@@ -285,7 +285,7 @@ class AppStore {
       senderId: 'system',
       senderName: 'System',
       channelId: 'general',
-      content: `${newUser.name} has joined Recipe Labs!`,
+      content: `${newUser.name} has joined Eleven Views!`,
       type: 'system'
     });
 
@@ -374,7 +374,7 @@ class AppStore {
       senderId: 'system',
       senderName: 'System',
       channelId: 'general',
-      content: `${newUser.name} has joined Recipe Labs!`,
+      content: `${newUser.name} has joined Eleven Views!`,
       type: 'system'
     });
 

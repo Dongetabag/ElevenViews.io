@@ -1,5 +1,5 @@
-// Recipe Labs Leads API Service
-// Connects to the live database via the Recipe Labs Agent API
+// Eleven Views Leads API Service
+// Connects to the live database via the Eleven Views Agent API
 
 const AGENT_API_URL = import.meta.env.VITE_AGENT_API_URL || 'http://72.61.72.94:5000';
 const MCP_URL = import.meta.env.VITE_MCP_URL || 'https://mcp.srv1167160.hstgr.cloud';

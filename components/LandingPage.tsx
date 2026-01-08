@@ -24,14 +24,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister }) => {
 
         <div className="mb-8">
           <h1 className="text-7xl md:text-9xl font-black font-orbitron tracking-tighter text-white leading-none">
-            RECIPE<span className="text-brand-gold">LABS</span>
+            ELEVEN<span className="text-brand-gold">VIEWS</span>
           </h1>
           <div className="h-1 w-32 bg-brand-gold mx-auto mt-4 rounded-full"></div>
         </div>
 
         <p className="text-lg md:text-2xl text-gray-400 mb-12 max-w-2xl mx-auto font-medium leading-relaxed">
-          The ultimate AI-powered cognitive workspace for elite agencies. 
-          <span className="text-white"> Strategy, Creation, and Growth—synchronized.</span>
+          The ultimate AI-powered business platform for modern enterprises.
+          <span className="text-white"> Strategy, Creation, and Growth—unified.</span>
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

@@ -65,7 +65,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onClose, onSuccess, onSwi
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white font-orbitron uppercase tracking-widest">Sign In</h2>
-              <p className="text-xs text-gray-500 font-medium">Access your Recipe Labs account</p>
+              <p className="text-xs text-gray-500 font-medium">Access your Eleven Views account</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 text-gray-500 hover:text-white transition-colors">

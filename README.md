@@ -1,20 +1,60 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Eleven Views Platform
 
-# Run and deploy your AI Studio app
+All-in-One AI-powered business platform for modern enterprises.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/drive/1xg8Uw30tJPn8usjVU0pTGw_rmvhBuGhH
+- Dashboard with key metrics and insights
+- Leads management with Kanban board
+- Clients and campaigns tracking
+- Email Builder for campaigns
+- AI Tools suite for strategy and creation
+- Media generation studio
+- Assets management
+- Team collaboration
+- Reports and analytics
+- Integrations hub
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+**Prerequisites:** Node.js 18+
 
+1. Clone the repo:
+   ```bash
+   git clone git@github.com:YOUR_ORG/eleven-views-platform.git
+   cd eleven-views-platform
+   ```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Copy and configure environment:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your API keys
+   ```
+
+4. Run the app:
+   ```bash
+   npm run dev
+   ```
+
+## Build for Production
+
+```bash
+npm run build
+```
+
+The built files will be in the `dist` directory.
+
+## Tech Stack
+
+- React 19 with TypeScript
+- Vite for build tooling
+- Tailwind CSS for styling
+- Lucide React for icons
+- Google AI for AI features
+- Supabase for backend (optional)
+- Baserow for data management (optional)

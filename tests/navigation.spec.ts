@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const BASE_URL = 'http://72.61.72.94:3003';
 
-test.describe('Recipe Labs Navigation Tests', () => {
+test.describe('Eleven Views Navigation Tests', () => {
 
   test.beforeEach(async ({ page }) => {
     // Go to the app
@@ -12,7 +12,7 @@ test.describe('Recipe Labs Navigation Tests', () => {
 
   test('Landing page loads correctly', async ({ page }) => {
     // Check landing page elements
-    await expect(page.locator('text=RECIPELABS')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=ELEVENVIEWS')).toBeVisible({ timeout: 10000 });
     console.log('Landing page loaded successfully');
   });
 

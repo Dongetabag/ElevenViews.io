@@ -63,24 +63,24 @@ interface EmailBuilderModuleProps {
 // API Endpoints
 const N8N_WEBHOOK_URL = 'https://n8n.srv1167160.hstgr.cloud/webhook/send-email';
 const N8N_CLAUDE_WEBHOOK = 'https://n8n.srv1167160.hstgr.cloud/webhook/claude-playbook';
-const SCRAPER_API_URL = 'https://scraper.madebyrecipe.com/api';
+const SCRAPER_API_URL = 'https://scraper.elevenviews.com/api';
 const GEMINI_API_KEY = 'AIzaSyBXNZAf1hqc8d4BQWfkwxPBLTF-wyEdU6E';
 
 const DEFAULT_TEMPLATES: EmailTemplate[] = [
   {
     id: '1',
     name: 'Welcome Email',
-    subject: 'Welcome to Recipe Labs!',
+    subject: 'Welcome to Eleven Views!',
     body: `Hi there,
 
-Welcome to Recipe Labs! We're thrilled to have you join our community of forward-thinking brands ready to dominate their markets.
+Welcome to Eleven Views! We're thrilled to have you join our community of forward-thinking brands ready to dominate their markets.
 
 Your journey to brand dominance starts here. We've prepared everything you need to get started.
 
 Best regards,
-The Recipe Labs Team`,
-    fromName: 'Recipe Labs',
-    fromEmail: 'contact@madebyrecipe.com'
+The Eleven Views Team`,
+    fromName: 'Eleven Views',
+    fromEmail: 'contact@elevenviews.com'
   },
   {
     id: '2',
@@ -98,7 +98,7 @@ Best regards,
 Lance Reid Jr.
 Founder & Chief Strategist`,
     fromName: 'Lance Reid Jr.',
-    fromEmail: 'lance@madebyrecipe.com'
+    fromEmail: 'lance@elevenviews.com'
   },
   {
     id: '3',
@@ -113,17 +113,17 @@ Let me know if you have any questions or if you'd like to schedule a call to dis
 Looking forward to hearing from you!
 
 Best regards,
-Recipe Labs Team`,
-    fromName: 'Recipe Labs',
-    fromEmail: 'contact@madebyrecipe.com'
+Eleven Views Team`,
+    fromName: 'Eleven Views',
+    fromEmail: 'contact@elevenviews.com'
   }
 ];
 
 const SENDERS = [
-  { id: 'lance', name: 'Lance Reid Jr.', email: 'lance@madebyrecipe.com', title: 'Founder & Chief Strategist' },
-  { id: 'ahmed', name: 'Ahmed Jibril', email: 'ahmed@madebyrecipe.com', title: 'Growth Director' },
-  { id: 'aaron', name: 'Aaron Ellis', email: 'aaron@madebyrecipe.com', title: 'Partner' },
-  { id: 'contact', name: 'Recipe Labs Team', email: 'contact@madebyrecipe.com', title: 'Strategic Partnerships' }
+  { id: 'lance', name: 'Lance Reid Jr.', email: 'lance@elevenviews.com', title: 'Founder & Chief Strategist' },
+  { id: 'ahmed', name: 'Ahmed Jibril', email: 'ahmed@elevenviews.com', title: 'Growth Director' },
+  { id: 'aaron', name: 'Aaron Ellis', email: 'aaron@elevenviews.com', title: 'Partner' },
+  { id: 'contact', name: 'Eleven Views Team', email: 'contact@elevenviews.com', title: 'Strategic Partnerships' }
 ];
 
 const EmailBuilderModule: React.FC<EmailBuilderModuleProps> = ({ user }) => {
@@ -261,7 +261,7 @@ const EmailBuilderModule: React.FC<EmailBuilderModuleProps> = ({ user }) => {
   <div style="max-width: 600px; margin: 0 auto; padding: 40px 24px;">
     <div style="text-align: center; margin-bottom: 32px;">
       <div style="display: inline-block; background: rgba(245, 213, 71, 0.15); border: 1px solid rgba(245, 213, 71, 0.3); padding: 8px 20px; border-radius: 100px;">
-        <span style="color: #F5D547; font-size: 12px; font-weight: 600; letter-spacing: 2px;">RECIPE LABS</span>
+        <span style="color: #F5D547; font-size: 12px; font-weight: 600; letter-spacing: 2px;">ELEVEN VIEWS</span>
       </div>
     </div>
     <div style="background: #141a16; border: 1px solid rgba(245, 213, 71, 0.2); border-radius: 16px; padding: 32px;">
@@ -269,7 +269,7 @@ const EmailBuilderModule: React.FC<EmailBuilderModuleProps> = ({ user }) => {
     </div>
     <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(245, 213, 71, 0.1); text-align: center;">
       <p style="color: #888; font-size: 12px; margin: 0;">${sender.name} | ${sender.title}</p>
-      <p style="color: #666; font-size: 11px; margin: 8px 0 0 0;">Recipe Labs | madebyrecipe.com</p>
+      <p style="color: #666; font-size: 11px; margin: 8px 0 0 0;">Eleven Views | elevenviews.com</p>
     </div>
   </div>
 </body>
@@ -1224,8 +1224,8 @@ Only respond with valid JSON, no markdown or explanation.`;
 
             <div class="cta-box">
                 <h3 class="cta-title">Ready to Transform ${data.company.name}?</h3>
-                <p class="cta-text">Recipe Labs can implement this entire strategy for you.</p>
-                <a href="https://madebyrecipe.com/contact" class="cta-button">Schedule Strategy Call</a>
+                <p class="cta-text">Eleven Views can implement this entire strategy for you.</p>
+                <a href="https://elevenviews.com/contact" class="cta-button">Schedule Strategy Call</a>
             </div>
         </div>
     </section>
@@ -1233,12 +1233,12 @@ Only respond with valid JSON, no markdown or explanation.`;
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <div class="footer-brand">RECIPE LABS</div>
+            <div class="footer-brand">ELEVEN VIEWS</div>
             <p class="footer-text">
-                Prepared exclusively for ${data.company.name} | <a href="https://madebyrecipe.com">madebyrecipe.com</a>
+                Prepared exclusively for ${data.company.name} | <a href="https://elevenviews.com">elevenviews.com</a>
             </p>
             <p class="footer-text" style="margin-top: 8px;">
-                © ${new Date().getFullYear()} Recipe Labs. Confidential.
+                © ${new Date().getFullYear()} Eleven Views. Confidential.
             </p>
         </div>
     </footer>
@@ -1374,7 +1374,7 @@ Provide the revised content. For playbooks, output complete HTML. For emails, ou
       // Use Gemini for smarter email generation
       const prompt = `Generate a personalized cold outreach email for a company called "${companyName}" (domain: ${domain}).
 
-The email should be from ${selectedSender.name}, ${selectedSender.title} at Recipe Labs, a strategic marketing agency.
+The email should be from ${selectedSender.name}, ${selectedSender.title} at Eleven Views, a strategic marketing agency.
 
 Requirements:
 - Professional but warm tone
@@ -1777,7 +1777,7 @@ ${selectedSender.title}`);
                 </div>
                 <div className="text-center mb-6">
                   <span className="inline-block px-4 py-2 bg-brand-gold/10 border border-brand-gold/30 rounded-full text-brand-gold text-xs font-semibold tracking-widest">
-                    RECIPE LABS
+                    ELEVEN VIEWS
                   </span>
                 </div>
                 <div className="bg-[#141a16] border border-brand-gold/20 rounded-xl p-6">
@@ -1787,7 +1787,7 @@ ${selectedSender.title}`);
                 </div>
                 <div className="mt-6 pt-4 border-t border-brand-gold/10 text-center">
                   <p className="text-gray-500 text-xs">{selectedSender.name} | {selectedSender.title}</p>
-                  <p className="text-gray-600 text-xs mt-1">Recipe Labs | madebyrecipe.com</p>
+                  <p className="text-gray-600 text-xs mt-1">Eleven Views | elevenviews.com</p>
                 </div>
               </div>
             </div>
@@ -2024,7 +2024,7 @@ ${selectedSender.title}`);
             <h3 className="text-lg font-bold text-white mb-4">Example Playbooks</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { name: 'Day Hill Dome', url: 'https://dayhilldome.madebyrecipe.com/', industry: 'Sports & Entertainment' },
+                { name: 'Day Hill Dome', url: 'https://dayhilldome.elevenviews.com/', industry: 'Sports & Entertainment' },
                 { name: 'Local Business', url: '#', industry: 'Retail' },
                 { name: 'SaaS Startup', url: '#', industry: 'Technology' }
               ].map((example, i) => (

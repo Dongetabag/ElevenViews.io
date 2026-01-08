@@ -196,7 +196,7 @@ Their #1 success metric is: "${user.successMetric}".
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `RecipeLabs-${selectedRecipe.name.replace(/\s/g, '_')}-${new Date().toISOString()}.txt`;
+        link.download = `ElevenViews-${selectedRecipe.name.replace(/\s/g, '_')}-${new Date().toISOString()}.txt`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

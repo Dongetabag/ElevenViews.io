@@ -65,12 +65,12 @@ class N8NService {
       // For now, return mock data or fetch from n8n API
       // TODO: Implement actual n8n API integration when credentials are available
       
-      // Mock workflows based on known Recipe Labs workflows
+      // Mock workflows based on known Eleven Views workflows
       return [
         {
           id: 'recipe-labs-agent-chat',
-          name: 'Recipe Labs Agent Chat',
-          description: 'AI agent workflow for Recipe Labs operations',
+          name: 'Eleven Views Agent Chat',
+          description: 'AI agent workflow for Eleven Views operations',
           category: 'AI',
           parameters: [],
           status: 'active',

@@ -13,7 +13,7 @@ const IntegrationsModule: React.FC = () => {
     <div className="p-8 space-y-8 animate-fadeIn">
       <div className="max-w-4xl">
         <h2 className="text-2xl font-bold text-white font-orbitron uppercase tracking-widest">Integrations Hub</h2>
-        <p className="text-sm text-gray-500 mt-2">Connect Recipe Labs to your existing workflow and synchronize data across all your agency platforms.</p>
+        <p className="text-sm text-gray-500 mt-2">Connect Eleven Views to your existing workflow and synchronize data across all your agency platforms.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl">

@@ -141,7 +141,7 @@ const ToolPage: React.FC<ToolPageProps> = ({ user, selectedTool, chatHistories, 
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `RecipeLabs-${selectedTool.name.replace(/\s/g, '_')}-${new Date().toISOString()}.txt`;
+        link.download = `ElevenViews-${selectedTool.name.replace(/\s/g, '_')}-${new Date().toISOString()}.txt`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

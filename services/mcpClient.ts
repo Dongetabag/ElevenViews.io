@@ -1,4 +1,4 @@
-// MCP Client Service for Recipe Labs
+// MCP Client Service for Eleven Views
 // Connects to the unified MCP server and exposes tools to the AI agent
 
 const MCP_BASE_URL = import.meta.env.VITE_MCP_URL || 'https://mcp.srv1167160.hstgr.cloud';
@@ -84,7 +84,7 @@ class MCPClient {
     return [
       {
         name: 'recipe_labs_health',
-        description: 'Check the health status of Recipe Labs API and all connected services',
+        description: 'Check the health status of Eleven Views API and all connected services',
         inputSchema: { type: 'object', properties: {}, required: [] }
       },
       {
@@ -108,7 +108,7 @@ class MCPClient {
       },
       {
         name: 'recipe_labs_send_slack',
-        description: 'Send a message to the Recipe Labs Slack channel',
+        description: 'Send a message to the Eleven Views Slack channel',
         inputSchema: {
           type: 'object',
           properties: {

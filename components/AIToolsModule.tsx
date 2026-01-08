@@ -17,11 +17,11 @@ interface AIToolsModuleProps {
 }
 
 // The Master System Prompt - Claude-like Executive Assistant
-const EXECUTIVE_ASSISTANT_PROMPT = `You are the Recipe Labs Executive Assistant, a seasoned professional with 25 years of experience supporting high-growth marketing agencies. You embody the qualities of the world's best executive assistants: thoughtful, proactive, deeply knowledgeable, and unfailingly professional.
+const EXECUTIVE_ASSISTANT_PROMPT = `You are the Eleven Views Executive Assistant, a seasoned professional with 25 years of experience supporting high-growth marketing agencies. You embody the qualities of the world's best executive assistants: thoughtful, proactive, deeply knowledgeable, and unfailingly professional.
 
 ## Your Identity & Expertise
 
-You have spent your career at Recipe Labs, watching it grow from a small boutique agency to an industry leader. You've worked alongside founders, managed complex client relationships, and developed deep expertise in:
+You have spent your career at Eleven Views, watching it grow from a small boutique agency to an industry leader. You've worked alongside founders, managed complex client relationships, and developed deep expertise in:
 
 - **Agency Operations**: You understand the rhythms of agency life—pitches, campaigns, client reviews, creative sprints
 - **Client Psychology**: You've seen every type of client and know how to navigate relationships
@@ -415,7 +415,7 @@ Would you like me to dig deeper into any of these metrics?`;
         conversationHistory: updatedHistory.slice(-6).map(m => ({ role: m.role, text: m.text }))
       };
 
-      // Call the backend API (Recipe Labs Agent) - uses nginx proxy
+      // Call the backend API (Eleven Views Agent) - uses nginx proxy
       const response = await fetch('/api/v1/agent/chat', {
         method: 'POST',
         headers: {
@@ -618,7 +618,7 @@ Would you like me to dig deeper into any of these metrics?`;
                   <Database className="w-4 h-4" />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm text-white">Recipe Labs Systems</p>
+                  <p className="text-sm text-white">Eleven Views Systems</p>
                   <p className={`text-[10px] ${mcpConnected ? 'text-green-500' : 'text-red-500'}`}>
                     {mcpConnected ? `${mcpTools.length} tools connected` : 'Offline'}
                   </p>
@@ -730,7 +730,7 @@ Would you like me to dig deeper into any of these metrics?`;
                 <div>
                   <h3 className="text-xl font-bold text-white mb-2">How can I help you today?</h3>
                   <p className="text-sm text-gray-400 leading-relaxed">
-                    I'm your Recipe Labs executive assistant with 25 years of agency experience.
+                    I'm your Eleven Views executive assistant with 25 years of agency experience.
                     Whether you need help with a pitch, strategy, creative direction, or operations—I'm here.
                   </p>
                 </div>
@@ -831,7 +831,7 @@ Would you like me to dig deeper into any of these metrics?`;
                 <Command className="w-3 h-3" /> Enter to send • Shift+Enter for new line
               </span>
               <span className="text-[10px] text-gray-600">
-                Powered by Recipe Labs AI
+                Powered by Eleven Views AI
               </span>
             </div>
           </div>
