@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { 
-  User, Palette, Edit3, Compass, Users, Shield, Target, 
-  FlaskConical, Globe, Rocket, Zap, X, Briefcase, AlertCircle
+import {
+  User, Palette, Edit3, Compass, Users, Shield, Target,
+  FlaskConical, Globe, Rocket, Zap, X, Briefcase, AlertCircle,
+  Lock, Eye, EyeOff, Mail
 } from 'lucide-react';
 
 export type IntakeData = {
   name: string;
+  email: string;
+  password: string;
   role: 'Designer' | 'Copywriter' | 'Strategist' | 'Account Manager';
   agencyBrandVoice: string;
   agencyCoreCompetency: string;
@@ -28,6 +31,8 @@ interface IntakeModalProps {
 const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) => {
   const [formData, setFormData] = useState<IntakeData>({
     name: '',
+    email: '',
+    password: '',
     role: 'Strategist',
     agencyBrandVoice: '',
     agencyCoreCompetency: '',
@@ -43,6 +48,7 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
 
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   if (!show) return null;
 
@@ -79,18 +85,19 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
     setTouched(prev => ({ ...prev, [field]: true }));
   };
 
-  const isFormValid = formData.name.trim().length > 0 && formData.agencyCoreCompetency.trim().length > 0;
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isFormValid = formData.name.trim().length > 0 && isValidEmail(formData.email) && formData.password.length >= 4 && formData.agencyCoreCompetency.trim().length > 0;
 
   const handleFinalSubmit = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (isFormValid) {
       console.log('Submitting Intake Data:', formData);
       onSubmit(formData);
     } else {
-      setTouched({ name: true, agencyCoreCompetency: true });
-      setError('Please fill in all required fields (marked with *).');
+      setTouched({ name: true, email: true, password: true, agencyCoreCompetency: true });
+      setError('Please fill in all required fields (marked with *). Email must be valid and password at least 4 characters.');
     }
   };
 
@@ -146,6 +153,51 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
                     touched.name && !formData.name.trim() ? 'border-red-500/50 ring-1 ring-red-500/20' : 'border-white/10 focus:border-brand-gold/50'
                   }`}
                 />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex justify-between items-center">
+                  <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> Email</span>
+                  <span className="text-brand-gold">*</span>
+                </label>
+                <input
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  onBlur={() => handleBlur('email')}
+                  placeholder="you@company.com"
+                  className={`w-full bg-white/5 border rounded-xl p-3 text-sm text-white focus:outline-none transition-all ${
+                    touched.email && !isValidEmail(formData.email) ? 'border-red-500/50 ring-1 ring-red-500/20' : 'border-white/10 focus:border-brand-gold/50'
+                  }`}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex justify-between items-center">
+                  <span className="flex items-center gap-1"><Lock className="w-3 h-3" /> Password</span>
+                  <span className="text-brand-gold">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur('password')}
+                    placeholder="Min 4 characters"
+                    className={`w-full bg-white/5 border rounded-xl p-3 pr-10 text-sm text-white focus:outline-none transition-all ${
+                      touched.password && formData.password.length < 4 ? 'border-red-500/50 ring-1 ring-red-500/20' : 'border-white/10 focus:border-brand-gold/50'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex justify-between">

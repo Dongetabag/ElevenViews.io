@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Home, Users, Briefcase, Mail, MessageSquare, Palette, Folder, Layout, BarChart, Settings, Search, Plus, Zap,
-  Compass, Sparkles, Target, Brain, FlaskConical, ClipboardList, PenTool, FileText, Share2, Award, Zap as ZapIcon, Eye, MousePointer2, TrendingUp, Presentation, Users2
+  Compass, Sparkles, Target, Brain, FlaskConical, ClipboardList, PenTool, FileText, Share2, Award, Zap as ZapIcon, Eye, MousePointer2, TrendingUp, Presentation, Users2, Send
 } from 'lucide-react';
 import { Tool, Recipe } from './types.ts';
 
@@ -10,6 +10,7 @@ export const NAV_ITEMS = [
   { id: 'leads', label: 'Leads', icon: <Layout className="w-5 h-5" /> },
   { id: 'clients', label: 'Clients', icon: <Briefcase className="w-5 h-5" /> },
   { id: 'campaigns', label: 'Campaigns', icon: <Mail className="w-5 h-5" /> },
+  { id: 'email-builder', label: 'Email Builder', icon: <Send className="w-5 h-5" /> },
   { id: 'ai-tools', label: 'AI Tools', icon: <MessageSquare className="w-5 h-5" /> },
   { id: 'media', label: 'Media', icon: <Palette className="w-5 h-5" /> },
   { id: 'assets', label: 'Assets', icon: <Folder className="w-5 h-5" /> },

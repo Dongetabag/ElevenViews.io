@@ -1,12 +1,13 @@
 import React from 'react';
 import HexGridBackground from './HexGridBackground.tsx';
-import { Sparkles, FlaskConical, ChevronRight } from 'lucide-react';
+import { Sparkles, FlaskConical, ChevronRight, LogIn } from 'lucide-react';
 
 interface LandingPageProps {
   onLogin: () => void;
+  onRegister: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister }) => {
   return (
     <div className="min-h-screen bg-brand-dark text-white flex items-center justify-center relative overflow-hidden font-sans">
       <HexGridBackground />
@@ -33,15 +34,25 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
           <span className="text-white"> Strategy, Creation, and Growth—synchronized.</span>
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
-            onClick={onLogin}
+            onClick={onRegister}
             className="group relative flex items-center gap-3 px-10 py-5 bg-brand-gold text-black font-bold text-lg transition-all duration-300 rounded-2xl hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(255,215,0,0.2)]"
           >
-            <span className="font-orbitron tracking-widest">INITIALIZE LAB</span>
+            <span className="font-orbitron tracking-widest">CREATE ACCOUNT</span>
             <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </button>
-          
+
+          <button
+            onClick={onLogin}
+            className="group relative flex items-center gap-3 px-8 py-5 bg-white/5 border border-white/20 text-white font-bold text-lg transition-all duration-300 rounded-2xl hover:bg-white/10 hover:border-white/30 active:scale-95"
+          >
+            <LogIn className="w-5 h-5 text-brand-gold" />
+            <span className="font-orbitron tracking-widest">SIGN IN</span>
+          </button>
+        </div>
+
+        <div className="mt-8 flex items-center justify-center">
           <div className="flex items-center gap-4 px-6 py-4 glass rounded-2xl border-white/10">
             <FlaskConical className="w-6 h-6 text-brand-gold" />
             <div className="text-left">

@@ -142,6 +142,20 @@ export interface ChatMessage {
   thought?: string;
 }
 
+// AI Executive Assistant Chat Sessions
+export interface AIChatSession {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AIAssistantData {
+  sessions: AIChatSession[];
+  activeSessionId: string | null;
+}
+
 export interface Tool {
   id: string;
   name: string;

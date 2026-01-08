@@ -6,6 +6,7 @@ import DashboardHome from './components/DashboardHome.tsx';
 import LeadsModule from './components/LeadsModule.tsx';
 import ClientsModule from './components/ClientsModule.tsx';
 import CampaignsModule from './components/CampaignsModule.tsx';
+import EmailBuilderModule from './components/EmailBuilderModule.tsx';
 import AIToolsModule from './components/AIToolsModule.tsx';
 import MediaModule from './components/MediaModule.tsx';
 import AssetsModule from './components/AssetsModule.tsx';
@@ -14,14 +15,17 @@ import ReportsModule from './components/ReportsModule.tsx';
 import IntegrationsModule from './components/IntegrationsModule.tsx';
 import SettingsModule from './components/SettingsModule.tsx';
 import IntakeModal, { IntakeData } from './components/IntakeModal.tsx';
+import LoginModal from './components/LoginModal.tsx';
 import { UserProfile } from './types.ts';
 import { useDataStore } from './hooks/useDataStore.ts';
+import { appStore } from './services/appStore.ts';
 
 const App: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [activeModule, setActiveModule] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showIntake, setShowIntake] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
 
   // Data store for all app data
   const dataStore = useDataStore();
@@ -33,6 +37,20 @@ const App: React.FC = () => {
         const parsed = JSON.parse(savedUser);
         console.log('Restored User Profile:', parsed);
         setUserProfile(parsed);
+
+        // Re-register user in app store to ensure they appear in team
+        if (parsed.name && parsed.email) {
+          appStore.registerUser({
+            name: parsed.name,
+            email: parsed.email,
+            role: parsed.role || 'Team Member',
+            department: parsed.role,
+            title: parsed.role,
+            agencyCoreCompetency: parsed.agencyCoreCompetency,
+            primaryClientIndustry: parsed.primaryClientIndustry,
+            avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(parsed.name)}&backgroundColor=d4a500&textColor=000000`
+          });
+        }
       } catch (e) {
         console.error("Failed to parse user profile", e);
         localStorage.removeItem('agency_user_profile');
@@ -40,20 +58,68 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const handleLogin = () => setShowIntake(true);
-  
+  const handleShowLogin = () => setShowLogin(true);
+  const handleShowRegister = () => setShowIntake(true);
+
+  const handleLoginSuccess = (user: any) => {
+    console.log('Login successful:', user);
+
+    const userProfile: UserProfile = {
+      name: user.name,
+      email: user.email,
+      role: user.role || 'Strategist',
+      agencyCoreCompetency: user.agencyCoreCompetency || '',
+      primaryClientIndustry: user.primaryClientIndustry || '',
+      agencyBrandVoice: '',
+      targetLocation: '',
+      idealClientProfile: '',
+      clientWorkExamples: '',
+      primaryGoals: [],
+      successMetric: '',
+      platformTheme: 'violet',
+      toolLayout: 'grid',
+      isPremium: true,
+      credits: 1000,
+      totalToolsUsed: 0,
+      hasCompletedOnboarding: true,
+      themeMode: 'dark',
+    };
+
+    localStorage.setItem('agency_user_profile', JSON.stringify(userProfile));
+    setUserProfile(userProfile);
+    setShowLogin(false);
+    setActiveModule('dashboard');
+  };
+
   const handleIntakeSubmit = (data: IntakeData) => {
     console.log('Processing Intake Submission in App:', data);
-    
+
     const newUser: UserProfile = {
       ...data,
-      email: `${data.name.toLowerCase().trim().replace(/\s/g, '.')}@recipelabs.ai`,
       isPremium: true,
       credits: 1000,
       totalToolsUsed: 0,
       hasCompletedOnboarding: false,
       themeMode: 'dark',
     };
+
+    // Register user in app store with password
+    const result = appStore.registerUserWithPassword({
+      name: data.name,
+      email: data.email,
+      role: data.role || 'Team Member',
+      department: data.role,
+      title: data.role,
+      agencyCoreCompetency: data.agencyCoreCompetency,
+      primaryClientIndustry: data.primaryClientIndustry,
+      avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.name)}&backgroundColor=d4a500&textColor=000000`
+    }, data.password);
+
+    if (!result.success) {
+      console.error('Registration failed:', result.error);
+      alert(result.error);
+      return;
+    }
 
     // Force immediate transition
     localStorage.setItem('agency_user_profile', JSON.stringify(newUser));
@@ -76,7 +142,7 @@ const App: React.FC = () => {
       case 'leads':
         return (
           <LeadsModule
-            leads={dataStore.data.leads}
+            leads={dataStore.leads}
             addLead={dataStore.addLead}
             updateLead={dataStore.updateLead}
             deleteLead={dataStore.deleteLead}
@@ -85,7 +151,7 @@ const App: React.FC = () => {
       case 'clients':
         return (
           <ClientsModule
-            clients={dataStore.data.clients}
+            clients={dataStore.clients}
             addClient={dataStore.addClient}
             updateClient={dataStore.updateClient}
             deleteClient={dataStore.deleteClient}
@@ -94,25 +160,18 @@ const App: React.FC = () => {
       case 'campaigns':
         return (
           <CampaignsModule
-            campaigns={dataStore.data.campaigns}
+            campaigns={dataStore.campaigns}
             addCampaign={dataStore.addCampaign}
             updateCampaign={dataStore.updateCampaign}
             deleteCampaign={dataStore.deleteCampaign}
           />
         );
+      case 'email-builder': return <EmailBuilderModule user={userProfile} />;
       case 'ai-tools': return <AIToolsModule user={userProfile} />;
       case 'media': return <MediaModule user={userProfile} />;
       case 'assets': return <AssetsModule />;
       case 'team':
-        return (
-          <TeamModule
-            team={dataStore.data.team}
-            activities={dataStore.data.activities}
-            addTeamMember={dataStore.addTeamMember}
-            updateTeamMember={dataStore.updateTeamMember}
-            deleteTeamMember={dataStore.deleteTeamMember}
-          />
-        );
+        return <TeamModule />;
       case 'reports': return <ReportsModule />;
       case 'integrations': return <IntegrationsModule />;
       case 'settings': return <SettingsModule user={userProfile} onUpdate={setUserProfile} />;
@@ -130,12 +189,23 @@ const App: React.FC = () => {
   if (!userProfile) {
     return (
       <div className="bg-brand-dark min-h-screen">
-        <LandingPage onLogin={handleLogin} />
+        <LandingPage onLogin={handleShowLogin} onRegister={handleShowRegister} />
         {showIntake && (
-          <IntakeModal 
-            show={showIntake} 
-            onClose={() => setShowIntake(false)} 
-            onSubmit={handleIntakeSubmit} 
+          <IntakeModal
+            show={showIntake}
+            onClose={() => setShowIntake(false)}
+            onSubmit={handleIntakeSubmit}
+          />
+        )}
+        {showLogin && (
+          <LoginModal
+            show={showLogin}
+            onClose={() => setShowLogin(false)}
+            onSuccess={handleLoginSuccess}
+            onSwitchToRegister={() => {
+              setShowLogin(false);
+              setShowIntake(true);
+            }}
           />
         )}
       </div>
@@ -150,6 +220,7 @@ const App: React.FC = () => {
         collapsed={sidebarCollapsed} 
         setCollapsed={setSidebarCollapsed}
         onLogout={() => {
+          appStore.logout();
           localStorage.removeItem('agency_user_profile');
           setUserProfile(null);
           setActiveModule('dashboard');
