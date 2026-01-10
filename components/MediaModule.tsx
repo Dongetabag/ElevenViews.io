@@ -310,40 +310,99 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
     setSaveTags('media-studio, ' + asset.style.toLowerCase().replace(/\s+/g, '-'));
   };
 
-  const confirmSaveToLibrary = () => {
+  const confirmSaveToLibrary = async () => {
     if (!saveModalAsset || !saveName.trim()) return;
 
-    // Save to wasabiService for Asset Library
-    const evAsset: ElevenViewsAsset = {
-      id: `ev_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      key: `ai-generated/${Date.now()}-${saveName.replace(/\s+/g, '-').toLowerCase()}.png`,
-      name: saveName,
-      fileName: `${saveName.replace(/\s+/g, '-').toLowerCase()}.png`,
-      fileType: 'image/png',
-      fileSize: Math.round(saveModalAsset.url.length * 0.75), // Approximate base64 size
-      category: 'image',
-      subcategory: 'ai-generated',
-      url: saveModalAsset.url,
-      thumbnailUrl: saveModalAsset.url,
-      tags: saveTags.split(',').map(t => t.trim()).filter(Boolean),
-      aiTags: ['ai-generated', saveModalAsset.style, 'media-studio'],
-      metadata: {
-        prompt: saveModalAsset.prompt,
-        style: saveModalAsset.style,
-        aspectRatio: saveModalAsset.aspectRatio,
-        model: 'Eleven Views Media Studio',
-        generatedAt: saveModalAsset.timestamp
-      },
-      uploadedBy: user?.id || 'system',
-      uploadedByName: user?.name || 'Media Studio',
-      isShared: true,
-      isFavorite: false,
-      isClientVisible: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    try {
+      // Convert base64 to File for upload
+      const base64Data = saveModalAsset.url.split(',')[1];
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/png' });
+      const fileName = `${saveName.replace(/\s+/g, '-').toLowerCase()}.png`;
+      const file = new File([blob], fileName, { type: 'image/png' });
 
-    wasabiService.saveAssetToStorage(evAsset);
+      // Upload to Wasabi via MCP server
+      const uploadedAsset = await wasabiService.uploadViaMCP(file, {
+        folder: 'ai-generated',
+        tags: saveTags.split(',').map(t => t.trim()).filter(Boolean),
+        userId: user?.email || 'system',
+        userName: user?.name || 'Media Studio'
+      });
+
+      if (uploadedAsset) {
+        // Update asset with AI metadata
+        uploadedAsset.name = saveName;
+        uploadedAsset.subcategory = 'ai-generated';
+        uploadedAsset.aiTags = ['ai-generated', saveModalAsset.style, 'media-studio'];
+        uploadedAsset.metadata = {
+          ...uploadedAsset.metadata,
+          prompt: saveModalAsset.prompt,
+          style: saveModalAsset.style,
+          aspectRatio: saveModalAsset.aspectRatio,
+          model: 'Eleven Views Media Studio',
+          generatedAt: saveModalAsset.timestamp
+        };
+        wasabiService.saveAssetToStorage(uploadedAsset);
+
+        // Mark as saved in session
+        updateActiveSessionAssets(
+          generatedImages.map(img =>
+            img.id === saveModalAsset.id ? { ...img, isSaved: true } : img
+          )
+        );
+
+        setSaveSuccess(saveModalAsset.id);
+        setTimeout(() => setSaveSuccess(null), 2000);
+      } else {
+        // Fallback: save locally with base64 if upload fails
+        const evAsset: ElevenViewsAsset = {
+          id: `ev_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          key: `ai-generated/${Date.now()}-${saveName.replace(/\s+/g, '-').toLowerCase()}.png`,
+          name: saveName,
+          fileName: `${saveName.replace(/\s+/g, '-').toLowerCase()}.png`,
+          fileType: 'image/png',
+          fileSize: Math.round(saveModalAsset.url.length * 0.75),
+          category: 'image',
+          subcategory: 'ai-generated',
+          url: saveModalAsset.url,
+          thumbnailUrl: saveModalAsset.url,
+          tags: saveTags.split(',').map(t => t.trim()).filter(Boolean),
+          aiTags: ['ai-generated', saveModalAsset.style, 'media-studio'],
+          metadata: {
+            prompt: saveModalAsset.prompt,
+            style: saveModalAsset.style,
+            aspectRatio: saveModalAsset.aspectRatio,
+            model: 'Eleven Views Media Studio',
+            generatedAt: saveModalAsset.timestamp
+          },
+          uploadedBy: user?.email || 'system',
+          uploadedByName: user?.name || 'Media Studio',
+          isShared: true,
+          isFavorite: false,
+          isClientVisible: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        wasabiService.saveAssetToStorage(evAsset);
+
+        updateActiveSessionAssets(
+          generatedImages.map(img =>
+            img.id === saveModalAsset.id ? { ...img, isSaved: true } : img
+          )
+        );
+
+        setSaveSuccess(saveModalAsset.id);
+        setTimeout(() => setSaveSuccess(null), 2000);
+      }
+    } catch (error) {
+      console.error('Save to library failed:', error);
+      alert('Failed to save to library. Please try again.');
+    }
 
     // Also save to AI assets for backward compatibility
     saveAsset({
@@ -356,15 +415,6 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
       isShared: true
     });
 
-    // Mark as saved in session
-    updateActiveSessionAssets(
-      generatedImages.map(img =>
-        img.id === saveModalAsset.id ? { ...img, isSaved: true } : img
-      )
-    );
-
-    setSaveSuccess(saveModalAsset.id);
-    setTimeout(() => setSaveSuccess(null), 2000);
     setSaveModalAsset(null);
     setSaveName('');
     setSaveTags('');

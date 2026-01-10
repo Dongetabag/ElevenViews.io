@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, LogIn, Mail, Lock, AlertCircle, Eye, EyeOff, Users, KeyRound, ArrowLeft, CheckCircle } from 'lucide-react';
+import { X, LogIn, Mail, Lock, AlertCircle, Eye, EyeOff, Users, KeyRound, ArrowLeft, CheckCircle, Send } from 'lucide-react';
 import { appStore } from '../services/appStore.ts';
 
 interface LoginModalProps {
@@ -17,8 +17,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onClose, onSuccess, onSwi
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [emailSent, setEmailSent] = useState(false);
   const [registeredUsers, setRegisteredUsers] = useState<{name: string, email: string, avatar?: string}[]>([]);
   const [showUserList, setShowUserList] = useState(false);
 
@@ -32,7 +31,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onClose, onSuccess, onSwi
 
   if (!show) return null;
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
+  // Request password reset link via email
+  const handleRequestResetLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
@@ -42,31 +42,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onClose, onSuccess, onSwi
       return;
     }
 
-    if (!newPassword || newPassword.length < 6) {
-      setError('Password must be at least 6 characters.');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      const result = await appStore.resetPassword(email, newPassword);
+      const result = await appStore.requestPasswordResetEmail(email);
 
       if (result.success) {
-        setSuccess('Password reset successfully! You can now sign in.');
-        setNewPassword('');
-        setConfirmPassword('');
-        setTimeout(() => {
-          setShowForgotPassword(false);
-          setSuccess(null);
-        }, 2000);
+        setEmailSent(true);
+        setSuccess('Reset link sent! Check your email inbox.');
       } else {
-        setError(result.error || 'Failed to reset password.');
+        setError(result.error || 'Failed to send reset email.');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
@@ -83,7 +68,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onClose, onSuccess, onSwi
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const result = appStore.login(email, password);
+    const result = await appStore.login(email, password);
 
     if (result.success && result.user) {
       onSuccess(result.user);
@@ -122,10 +107,15 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onClose, onSuccess, onSwi
 
         {/* Form Body */}
         {showForgotPassword ? (
-          <form onSubmit={handleForgotPassword} className="p-8 space-y-6">
+          <div className="p-8 space-y-6">
             <button
               type="button"
-              onClick={() => { setShowForgotPassword(false); setError(null); setSuccess(null); }}
+              onClick={() => {
+                setShowForgotPassword(false);
+                setEmailSent(false);
+                setError(null);
+                setSuccess(null);
+              }}
               className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -134,10 +124,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onClose, onSuccess, onSwi
 
             <div className="text-center space-y-2">
               <div className="w-16 h-16 mx-auto rounded-2xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center">
-                <KeyRound className="w-8 h-8 text-brand-gold" />
+                {emailSent ? <CheckCircle className="w-8 h-8 text-green-400" /> : <KeyRound className="w-8 h-8 text-brand-gold" />}
               </div>
-              <h3 className="text-xl font-bold text-white">Reset Password</h3>
-              <p className="text-sm text-gray-500">Enter your email and new password</p>
+              <h3 className="text-xl font-bold text-white">
+                {emailSent ? 'Check Your Email' : 'Reset Password'}
+              </h3>
+              <p className="text-sm text-gray-500">
+                {emailSent
+                  ? 'We sent a password reset link to your email'
+                  : 'Enter your email to receive a reset link'}
+              </p>
             </div>
 
             {error && (
@@ -147,79 +143,64 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onClose, onSuccess, onSwi
               </div>
             )}
 
-            {success && (
-              <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-2xl text-green-400 text-sm">
-                <CheckCircle className="w-5 h-5 flex-shrink-0" />
-                <span>{success}</span>
+            {emailSent ? (
+              <div className="space-y-6">
+                <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-2xl text-green-400 text-sm text-center">
+                  <p>A password reset link has been sent to:</p>
+                  <p className="font-bold mt-1">{email}</p>
+                </div>
+                <p className="text-xs text-gray-500 text-center">
+                  Click the link in the email to create a new password. The link expires in 1 hour.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleRequestResetLink({ preventDefault: () => {} } as React.FormEvent)}
+                  disabled={isLoading}
+                  className="w-full text-sm text-brand-gold hover:text-brand-gold/80 transition-colors"
+                >
+                  {isLoading ? 'Sending...' : "Didn't receive it? Send again"}
+                </button>
               </div>
+            ) : (
+              <form onSubmit={handleRequestResetLink} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                    <Mail className="w-3 h-3" />
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your.email@example.com"
+                    required
+                    autoFocus
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/50 transition-all"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading || !email}
+                  className={`w-full flex items-center justify-center gap-3 px-8 py-4 bg-brand-gold text-black font-bold text-sm rounded-2xl transition-all shadow-xl shadow-brand-gold/20 ${
+                    isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98]'
+                  }`}
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                      <span className="font-orbitron tracking-widest">SENDING...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      <span className="font-orbitron tracking-widest">SEND RESET LINK</span>
+                    </>
+                  )}
+                </button>
+              </form>
             )}
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                <Mail className="w-3 h-3" />
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your.email@example.com"
-                required
-                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/50 transition-all"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                <Lock className="w-3 h-3" />
-                New Password
-              </label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password (min 6 characters)"
-                required
-                minLength={6}
-                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/50 transition-all"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                <Lock className="w-3 h-3" />
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
-                required
-                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/50 transition-all"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading || !email || !newPassword || !confirmPassword}
-              className={`w-full flex items-center justify-center gap-3 px-8 py-4 bg-brand-gold text-black font-bold text-sm rounded-2xl transition-all shadow-xl shadow-brand-gold/20 ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98]'
-              }`}
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                  <span className="font-orbitron tracking-widest">RESETTING...</span>
-                </>
-              ) : (
-                <>
-                  <KeyRound className="w-5 h-5" />
-                  <span className="font-orbitron tracking-widest">RESET PASSWORD</span>
-                </>
-              )}
-            </button>
-          </form>
+          </div>
         ) : (
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           {error && (

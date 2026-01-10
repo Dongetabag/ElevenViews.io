@@ -22,6 +22,7 @@ import DesignAgent from './components/DesignAgent.tsx';
 import MusicPlayer from './components/MusicPlayer.tsx';
 import IntakeModal, { IntakeData } from './components/IntakeModal.tsx';
 import LoginModal from './components/LoginModal.tsx';
+import ResetPasswordPage from './components/ResetPasswordPage.tsx';
 import { UserProfile } from './types.ts';
 import { useDataStore } from './hooks/useDataStore.ts';
 import { appStore } from './services/appStore.ts';
@@ -34,9 +35,19 @@ const App: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showIntake, setShowIntake] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
 
   // Data store for all app data
   const dataStore = useDataStore();
+
+  // Check if we're on the reset password page
+  useEffect(() => {
+    const path = window.location.pathname;
+    const params = new URLSearchParams(window.location.search);
+    if (path === '/reset-password' || params.has('token')) {
+      setShowResetPassword(true);
+    }
+  }, []);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('agency_user_profile');
@@ -226,6 +237,19 @@ const App: React.FC = () => {
         );
     }
   };
+
+  // Show reset password page if on /reset-password route
+  if (showResetPassword) {
+    return (
+      <ResetPasswordPage
+        onBackToLogin={() => {
+          setShowResetPassword(false);
+          window.history.replaceState({}, document.title, '/');
+          setShowLogin(true);
+        }}
+      />
+    );
+  }
 
   if (!userProfile) {
     return (

@@ -1,14 +1,10 @@
 // Eleven Views App Store - Unified state management with persistence
 // Handles users, team, chat, documents, and AI assets
-// Updated to use Supabase for user storage
+// Updated to use MCP Server for user authentication (bypasses invalid Supabase API key)
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { sendWelcomeEmail, sendPasswordResetEmail } from './resendService';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://fiiiszodgngqbgkczfvd.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-// Create Supabase client
-const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const MCP_URL = import.meta.env.VITE_MCP_URL || 'https://mcp.elevenviews.io';
 
 const STORAGE_KEYS = {
   USERS_CACHE: 'eleven-views-users-cache',
@@ -17,14 +13,6 @@ const STORAGE_KEYS = {
   DOCUMENTS: 'eleven-views-documents',
   AI_ASSETS: 'eleven-views-ai-assets',
   NOTIFICATIONS: 'eleven-views-notifications'
-};
-
-// Simple hash function for password storage
-const simpleHash = async (str: string): Promise<string> => {
-  const msgBuffer = new TextEncoder().encode(str);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };
 
 // Types
@@ -210,7 +198,7 @@ class AppStore {
 
   constructor() {
     this.loadFromStorage();
-    this.syncUsersFromSupabase();
+    this.syncUsersFromMCP();
   }
 
   private loadFromStorage() {
@@ -231,38 +219,36 @@ class AppStore {
     setStorage(STORAGE_KEYS.NOTIFICATIONS, this.notifications);
   }
 
-  private async syncUsersFromSupabase() {
+  private async syncUsersFromMCP() {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const response = await fetch(`${MCP_URL}/auth/users`);
+      const data = await response.json();
 
-      if (error) {
-        console.error('Failed to sync users from Supabase:', error);
+      if (!data.success) {
+        console.error('Failed to sync users from MCP:', data.error);
         return;
       }
 
-      if (data) {
-        this.usersCache = data.map(u => this.mapSupabaseUserToUser(u));
+      if (data.users) {
+        this.usersCache = data.users.map((u: any) => this.mapMCPUserToUser(u));
         this.saveToStorage();
         this.notify('users');
       }
     } catch (err) {
-      console.error('Supabase sync error:', err);
+      console.error('MCP sync error:', err);
     }
   }
 
-  private mapSupabaseUserToUser(supabaseUser: any): User {
+  private mapMCPUserToUser(mcpUser: any): User {
     return {
-      id: supabaseUser.id,
-      name: supabaseUser.name || '',
-      email: supabaseUser.email,
-      role: supabaseUser.role || 'user',
-      avatar: supabaseUser.avatar,
+      id: mcpUser.id,
+      name: mcpUser.name || '',
+      email: mcpUser.email,
+      role: mcpUser.role || 'user',
+      avatar: mcpUser.avatar,
       status: 'offline',
-      joinedAt: supabaseUser.created_at,
-      lastActiveAt: supabaseUser.updated_at || supabaseUser.created_at
+      joinedAt: mcpUser.joinedAt,
+      lastActiveAt: mcpUser.lastActiveAt || mcpUser.joinedAt
     };
   }
 
@@ -290,52 +276,29 @@ class AppStore {
   // ==================== USER MANAGEMENT ====================
 
   async registerUser(userData: Omit<User, 'id' | 'joinedAt' | 'lastActiveAt' | 'status'>): Promise<User> {
-    // Check if user exists in Supabase
-    const { data: existing } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', userData.email)
-      .single();
-
-    if (existing) {
-      // Update existing user
-      const { data: updated, error } = await supabase
-        .from('users')
-        .update({ name: userData.name, updated_at: now() })
-        .eq('email', userData.email)
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      const user = this.mapSupabaseUserToUser(updated);
-      user.status = 'online';
-      this.updateUserCache(user);
-      this.currentUserId = user.id;
+    // Check if user exists in cache first
+    const existingLocal = this.usersCache.find(u => u.email.toLowerCase() === userData.email.toLowerCase());
+    if (existingLocal) {
+      existingLocal.name = userData.name;
+      existingLocal.status = 'online';
+      this.currentUserId = existingLocal.id;
       this.saveToStorage();
       this.notify('users');
-      return user;
+      return existingLocal;
     }
 
-    // Create new user in Supabase (without password - use registerUserWithPassword for auth)
-    const { data: newData, error } = await supabase
-      .from('users')
-      .insert({
-        email: userData.email,
-        name: userData.name,
-        role: userData.role || 'user',
-        avatar: userData.avatar,
-        password_hash: '', // Empty for OAuth/social login users
-        created_at: now(),
-        updated_at: now()
-      })
-      .select()
-      .single();
+    // Create new user locally (for social/OAuth login without password)
+    const newUser: User = {
+      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: userData.name,
+      email: userData.email,
+      role: userData.role || 'user',
+      avatar: userData.avatar,
+      status: 'online',
+      joinedAt: now(),
+      lastActiveAt: now()
+    };
 
-    if (error) throw error;
-
-    const newUser = this.mapSupabaseUserToUser(newData);
-    newUser.status = 'online';
     this.usersCache.push(newUser);
     this.currentUserId = newUser.id;
     this.saveToStorage();
@@ -378,25 +341,13 @@ class AppStore {
   }
 
   async updateUser(userId: string, updates: Partial<User>): Promise<User | null> {
-    const { data, error } = await supabase
-      .from('users')
-      .update({
-        name: updates.name,
-        avatar: updates.avatar,
-        role: updates.role,
-        updated_at: now()
-      })
-      .eq('id', userId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Failed to update user:', error);
+    const user = this.usersCache.find(u => u.id === userId);
+    if (!user) {
+      console.error('User not found:', userId);
       return null;
     }
 
-    const user = this.mapSupabaseUserToUser(data);
-    Object.assign(user, updates);
+    Object.assign(user, updates, { lastActiveAt: now() });
     this.updateUserCache(user);
     this.saveToStorage();
     this.notify('users');
@@ -432,41 +383,26 @@ class AppStore {
     password: string
   ): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
-      // Check if email already exists
-      const { data: existing } = await supabase
-        .from('users')
-        .select('id')
-        .eq('email', userData.email)
-        .single();
-
-      if (existing) {
-        return { success: false, error: 'An account with this email already exists. Please sign in instead.' };
-      }
-
-      // Hash password
-      const passwordHash = await simpleHash(password);
-
-      // Create user in Supabase
-      const { data: newData, error } = await supabase
-        .from('users')
-        .insert({
+      // Use MCP auth endpoint for registration
+      const response = await fetch(`${MCP_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           email: userData.email,
+          password: password,
           name: userData.name,
           role: userData.role || 'user',
-          avatar: userData.avatar,
-          password_hash: passwordHash,
-          created_at: now(),
-          updated_at: now()
+          avatar: userData.avatar
         })
-        .select()
-        .single();
+      });
 
-      if (error) {
-        console.error('Supabase insert error:', error);
-        return { success: false, error: 'Failed to create account. Please try again.' };
+      const data = await response.json();
+
+      if (!data.success) {
+        return { success: false, error: data.error || 'Failed to create account. Please try again.' };
       }
 
-      const newUser = this.mapSupabaseUserToUser(newData);
+      const newUser = this.mapMCPUserToUser(data.user);
       newUser.status = 'online';
       this.usersCache.push(newUser);
       this.currentUserId = newUser.id;
@@ -481,6 +417,11 @@ class AppStore {
         type: 'system'
       });
 
+      // Send welcome/confirmation email via Resend
+      sendWelcomeEmail(userData.email, newUser.name).catch(err => {
+        console.error('Failed to send welcome email:', err);
+      });
+
       return { success: true, user: newUser };
     } catch (err) {
       console.error('Registration error:', err);
@@ -490,30 +431,20 @@ class AppStore {
 
   async login(email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
-      // Get user from Supabase
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email.toLowerCase())
-        .single();
+      // Use MCP auth endpoint for login
+      const response = await fetch(`${MCP_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
 
-      if (error || !userData) {
-        return { success: false, error: 'No account found with this email. Please create an account first.' };
+      const data = await response.json();
+
+      if (!data.success) {
+        return { success: false, error: data.error || 'Login failed. Please try again.' };
       }
 
-      // Check password
-      const passwordHash = await simpleHash(password);
-      if (userData.password_hash !== passwordHash) {
-        return { success: false, error: 'Incorrect password. Please try again.' };
-      }
-
-      // Login successful - update last active
-      await supabase
-        .from('users')
-        .update({ updated_at: now() })
-        .eq('id', userData.id);
-
-      const user = this.mapSupabaseUserToUser(userData);
+      const user = this.mapMCPUserToUser(data.user);
       user.status = 'online';
       this.updateUserCache(user);
       this.currentUserId = user.id;
@@ -528,89 +459,84 @@ class AppStore {
   }
 
   async emailExists(email: string): Promise<boolean> {
-    const { data } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', email.toLowerCase())
-      .single();
-    return !!data;
-  }
-
-
-  // Reset password - generates a reset token and sends email (simulated)
-  async requestPasswordReset(email: string): Promise<{ success: boolean; error?: string; resetToken?: string }> {
     try {
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email.toLowerCase())
-        .single();
-
-      if (error || !userData) {
-        // Don't reveal if email exists for security
-        return { success: true }; // Always return success to prevent email enumeration
-      }
-
-      // Generate reset token (in production, this would be sent via email)
-      const resetToken = `reset_${Date.now()}_${Math.random().toString(36).substr(2, 12)}`;
-      const resetExpiry = new Date(Date.now() + 3600000).toISOString(); // 1 hour expiry
-
-      // Store reset token in database
-      await supabase
-        .from('users')
-        .update({
-          reset_token: resetToken,
-          reset_token_expiry: resetExpiry,
-          updated_at: now()
-        })
-        .eq('email', email.toLowerCase());
-
-      // In production, send email here
-      console.log(`Password reset requested for ${email}. Token: ${resetToken}`);
-
-      return { success: true, resetToken }; // Return token for demo purposes
-    } catch (err) {
-      console.error('Password reset request error:', err);
-      return { success: false, error: 'Failed to process reset request.' };
+      const response = await fetch(`${MCP_URL}/auth/check-email?email=${encodeURIComponent(email)}`);
+      const data = await response.json();
+      return data.exists || false;
+    } catch {
+      return false;
     }
   }
 
-  // Verify reset token and set new password
-  async resetPasswordWithToken(email: string, token: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+
+  // Request password reset email - generates token via MCP and sends email with link
+  async requestPasswordResetEmail(email: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email.toLowerCase())
-        .single();
+      // Request token from MCP server (stores token in database)
+      const response = await fetch(`${MCP_URL}/auth/request-reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
 
-      if (error || !userData) {
-        return { success: false, error: 'Invalid reset request.' };
-      }
+      const data = await response.json();
 
-      // For demo: accept any token or check if token matches
-      // In production, verify token and expiry
-      if (userData.reset_token && userData.reset_token !== token) {
-        // Check if token is expired
-        if (userData.reset_token_expiry && new Date(userData.reset_token_expiry) < new Date()) {
-          return { success: false, error: 'Reset token has expired. Please request a new one.' };
+      if (!data.success) {
+        // Don't reveal if email exists for security - always show success
+        if (data.error === 'User not found') {
+          return { success: true };
         }
+        return { success: false, error: data.error || 'Failed to request reset.' };
       }
 
-      // Hash new password and update
-      const passwordHash = await simpleHash(newPassword);
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({
-          password_hash: passwordHash,
-          reset_token: null,
-          reset_token_expiry: null,
-          updated_at: now()
-        })
-        .eq('email', email.toLowerCase());
+      // Get user name for email personalization
+      const user = this.usersCache.find(u => u.email.toLowerCase() === email.toLowerCase());
+      const userName = user?.name || 'User';
 
-      if (updateError) {
-        return { success: false, error: 'Failed to update password.' };
+      // Send reset email with link via Resend
+      const emailResult = await sendPasswordResetEmail(email, userName, data.token);
+
+      if (!emailResult.success) {
+        return { success: false, error: emailResult.error || 'Failed to send reset email.' };
+      }
+
+      return { success: true };
+    } catch (err) {
+      console.error('Password reset request error:', err);
+      return { success: false, error: 'Failed to send reset email.' };
+    }
+  }
+
+  // Verify reset token and get associated email
+  async verifyResetToken(token: string): Promise<{ valid: boolean; email?: string; error?: string }> {
+    try {
+      const response = await fetch(`${MCP_URL}/auth/verify-reset-token?token=${encodeURIComponent(token)}`);
+      const data = await response.json();
+
+      if (!data.success) {
+        return { valid: false, error: data.error || 'Invalid or expired token.' };
+      }
+
+      return { valid: true, email: data.email };
+    } catch (err) {
+      console.error('Token verification error:', err);
+      return { valid: false, error: 'Failed to verify token.' };
+    }
+  }
+
+  // Reset password using token (called from reset password page)
+  async resetPasswordWithToken(token: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch(`${MCP_URL}/auth/reset-password-with-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, newPassword })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        return { success: false, error: data.error || 'Failed to reset password.' };
       }
 
       return { success: true };
@@ -620,20 +546,19 @@ class AppStore {
     }
   }
 
-  // Simple password reset without token (for admin/demo use)
+  // Legacy method - Simple password reset (using MCP endpoint directly)
   async resetPassword(email: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const passwordHash = await simpleHash(newPassword);
-      const { error } = await supabase
-        .from('users')
-        .update({
-          password_hash: passwordHash,
-          updated_at: now()
-        })
-        .eq('email', email.toLowerCase());
+      const response = await fetch(`${MCP_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, newPassword })
+      });
 
-      if (error) {
-        return { success: false, error: 'User not found or update failed.' };
+      const data = await response.json();
+
+      if (!data.success) {
+        return { success: false, error: data.error || 'Failed to reset password.' };
       }
 
       return { success: true };
@@ -661,13 +586,8 @@ class AppStore {
 
   async setPassword(email: string, password: string): Promise<boolean> {
     try {
-      const passwordHash = await simpleHash(password);
-      const { error } = await supabase
-        .from('users')
-        .update({ password_hash: passwordHash, updated_at: now() })
-        .eq('email', email.toLowerCase());
-
-      return !error;
+      const result = await this.resetPassword(email, password);
+      return result.success;
     } catch {
       return false;
     }

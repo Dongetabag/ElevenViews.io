@@ -598,7 +598,7 @@ class WasabiService {
         fileSize: file.size,
         category,
         subcategory,
-        url: result.url || `https://s3.us-east-1.wasabisys.com/eleven-views-media/${key}`,
+        url: `${this.mcpUrl}/stream?key=${encodeURIComponent(key)}`,
         tags: options.tags || generateSmartTags(file.name, category),
         aiTags: generateSmartTags(file.name, category),
         metadata: {

@@ -63,7 +63,7 @@ interface EmailBuilderModuleProps {
 // API Endpoints
 const N8N_WEBHOOK_URL = 'https://n8n.srv1167160.hstgr.cloud/webhook/send-email';
 const N8N_CLAUDE_WEBHOOK = 'https://n8n.srv1167160.hstgr.cloud/webhook/claude-playbook';
-const SCRAPER_API_URL = 'https://scraper.elevenviews.com/api';
+const SCRAPER_API_URL = 'https://scraper.elevenviews.io/api';
 const GEMINI_API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY || '';
 
 const DEFAULT_TEMPLATES: EmailTemplate[] = [
@@ -80,7 +80,7 @@ Your journey to brand dominance starts here. We've prepared everything you need 
 Best regards,
 The Eleven Views Team`,
     fromName: 'Eleven Views',
-    fromEmail: 'contact@elevenviews.com'
+    fromEmail: 'contact@elevenviews.io'
   },
   {
     id: '2',
@@ -98,7 +98,7 @@ Best regards,
 Lance Reid Jr.
 Founder & Chief Strategist`,
     fromName: 'Lance Reid Jr.',
-    fromEmail: 'lance@elevenviews.com'
+    fromEmail: 'lance@elevenviews.io'
   },
   {
     id: '3',
@@ -115,15 +115,15 @@ Looking forward to hearing from you!
 Best regards,
 Eleven Views Team`,
     fromName: 'Eleven Views',
-    fromEmail: 'contact@elevenviews.com'
+    fromEmail: 'contact@elevenviews.io'
   }
 ];
 
 const SENDERS = [
-  { id: 'lance', name: 'Lance Reid Jr.', email: 'lance@elevenviews.com', title: 'Founder & Chief Strategist' },
-  { id: 'ahmed', name: 'Ahmed Jibril', email: 'ahmed@elevenviews.com', title: 'Growth Director' },
-  { id: 'aaron', name: 'Aaron Ellis', email: 'aaron@elevenviews.com', title: 'Partner' },
-  { id: 'contact', name: 'Eleven Views Team', email: 'contact@elevenviews.com', title: 'Strategic Partnerships' }
+  { id: 'lance', name: 'Lance Reid Jr.', email: 'lance@elevenviews.io', title: 'Founder & Chief Strategist' },
+  { id: 'ahmed', name: 'Ahmed Jibril', email: 'ahmed@elevenviews.io', title: 'Growth Director' },
+  { id: 'aaron', name: 'Aaron Ellis', email: 'aaron@elevenviews.io', title: 'Partner' },
+  { id: 'contact', name: 'Eleven Views Team', email: 'contact@elevenviews.io', title: 'Strategic Partnerships' }
 ];
 
 const EmailBuilderModule: React.FC<EmailBuilderModuleProps> = ({ user }) => {
@@ -269,7 +269,7 @@ const EmailBuilderModule: React.FC<EmailBuilderModuleProps> = ({ user }) => {
     </div>
     <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(245, 213, 71, 0.1); text-align: center;">
       <p style="color: #888; font-size: 12px; margin: 0;">${sender.name} | ${sender.title}</p>
-      <p style="color: #666; font-size: 11px; margin: 8px 0 0 0;">Eleven Views | elevenviews.com</p>
+      <p style="color: #666; font-size: 11px; margin: 8px 0 0 0;">Eleven Views | elevenviews.io</p>
     </div>
   </div>
 </body>
@@ -1225,7 +1225,7 @@ Only respond with valid JSON, no markdown or explanation.`;
             <div class="cta-box">
                 <h3 class="cta-title">Ready to Transform ${data.company.name}?</h3>
                 <p class="cta-text">Eleven Views can implement this entire strategy for you.</p>
-                <a href="https://elevenviews.com/contact" class="cta-button">Schedule Strategy Call</a>
+                <a href="https://elevenviews.io/contact" class="cta-button">Schedule Strategy Call</a>
             </div>
         </div>
     </section>
@@ -1235,7 +1235,7 @@ Only respond with valid JSON, no markdown or explanation.`;
         <div class="container">
             <div class="footer-brand">ELEVEN VIEWS</div>
             <p class="footer-text">
-                Prepared exclusively for ${data.company.name} | <a href="https://elevenviews.com">elevenviews.com</a>
+                Prepared exclusively for ${data.company.name} | <a href="https://elevenviews.io">elevenviews.io</a>
             </p>
             <p class="footer-text" style="margin-top: 8px;">
                 © ${new Date().getFullYear()} Eleven Views. Confidential.
@@ -1787,7 +1787,7 @@ ${selectedSender.title}`);
                 </div>
                 <div className="mt-6 pt-4 border-t border-brand-gold/10 text-center">
                   <p className="text-gray-500 text-xs">{selectedSender.name} | {selectedSender.title}</p>
-                  <p className="text-gray-600 text-xs mt-1">Eleven Views | elevenviews.com</p>
+                  <p className="text-gray-600 text-xs mt-1">Eleven Views | elevenviews.io</p>
                 </div>
               </div>
             </div>
@@ -2024,7 +2024,7 @@ ${selectedSender.title}`);
             <h3 className="text-lg font-bold text-white mb-4">Example Playbooks</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { name: 'Day Hill Dome', url: 'https://dayhilldome.elevenviews.com/', industry: 'Sports & Entertainment' },
+                { name: 'Day Hill Dome', url: 'https://dayhilldome.elevenviews.io/', industry: 'Sports & Entertainment' },
                 { name: 'Local Business', url: '#', industry: 'Retail' },
                 { name: 'SaaS Startup', url: '#', industry: 'Technology' }
               ].map((example, i) => (
