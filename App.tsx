@@ -33,12 +33,24 @@ const App: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [activeModule, setActiveModule] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showIntake, setShowIntake] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
 
   // Data store for all app data
   const dataStore = useDataStore();
+
+  // Close mobile menu on window resize to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Check if we're on the reset password page
   useEffect(() => {
@@ -123,7 +135,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleIntakeSubmit = (data: IntakeData) => {
+  const handleIntakeSubmit = async (data: IntakeData) => {
     console.log('Processing Intake Submission in App:', data);
 
     const newUser: UserProfile = {
@@ -136,20 +148,26 @@ const App: React.FC = () => {
     };
 
     // Register user in app store with password
-    const result = appStore.registerUserWithPassword({
-      name: data.name,
-      email: data.email,
-      role: data.role || 'Team Member',
-      department: data.role,
-      title: data.role,
-      agencyCoreCompetency: data.agencyCoreCompetency,
-      primaryClientIndustry: data.primaryClientIndustry,
-      avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.name)}&backgroundColor=d4a500&textColor=000000`
-    }, data.password);
+    try {
+      const result = await appStore.registerUserWithPassword({
+        name: data.name,
+        email: data.email,
+        role: data.role || 'Team Member',
+        department: data.role,
+        title: data.role,
+        agencyCoreCompetency: data.agencyCoreCompetency,
+        primaryClientIndustry: data.primaryClientIndustry,
+        avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.name)}&backgroundColor=d4a500&textColor=000000`
+      }, data.password);
 
-    if (!result.success) {
-      console.error('Registration failed:', result.error);
-      alert(result.error);
+      if (!result || !result.success) {
+        console.error('Registration failed:', result?.error);
+        alert(result?.error || 'Registration failed. Please try again.');
+        return;
+      }
+    } catch (err) {
+      console.error('Registration error:', err);
+      alert('Registration failed. Please check your connection and try again.');
       return;
     }
 
@@ -284,6 +302,8 @@ const App: React.FC = () => {
         setActiveModule={setActiveModule}
         collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed}
+        mobileOpen={mobileMenuOpen}
+        setMobileOpen={setMobileMenuOpen}
         onLogout={() => {
           appStore.logout();
           localStorage.removeItem('agency_user_profile');
@@ -291,7 +311,7 @@ const App: React.FC = () => {
           setActiveModule('dashboard');
         }}
       />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 w-full">
         <TopBar
           user={userProfile}
           onLogout={() => {
@@ -302,7 +322,7 @@ const App: React.FC = () => {
           }}
           onNavigate={setActiveModule}
         />
-        <main className="flex-1 overflow-y-auto bg-brand-dark scrollbar-hide pb-20">
+        <main className="flex-1 overflow-y-auto bg-brand-dark scrollbar-hide pb-20 md:pb-20">
           {renderModule()}
         </main>
       </div>

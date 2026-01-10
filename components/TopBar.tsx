@@ -31,8 +31,9 @@ const TopBar: React.FC<TopBarProps> = ({ user, onLogout, onNavigate }) => {
   };
 
   return (
-    <header className="h-16 border-b border-white/[0.06] bg-brand-dark/80 backdrop-blur-xl sticky top-0 z-40 px-8 flex items-center justify-between">
-      <div className="flex items-center gap-4 w-1/3">
+    <header className="h-14 md:h-16 border-b border-white/[0.06] bg-brand-dark/80 backdrop-blur-xl sticky top-0 z-40 px-4 md:px-8 flex items-center justify-between pl-16 md:pl-8">
+      {/* Search - Hidden on mobile, visible on tablet+ */}
+      <div className="hidden md:flex items-center gap-4 w-1/3">
         <div className="relative group w-full max-w-sm">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-brand-gold transition-colors" />
           <input
@@ -47,28 +48,34 @@ const TopBar: React.FC<TopBarProps> = ({ user, onLogout, onNavigate }) => {
         </div>
       </div>
 
-      <div className="flex items-center gap-6">
-        <button className="relative p-2 text-gray-500 hover:text-white transition-colors rounded-lg hover:bg-white/[0.04]">
+      {/* Mobile: Logo/Title */}
+      <div className="md:hidden flex items-center">
+        <span className="text-brand-gold font-display font-bold text-lg">VIEWS</span>
+      </div>
+
+      <div className="flex items-center gap-3 md:gap-6">
+        <button className="relative p-2 text-gray-500 hover:text-white transition-colors rounded-lg hover:bg-white/[0.04] min-w-[44px] min-h-[44px] flex items-center justify-center">
           <Bell className="w-5 h-5" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-gold rounded-full border-2 border-brand-dark"></span>
         </button>
 
-        <div className="h-8 w-px bg-white/[0.08]"></div>
+        <div className="hidden md:block h-8 w-px bg-white/[0.08]"></div>
 
         {/* User Menu with Dropdown */}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-white/[0.04] transition-colors"
+            className="flex items-center gap-2 md:gap-3 p-1.5 rounded-xl hover:bg-white/[0.04] transition-colors min-h-[44px]"
           >
-            <div className="text-right">
+            {/* Hide text on mobile */}
+            <div className="hidden md:block text-right">
               <p className="text-sm font-medium text-white leading-none">{user.name}</p>
               <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">{user.role}</p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold font-display font-semibold">
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold font-display font-semibold text-sm">
               {user.name[0]}
             </div>
-            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform hidden md:block ${showUserMenu ? 'rotate-180' : ''}`} />
           </button>
 
           {/* Dropdown Menu */}
@@ -84,14 +91,14 @@ const TopBar: React.FC<TopBarProps> = ({ user, onLogout, onNavigate }) => {
                     setShowUserMenu(false);
                     onNavigate?.('settings');
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-lg transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-lg transition-colors min-h-[44px]"
                 >
                   <Settings className="w-4 h-4" />
                   Settings
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors min-h-[44px]"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign Out
