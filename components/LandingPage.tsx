@@ -23,7 +23,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister }) => {
         {/* Badge */}
         <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-brand-gold/5 border border-brand-gold/15 mb-10 animate-glow">
           <Aperture className="w-4 h-4 text-brand-gold" />
-          <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-brand-gold/90">Production Studio</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-brand-gold/90">Members Only</span>
         </div>
 
         {/* Main Title */}
@@ -33,20 +33,20 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister }) => {
           </h1>
           <div className="flex items-center justify-center gap-4 mt-6">
             <div className="h-px w-16 bg-gradient-to-r from-transparent to-brand-gold/50"></div>
-            <span className="text-xs uppercase tracking-[0.3em] text-gray-500 font-medium">Est. 2024</span>
+            <span className="text-xs uppercase tracking-[0.3em] text-gray-500 font-medium">Est. 2021</span>
             <div className="h-px w-16 bg-gradient-to-l from-transparent to-brand-gold/50"></div>
           </div>
         </div>
 
         {/* Tagline */}
         <p className="text-lg md:text-xl lg:text-2xl text-gray-400 mb-6 max-w-2xl mx-auto font-light leading-relaxed">
-          Visual storytelling through the
-          <span className="text-white font-normal"> raw beauty of the world.</span>
+          A creative collective of
+          <span className="text-white font-normal"> industry professionals.</span>
         </p>
 
         <p className="text-sm text-gray-500 mb-12 max-w-xl mx-auto">
-          A boutique production company crafting cinematic narratives for global brands.
-          Video. Photography. Campaigns.
+          An exclusive members portal for creatives in music, film, fashion & design.
+          Service clients. Grow the brand. Build together.
         </p>
 
         {/* CTA Buttons */}
@@ -55,7 +55,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister }) => {
             onClick={onRegister}
             className="group relative flex items-center gap-3 px-10 py-5 bg-brand-gold text-brand-dark font-semibold text-base transition-all duration-300 rounded-xl hover:bg-brand-gold/90 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_40px_rgba(201,169,98,0.15)]"
           >
-            <span className="font-display tracking-wide">Start a Project</span>
+            <span className="font-display tracking-wide">Apply for Membership</span>
             <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </button>
 
@@ -64,26 +64,31 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister }) => {
             className="group relative flex items-center gap-3 px-8 py-5 bg-white/5 border border-white/10 text-white font-medium text-base transition-all duration-300 rounded-xl hover:bg-white/10 hover:border-white/20 active:scale-[0.98]"
           >
             <LogIn className="w-5 h-5 text-brand-gold/80" />
-            <span className="font-display tracking-wide">Client Portal</span>
+            <span className="font-display tracking-wide">Members Portal</span>
           </button>
         </div>
 
-        {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mb-16">
-          <div className="glass-gold rounded-2xl p-6 text-center hover:border-brand-gold/20 transition-all">
-            <Play className="w-8 h-8 text-brand-gold mx-auto mb-3" />
-            <h3 className="text-sm font-display font-semibold text-white mb-1">Video Production</h3>
-            <p className="text-xs text-gray-500">Cinematic narratives that move</p>
+        {/* Industries Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-16">
+          <div className="glass-gold rounded-2xl p-5 text-center hover:border-brand-gold/20 transition-all">
+            <Play className="w-7 h-7 text-brand-gold mx-auto mb-2" />
+            <h3 className="text-sm font-display font-semibold text-white mb-1">Music</h3>
+            <p className="text-[10px] text-gray-500">Artists & Labels</p>
           </div>
-          <div className="glass-gold rounded-2xl p-6 text-center hover:border-brand-gold/20 transition-all">
-            <Camera className="w-8 h-8 text-brand-gold mx-auto mb-3" />
-            <h3 className="text-sm font-display font-semibold text-white mb-1">Photography</h3>
-            <p className="text-xs text-gray-500">Editorial imagery with soul</p>
+          <div className="glass-gold rounded-2xl p-5 text-center hover:border-brand-gold/20 transition-all">
+            <Camera className="w-7 h-7 text-brand-gold mx-auto mb-2" />
+            <h3 className="text-sm font-display font-semibold text-white mb-1">Film</h3>
+            <p className="text-[10px] text-gray-500">Directors & Producers</p>
           </div>
-          <div className="glass-gold rounded-2xl p-6 text-center hover:border-brand-gold/20 transition-all">
-            <Globe className="w-8 h-8 text-brand-gold mx-auto mb-3" />
-            <h3 className="text-sm font-display font-semibold text-white mb-1">Global Campaigns</h3>
-            <p className="text-xs text-gray-500">Location-driven storytelling</p>
+          <div className="glass-gold rounded-2xl p-5 text-center hover:border-brand-gold/20 transition-all">
+            <Globe className="w-7 h-7 text-brand-gold mx-auto mb-2" />
+            <h3 className="text-sm font-display font-semibold text-white mb-1">Fashion</h3>
+            <p className="text-[10px] text-gray-500">Designers & Stylists</p>
+          </div>
+          <div className="glass-gold rounded-2xl p-5 text-center hover:border-brand-gold/20 transition-all">
+            <Aperture className="w-7 h-7 text-brand-gold mx-auto mb-2" />
+            <h3 className="text-sm font-display font-semibold text-white mb-1">Design</h3>
+            <p className="text-[10px] text-gray-500">Creatives & Visionaries</p>
           </div>
         </div>
 
@@ -91,33 +96,33 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister }) => {
         <div className="flex items-center justify-center">
           <div className="inline-flex items-center gap-8 px-8 py-5 glass rounded-2xl">
             <div className="text-center">
-              <p className="text-xl font-display font-bold text-white">40+</p>
-              <p className="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Countries</p>
-            </div>
-            <div className="w-px h-10 bg-white/10"></div>
-            <div className="text-center">
-              <p className="text-xl font-display font-bold text-white">200+</p>
-              <p className="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Projects</p>
-            </div>
-            <div className="w-px h-10 bg-white/10"></div>
-            <div className="text-center">
               <p className="text-xl font-display font-bold text-white">11</p>
-              <p className="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Perspectives</p>
+              <p className="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Core Members</p>
+            </div>
+            <div className="w-px h-10 bg-white/10"></div>
+            <div className="text-center">
+              <p className="text-xl font-display font-bold text-white">4</p>
+              <p className="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Industries</p>
+            </div>
+            <div className="w-px h-10 bg-white/10"></div>
+            <div className="text-center">
+              <p className="text-xl font-display font-bold text-white">1</p>
+              <p className="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Vision</p>
             </div>
           </div>
         </div>
 
-        {/* Featured In */}
-        <div className="mt-16 opacity-40">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-gray-600 mb-4">Featured In</p>
+        {/* Member Benefits */}
+        <div className="mt-16 opacity-60">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-gray-600 mb-4">Member Benefits</p>
           <div className="flex items-center justify-center gap-8 flex-wrap text-xs text-gray-500 font-medium">
-            <span>Condé Nast Traveler</span>
+            <span>Client Access</span>
             <span className="hidden md:inline">•</span>
-            <span>Monocle</span>
+            <span>Project Tools</span>
             <span className="hidden md:inline">•</span>
-            <span>Wallpaper*</span>
+            <span>AI Suite</span>
             <span className="hidden md:inline">•</span>
-            <span>Kinfolk</span>
+            <span>Crew Network</span>
           </div>
         </div>
       </div>

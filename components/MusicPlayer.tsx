@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX,
   Repeat, Shuffle, Heart, ListMusic, X, ChevronUp, ChevronDown, Music
@@ -18,18 +18,16 @@ interface Track {
 
 interface MusicPlayerProps {
   playlist?: Track[];
-  libraryAssets?: Asset[]; // Accept library assets directly
+  libraryAssets?: Asset[];
   initialTrack?: Track;
-  currentAsset?: Asset; // Currently selected asset from library
+  currentAsset?: Asset;
   onClose?: () => void;
   onTrackChange?: (asset: Asset | null) => void;
   minimized?: boolean;
 }
 
-// Eleven Views branded audio placeholder
 const AUDIO_PLACEHOLDER = '/placeholders/audio-placeholder.svg';
 
-// Convert Asset to Track format
 const assetToTrack = (asset: Asset): Track => {
   return {
     id: asset.id,
@@ -42,7 +40,6 @@ const assetToTrack = (asset: Asset): Track => {
   };
 };
 
-// Empty default - music only plays when library has assets
 const DEFAULT_TRACKS: Track[] = [];
 
 const MusicPlayer: React.FC<MusicPlayerProps> = ({
@@ -54,7 +51,6 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   onTrackChange,
   minimized: initialMinimized = true
 }) => {
-  // Convert library assets to tracks if provided
   const tracksFromLibrary = useMemo(() => {
     if (libraryAssets && libraryAssets.length > 0) {
       return libraryAssets
@@ -64,10 +60,8 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     return playlist;
   }, [libraryAssets, playlist]);
 
-  // Use library tracks or provided playlist
   const activePlaylist = tracksFromLibrary.length > 0 ? tracksFromLibrary : playlist;
 
-  // Convert currentAsset to track if provided
   const initialTrackFromAsset = useMemo(() => {
     if (currentAsset) return assetToTrack(currentAsset);
     return initialTrack || (activePlaylist.length > 0 ? activePlaylist[0] : null);
@@ -85,48 +79,126 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [minimized, setMinimized] = useState(initialMinimized);
   const [audioError, setAudioError] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Update current track when currentAsset changes
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const playlistRef = useRef(activePlaylist);
+  const repeatModeRef = useRef(repeatMode);
+  const isShuffledRef = useRef(isShuffled);
+
+  // Keep refs in sync
+  useEffect(() => {
+    playlistRef.current = activePlaylist;
+  }, [activePlaylist]);
+
+  useEffect(() => {
+    repeatModeRef.current = repeatMode;
+  }, [repeatMode]);
+
+  useEffect(() => {
+    isShuffledRef.current = isShuffled;
+  }, [isShuffled]);
+
+  // Play next track (using refs to avoid stale closures)
+  const playNextTrack = useCallback(() => {
+    const playlist = playlistRef.current;
+    if (playlist.length === 0) return;
+
+    const currentIndex = playlist.findIndex(t => t.id === currentTrack?.id);
+    let nextIndex;
+
+    if (isShuffledRef.current) {
+      nextIndex = Math.floor(Math.random() * playlist.length);
+    } else {
+      nextIndex = (currentIndex + 1) % playlist.length;
+    }
+
+    const nextTrack = playlist[nextIndex];
+    if (nextTrack) {
+      setCurrentTrack(nextTrack);
+      setCurrentTime(0);
+      setAudioError(null);
+      setIsLoading(true);
+    }
+  }, [currentTrack?.id]);
+
+  // Handle track ended
+  const handleEnded = useCallback(() => {
+    if (repeatModeRef.current === 'one') {
+      // Repeat current track
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(console.error);
+      }
+    } else if (repeatModeRef.current === 'all' || playlistRef.current.length > 1) {
+      // Play next track
+      playNextTrack();
+    } else {
+      // Stop at end
+      setIsPlaying(false);
+    }
+  }, [playNextTrack]);
+
+  // Update current track when currentAsset changes externally
   useEffect(() => {
     if (currentAsset) {
       const track = assetToTrack(currentAsset);
       setCurrentTrack(track);
       setCurrentTime(0);
       setAudioError(null);
-      // Auto-play when a new asset is selected
-      setTimeout(() => {
-        if (audioRef.current) {
-          audioRef.current.play().catch(err => {
-            console.error('Playback failed:', err);
-            setAudioError('Unable to play this track');
-          });
-          setIsPlaying(true);
-        }
-      }, 100);
+      setIsLoading(true);
     }
   }, [currentAsset]);
 
+  // Handle audio source change and autoplay
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume;
-    }
-  }, [volume, isMuted]);
+    const audio = audioRef.current;
+    if (!audio || !currentTrack) return;
 
+    const handleCanPlay = () => {
+      setIsLoading(false);
+      setDuration(audio.duration || 0);
+      // Auto-play when track is ready
+      audio.play()
+        .then(() => setIsPlaying(true))
+        .catch(err => {
+          console.error('Playback failed:', err);
+          setAudioError('Unable to play this track');
+          setIsPlaying(false);
+        });
+    };
+
+    const handleError = () => {
+      setIsLoading(false);
+      setAudioError('Unable to load audio file');
+      setIsPlaying(false);
+    };
+
+    const handleLoadStart = () => {
+      setIsLoading(true);
+    };
+
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('loadstart', handleLoadStart);
+
+    // Load the new source
+    audio.load();
+
+    return () => {
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('loadstart', handleLoadStart);
+    };
+  }, [currentTrack?.audioUrl]);
+
+  // Setup time update and ended listeners
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const updateTime = () => setCurrentTime(audio.currentTime);
     const updateDuration = () => setDuration(audio.duration);
-    const handleEnded = () => {
-      if (repeatMode === 'one') {
-        audio.currentTime = 0;
-        audio.play();
-      } else {
-        playNext();
-      }
-    };
 
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('loadedmetadata', updateDuration);
@@ -137,60 +209,86 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [currentTrack, repeatMode]);
+  }, [handleEnded]);
+
+  // Volume control
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted]);
 
   const togglePlay = () => {
-    if (!audioRef.current) return;
+    const audio = audioRef.current;
+    if (!audio || !currentTrack) return;
+
     if (isPlaying) {
-      audioRef.current.pause();
+      audio.pause();
+      setIsPlaying(false);
     } else {
-      audioRef.current.play();
+      audio.play()
+        .then(() => setIsPlaying(true))
+        .catch(err => {
+          console.error('Play failed:', err);
+          setAudioError('Unable to play this track');
+        });
     }
-    setIsPlaying(!isPlaying);
   };
 
   const playTrack = (track: Track) => {
+    if (track.id === currentTrack?.id) {
+      // Same track - just toggle play
+      togglePlay();
+      return;
+    }
+
+    // Different track - load and play
     setCurrentTrack(track);
     setCurrentTime(0);
-    setTimeout(() => {
-      if (audioRef.current) {
-        audioRef.current.play();
-        setIsPlaying(true);
-      }
-    }, 100);
+    setAudioError(null);
+    setIsLoading(true);
+
+    // Notify parent of track change
+    if (onTrackChange && libraryAssets) {
+      const asset = libraryAssets.find(a => a.id === track.id);
+      if (asset) onTrackChange(asset);
+    }
   };
 
   const playNext = () => {
-    if (activePlaylist.length === 0 || !currentTrack) return;
-    const currentIndex = activePlaylist.findIndex(t => t.id === currentTrack.id);
-    let nextIndex;
-    if (isShuffled) {
-      nextIndex = Math.floor(Math.random() * activePlaylist.length);
-    } else {
-      nextIndex = (currentIndex + 1) % activePlaylist.length;
-    }
-    playTrack(activePlaylist[nextIndex]);
+    playNextTrack();
   };
 
   const playPrevious = () => {
     if (activePlaylist.length === 0 || !currentTrack) return;
+
     if (currentTime > 3) {
-      // If more than 3 seconds in, restart current track
+      // Restart current track
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
       }
       return;
     }
+
     const currentIndex = activePlaylist.findIndex(t => t.id === currentTrack.id);
     const prevIndex = currentIndex === 0 ? activePlaylist.length - 1 : currentIndex - 1;
-    playTrack(activePlaylist[prevIndex]);
+    const prevTrack = activePlaylist[prevIndex];
+
+    if (prevTrack) {
+      setCurrentTrack(prevTrack);
+      setCurrentTime(0);
+      setAudioError(null);
+      setIsLoading(true);
+    }
   };
 
   const seekTo = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || !duration) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
-    audioRef.current.currentTime = percent * duration;
+    const newTime = percent * duration;
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
   };
 
   const formatTime = (seconds: number) => {
@@ -206,7 +304,6 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     setRepeatMode(modes[(currentIndex + 1) % 3]);
   };
 
-  // Don't render if no tracks available and no current track
   if (!currentTrack && activePlaylist.length === 0) {
     return null;
   }
@@ -217,12 +314,8 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         <audio
           ref={audioRef}
           src={currentTrack?.audioUrl || ''}
-          preload="metadata"
+          preload="auto"
           crossOrigin="anonymous"
-          onError={(e) => {
-            console.error('Audio error:', e);
-            setAudioError('Unable to load audio file');
-          }}
         />
 
         {/* Progress bar */}
@@ -232,11 +325,11 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         >
           <div
             className="h-full bg-brand-gold transition-all"
-            style={{ width: `${(currentTime / duration) * 100}%` }}
+            style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
           />
           <div
             className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-brand-gold rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-            style={{ left: `${(currentTime / duration) * 100}%` }}
+            style={{ left: `${duration ? (currentTime / duration) * 100 : 0}%` }}
           />
         </div>
 
@@ -256,6 +349,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
               <p className="font-medium text-white truncate">{currentTrack?.title || 'No Track Selected'}</p>
               <p className="text-sm text-gray-400 truncate">{currentTrack?.artist || 'Select a track to play'}</p>
               {audioError && <p className="text-xs text-red-400 truncate">{audioError}</p>}
+              {isLoading && <p className="text-xs text-brand-gold truncate">Loading...</p>}
             </div>
             <button
               onClick={() => setIsLiked(!isLiked)}
@@ -279,9 +373,16 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
               </button>
               <button
                 onClick={togglePlay}
-                className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-transform"
+                disabled={isLoading}
+                className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-transform disabled:opacity-50"
               >
-                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                ) : isPlaying ? (
+                  <Pause className="w-5 h-5" />
+                ) : (
+                  <Play className="w-5 h-5 ml-0.5" />
+                )}
               </button>
               <button onClick={playNext} className="p-2 text-gray-400 hover:text-white transition-colors">
                 <SkipForward className="w-5 h-5" />
@@ -299,7 +400,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
             <div className="flex items-center gap-2 text-xs text-gray-400 w-full max-w-md">
               <span className="w-10 text-right">{formatTime(currentTime)}</span>
               <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full bg-brand-gold" style={{ width: `${(currentTime / duration) * 100}%` }} />
+                <div className="h-full bg-brand-gold" style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }} />
               </div>
               <span className="w-10">{formatTime(duration)}</span>
             </div>
@@ -336,6 +437,14 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
             >
               <ChevronUp className="w-5 h-5" />
             </button>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -363,7 +472,9 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
                   >
                     <span className="w-6 text-center text-sm text-gray-500">
                       {track.id === currentTrack?.id && isPlaying ? (
-                        <span className="text-brand-gold">♪</span>
+                        <span className="text-brand-gold animate-pulse">♪</span>
+                      ) : track.id === currentTrack?.id && isLoading ? (
+                        <span className="text-brand-gold">...</span>
                       ) : (
                         i + 1
                       )}
@@ -383,7 +494,13 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
                       </p>
                       <p className="text-xs text-gray-400 truncate">{track.artist}</p>
                     </div>
-                    <span className="text-xs text-gray-500">{formatTime(track.duration)}</span>
+                    {track.id === currentTrack?.id && isPlaying && (
+                      <div className="flex items-end gap-0.5 h-4">
+                        <div className="w-1 bg-brand-gold rounded-full animate-pulse" style={{ height: '60%', animationDelay: '0ms' }} />
+                        <div className="w-1 bg-brand-gold rounded-full animate-pulse" style={{ height: '100%', animationDelay: '150ms' }} />
+                        <div className="w-1 bg-brand-gold rounded-full animate-pulse" style={{ height: '40%', animationDelay: '300ms' }} />
+                      </div>
+                    )}
                   </button>
                 ))
               )}
@@ -400,12 +517,8 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       <audio
         ref={audioRef}
         src={currentTrack?.audioUrl || ''}
-        preload="metadata"
+        preload="auto"
         crossOrigin="anonymous"
-        onError={(e) => {
-          console.error('Audio error:', e);
-          setAudioError('Unable to load audio file');
-        }}
       />
 
       {/* Header */}
@@ -443,6 +556,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
           <h2 className="text-2xl font-bold text-white mb-2">{currentTrack?.title || 'No Track Selected'}</h2>
           <p className="text-gray-400 mb-2">{currentTrack?.artist || 'Select a track to play'}</p>
           {audioError && <p className="text-sm text-red-400 mb-4">{audioError}</p>}
+          {isLoading && <p className="text-sm text-brand-gold mb-4">Loading...</p>}
 
           {/* Progress */}
           <div className="mb-6">
@@ -452,7 +566,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
             >
               <div
                 className="h-full bg-brand-gold rounded-full relative"
-                style={{ width: `${(currentTime / duration) * 100}%` }}
+                style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
               >
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-brand-gold rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
@@ -476,9 +590,16 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
             </button>
             <button
               onClick={togglePlay}
-              className="w-16 h-16 rounded-full bg-brand-gold text-black flex items-center justify-center hover:scale-105 transition-transform"
+              disabled={isLoading}
+              className="w-16 h-16 rounded-full bg-brand-gold text-black flex items-center justify-center hover:scale-105 transition-transform disabled:opacity-50"
             >
-              {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
+              {isLoading ? (
+                <div className="w-8 h-8 border-3 border-black/20 border-t-black rounded-full animate-spin" />
+              ) : isPlaying ? (
+                <Pause className="w-8 h-8" />
+              ) : (
+                <Play className="w-8 h-8 ml-1" />
+              )}
             </button>
             <button onClick={playNext} className="p-3 text-gray-400 hover:text-white transition-colors">
               <SkipForward className="w-8 h-8" />
@@ -520,6 +641,47 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Playlist Sidebar */}
+      {showPlaylist && (
+        <div className="absolute top-16 right-0 bottom-0 w-80 bg-black/90 border-l border-white/5 overflow-y-auto">
+          <div className="p-4 border-b border-white/5 sticky top-0 bg-black/90">
+            <h3 className="font-semibold text-white">Queue ({activePlaylist.length} tracks)</h3>
+          </div>
+          {activePlaylist.map((track, i) => (
+            <button
+              key={track.id}
+              onClick={() => playTrack(track)}
+              className={`w-full flex items-center gap-3 p-3 hover:bg-white/5 transition-colors ${
+                track.id === currentTrack?.id ? 'bg-brand-gold/10' : ''
+              }`}
+            >
+              <span className="w-6 text-center text-sm text-gray-500">
+                {track.id === currentTrack?.id && isPlaying ? (
+                  <span className="text-brand-gold animate-pulse">♪</span>
+                ) : (
+                  i + 1
+                )}
+              </span>
+              <div className="w-10 h-10 rounded overflow-hidden bg-gradient-to-br from-brand-gold/20 to-purple-500/20 flex-shrink-0">
+                {track.coverUrl && track.coverUrl !== AUDIO_PLACEHOLDER ? (
+                  <img src={track.coverUrl} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Music className="w-4 h-4 text-brand-gold" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <p className={`text-sm truncate ${track.id === currentTrack?.id ? 'text-brand-gold' : 'text-white'}`}>
+                  {track.title}
+                </p>
+                <p className="text-xs text-gray-400 truncate">{track.artist}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

@@ -46,6 +46,7 @@ const MetadataEditor: React.FC<MetadataEditorProps> = ({ asset, onClose, onSave 
   const [success, setSuccess] = useState(false);
 
   // Form state
+  const [title, setTitle] = useState(asset.name || '');
   const [subcategory, setSubcategory] = useState(asset.subcategory || asset.metadata?.subcategory || '');
   const [tags, setTags] = useState<string[]>(asset.tags || []);
   const [tagInput, setTagInput] = useState('');
@@ -116,6 +117,7 @@ const MetadataEditor: React.FC<MetadataEditorProps> = ({ asset, onClose, onSave 
       const metadata: Partial<MediaMetadata> = {
         subcategory,
         tags,
+        title: title.trim() || asset.name,
       };
 
       if (isAudio) {
@@ -123,6 +125,10 @@ const MetadataEditor: React.FC<MetadataEditorProps> = ({ asset, onClose, onSave 
         if (album) metadata.album = album;
         if (bpm) metadata.bpm = bpm;
         if (musicalKey) metadata.key = musicalKey;
+        // Smart organization: add artist as tag for filtering
+        if (artist && !tags.includes(artist.toLowerCase())) {
+          metadata.tags = [...tags, artist.toLowerCase()];
+        }
       }
 
       if (duration) metadata.duration = duration;
@@ -184,6 +190,25 @@ const MetadataEditor: React.FC<MetadataEditorProps> = ({ asset, onClose, onSave 
               <p className="text-sm text-green-400">Saved successfully!</p>
             </div>
           )}
+
+          {/* Title / Song Name - Prominent for audio */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
+              {isAudio ? 'Song Title' : isVideo ? 'Video Title' : 'File Name'}
+            </label>
+            <div className="relative">
+              {isAudio && <Music className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-400" />}
+              {isVideo && <Film className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />}
+              {isImage && <Image className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-pink-400" />}
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={isAudio ? 'Enter song title' : 'Enter file name'}
+                className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder-gray-600 focus:outline-none focus:border-brand-gold/50"
+              />
+            </div>
+          </div>
 
           {/* Category Info */}
           <div className="flex items-center gap-4 p-3 bg-white/[0.02] rounded-xl">

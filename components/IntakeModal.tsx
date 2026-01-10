@@ -33,7 +33,7 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
     name: '',
     email: '',
     password: '',
-    role: 'Client',
+    role: 'Director',
     agencyBrandVoice: '',
     agencyCoreCompetency: '',
     primaryClientIndustry: '',
@@ -53,17 +53,17 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
   if (!show) return null;
 
   const roles: { id: IntakeData['role']; icon: any; desc: string }[] = [
-    { id: 'Client', icon: Briefcase, desc: 'Brand Partner' },
-    { id: 'Director', icon: Film, desc: 'Creative Lead' },
+    { id: 'Director', icon: Film, desc: 'Film & Music' },
     { id: 'Producer', icon: Play, desc: 'Production' },
-    { id: 'Cinematographer', icon: Camera, desc: 'Visual' },
+    { id: 'Cinematographer', icon: Camera, desc: 'Visual Arts' },
+    { id: 'Client', icon: Briefcase, desc: 'Fashion & Design' },
   ];
 
   const projectTypes = [
-    'Brand Film',
-    'Campaign',
-    'Documentary',
-    'Social Content'
+    'Music',
+    'Film',
+    'Fashion',
+    'Design'
   ];
 
   const toggleGoal = (goal: string) => {
@@ -113,8 +113,8 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
               <Aperture className="w-6 h-6 text-brand-gold" />
             </div>
             <div>
-              <h2 className="text-2xl font-display font-bold text-white tracking-tight">Project Onboarding</h2>
-              <p className="text-xs text-gray-500 mt-1">Let's bring your vision to life</p>
+              <h2 className="text-2xl font-display font-bold text-white tracking-tight">Member Application</h2>
+              <p className="text-xs text-gray-500 mt-1">Join the Eleven Views creative collective</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 text-gray-500 hover:text-white transition-colors rounded-lg hover:bg-white/5">
@@ -201,14 +201,14 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider flex justify-between">
-                  Company / Brand <span className="text-brand-gold">*</span>
+                  Portfolio / Brand <span className="text-brand-gold">*</span>
                 </label>
                 <input
                   name="agencyCoreCompetency"
                   value={formData.agencyCoreCompetency}
                   onChange={handleChange}
                   onBlur={() => handleBlur('agencyCoreCompetency')}
-                  placeholder="Your brand or company name"
+                  placeholder="Your portfolio, brand, or project name"
                   className={`w-full bg-white/5 border rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none transition-all ${
                     touched.agencyCoreCompetency && !formData.agencyCoreCompetency.trim() ? 'border-red-500/50 ring-1 ring-red-500/20' : 'border-white/10 focus:border-brand-gold/40'
                   }`}
@@ -217,7 +217,7 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Your Role</label>
+              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Your Specialty</label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {roles.map(r => (
                   <button
@@ -239,20 +239,20 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
             </div>
           </section>
 
-          {/* Section 2: Project Details */}
+          {/* Section 2: Member Profile */}
           <section className="space-y-6">
             <div className="flex items-center gap-2 mb-2">
               <Globe className="w-4 h-4 text-brand-gold" />
-              <h3 className="text-[10px] font-semibold text-brand-gold uppercase tracking-[0.2em]">Project Details</h3>
+              <h3 className="text-[10px] font-semibold text-brand-gold uppercase tracking-[0.2em]">Member Profile</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Industry</label>
+                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Primary Industry</label>
                 <input
                   name="primaryClientIndustry"
                   value={formData.primaryClientIndustry}
                   onChange={handleChange}
-                  placeholder="e.g. Fashion, Travel, Tech"
+                  placeholder="e.g. Music, Film, Fashion, Design"
                   className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/30 transition-all"
                 />
               </div>
@@ -264,40 +264,40 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
                   name="targetLocation"
                   value={formData.targetLocation}
                   onChange={handleChange}
-                  placeholder="e.g. Morocco, Tokyo, Global"
+                  placeholder="e.g. LA, NYC, Atlanta, Global"
                   className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/30 transition-all"
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                  <Target className="w-3 h-3" /> Primary Goal
+                  <Target className="w-3 h-3" /> What You Bring
                 </label>
                 <input
                   name="successMetric"
                   value={formData.successMetric}
                   onChange={handleChange}
-                  placeholder="e.g. Brand Launch, Awareness"
+                  placeholder="e.g. Creative Direction, Production"
                   className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/30 transition-all"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Brand Voice / Style</label>
+              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Creative Style / Approach</label>
               <input
                 name="agencyBrandVoice"
                 value={formData.agencyBrandVoice}
                 onChange={handleChange}
-                placeholder="e.g. Cinematic, raw, editorial, adventure-focused"
+                placeholder="e.g. Cinematic, raw, editorial, avant-garde"
                 className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/30 transition-all"
               />
             </div>
           </section>
 
-          {/* Section 3: Project Type */}
+          {/* Section 3: Industry Focus */}
           <section className="space-y-6 pb-4">
             <div className="flex items-center gap-2 mb-2">
               <Film className="w-4 h-4 text-brand-gold" />
-              <h3 className="text-[10px] font-semibold text-brand-gold uppercase tracking-[0.2em]">What are you looking to create?</h3>
+              <h3 className="text-[10px] font-semibold text-brand-gold uppercase tracking-[0.2em]">Select Your Industries</h3>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {projectTypes.map(type => (
@@ -337,7 +337,7 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
             }`}
           >
             <Rocket className="w-5 h-5" />
-            <span className="font-display tracking-wide">Begin Project</span>
+            <span className="font-display tracking-wide">Join Eleven Views</span>
           </button>
         </div>
       </div>

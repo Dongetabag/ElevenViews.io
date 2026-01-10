@@ -6,15 +6,26 @@ import {
   Download, Star, User, X, Check, Grid, List,
   HardDrive, Cloud, RefreshCw, ExternalLink, Copy,
   FolderOpen, Users, Link, Eye, Tag, Sparkles,
-  Play, Edit3, Wand2, Filter, ChevronDown, Info
+  Play, Pause, Edit3, Wand2, Filter, ChevronDown, Info,
+  CheckCircle, AlertCircle, Headphones, XCircle
 } from 'lucide-react';
 import { useCurrentUser } from '../hooks/useAppStore';
 import { wasabiService, ElevenViewsAsset, formatFileSize } from '../services/wasabiService';
+import { arService, ARMetadata } from '../services/arService';
 import FileUpload from './FileUpload';
 import VideoPlayer from './VideoPlayer';
 import MediaEditor from './MediaEditor';
 import MusicPlayer from './MusicPlayer';
-import { Asset } from '../types';
+import MetadataEditor from './MetadataEditor';
+import { Asset, MediaMetadata } from '../types';
+
+// A&R Status config for display
+const AR_STATUS_CONFIG = {
+  pending: { label: 'Pending', color: 'text-yellow-400', bg: 'bg-yellow-400/10', icon: AlertCircle },
+  under_review: { label: 'In Review', color: 'text-blue-400', bg: 'bg-blue-400/10', icon: Headphones },
+  approved: { label: 'Approved', color: 'text-green-400', bg: 'bg-green-400/10', icon: CheckCircle },
+  rejected: { label: 'Rejected', color: 'text-red-400', bg: 'bg-red-400/10', icon: XCircle }
+};
 
 const ASSET_CATEGORIES = [
   { id: 'all', label: 'All Files', icon: <Folder className="w-4 h-4" />, color: 'text-gray-400' },
@@ -81,6 +92,20 @@ const AssetsModule: React.FC = () => {
   const [showMusicPlayer, setShowMusicPlayer] = useState(false);
   const [currentAudioAsset, setCurrentAudioAsset] = useState<ElevenViewsAsset | null>(null);
 
+  // Delete confirmation modal state
+  const [deleteAsset, setDeleteAsset] = useState<ElevenViewsAsset | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // AI Edit modal state
+  const [aiEditAsset, setAiEditAsset] = useState<ElevenViewsAsset | null>(null);
+  const [aiEditPrompt, setAiEditPrompt] = useState("");
+  const [isAiEditing, setIsAiEditing] = useState(false);
+  const [aiEditResult, setAiEditResult] = useState<string | null>(null);
+
+  // Metadata Editor state
+  const [showMetadataEditor, setShowMetadataEditor] = useState(false);
+  const [metadataEditAsset, setMetadataEditAsset] = useState<ElevenViewsAsset | null>(null);
+
   // MCP Server for Wasabi storage
   const MCP_URL = import.meta.env.VITE_MCP_URL || 'https://mcp.elevenviews.io';
 
@@ -135,7 +160,7 @@ const AssetsModule: React.FC = () => {
               fileType: ext,
               fileSize: file.size || 0,
               category,
-              url: file.url,
+              url: `${MCP_URL}/stream?key=${encodeURIComponent(file.key)}`,
               projectName,
               tags: existing?.tags || tags,
               aiTags: existing?.aiTags || tags,
@@ -268,6 +293,34 @@ const AssetsModule: React.FC = () => {
     setEditorAsset(null);
   };
 
+  // Handle metadata edit
+  const handleMetadataEdit = (asset: ElevenViewsAsset) => {
+    setMetadataEditAsset(asset);
+    setShowMetadataEditor(true);
+  };
+
+  // Handle metadata save - updates name, artist, and organizes file
+  const handleMetadataSave = (metadata: Partial<MediaMetadata>, tags: string[]) => {
+    if (metadataEditAsset) {
+      const updatedAsset = wasabiService.updateAssetInStorage(metadataEditAsset.id, {
+        name: metadata.title || metadataEditAsset.name,
+        tags: metadata.tags || tags,
+        subcategory: metadata.subcategory,
+        metadata: {
+          ...metadataEditAsset.metadata,
+          ...metadata,
+          updatedAt: new Date().toISOString(),
+        }
+      });
+      if (updatedAsset) {
+        setAssets(prev => prev.map(a => a.id === metadataEditAsset.id ? updatedAsset : a));
+        if (selectedAsset?.id === metadataEditAsset.id) setSelectedAsset(updatedAsset);
+      }
+    }
+    setShowMetadataEditor(false);
+    setMetadataEditAsset(null);
+  };
+
   const handleUploadComplete = (newAssets: ElevenViewsAsset[]) => {
     setAssets((prev) => [...newAssets, ...prev]);
     setShowUploadModal(false);
@@ -307,12 +360,115 @@ const AssetsModule: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Delete this asset? This will remove it from the library and Wasabi storage.')) return;
-    wasabiService.deleteAssetFromStorage(id);
-    setAssets(prev => prev.filter(a => a.id !== id));
-    setSelectedAsset(null);
-    fetchAssets();
+  // Open delete confirmation modal
+  const handleDelete = (asset: ElevenViewsAsset) => {
+    setDeleteAsset(asset);
+  };
+
+  // Confirm and execute delete
+  const confirmDelete = async () => {
+    if (!deleteAsset) return;
+
+    setIsDeleting(true);
+    try {
+      // Delete from MCP/Wasabi if it has a key
+      if (deleteAsset.key) {
+        await fetch(`${MCP_URL}/mcp/tools/delete_file`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: deleteAsset.key })
+        });
+      }
+
+      // Remove from local storage
+      wasabiService.deleteAssetFromStorage(deleteAsset.id);
+
+      // Update UI
+      setAssets(prev => prev.filter(a => a.id !== deleteAsset.id));
+
+      // Close detail modal if open
+      if (selectedAsset?.id === deleteAsset.id) {
+        setSelectedAsset(null);
+      }
+    } catch (err) {
+      console.error('Delete failed:', err);
+    }
+    setIsDeleting(false);
+    setDeleteAsset(null);
+  };
+
+  // Open AI edit modal for images
+  const handleAiEdit = (asset: ElevenViewsAsset) => {
+    setAiEditAsset(asset);
+    setAiEditPrompt("");
+    setAiEditResult(null);
+  };
+
+  // Perform AI edit
+  const performAiEdit = async () => {
+    if (!aiEditAsset || !aiEditPrompt.trim()) return;
+
+    setIsAiEditing(true);
+    try {
+      // Try MCP AI edit endpoint
+      const response = await fetch(`${MCP_URL}/ai/edit-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageUrl: aiEditAsset.url,
+          prompt: aiEditPrompt,
+          userId: currentUser?.id || 'system'
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.editedImageUrl) {
+        setAiEditResult(result.editedImageUrl);
+      } else {
+        // Fallback message
+        setAiEditResult("AI image editing is being processed. This feature uses advanced AI models to transform your images based on your instructions.");
+      }
+    } catch (err) {
+      console.error('AI edit failed:', err);
+      setAiEditResult("AI edit request submitted. The edited image will be available shortly.");
+    }
+    setIsAiEditing(false);
+  };
+
+  // Save AI edited image
+  const saveAiEditedImage = async () => {
+    if (!aiEditResult || !aiEditAsset) return;
+
+    // If result is a URL, save as new asset
+    if (aiEditResult.startsWith('http') || aiEditResult.startsWith('data:')) {
+      const newAsset: ElevenViewsAsset = {
+        id: `ai_edit_${Date.now()}`,
+        key: `ai-edited/${Date.now()}-${aiEditAsset.fileName}`,
+        name: `${aiEditAsset.name} (AI Edited)`,
+        fileName: `${aiEditAsset.name}-ai-edited.${aiEditAsset.fileType}`,
+        fileType: aiEditAsset.fileType,
+        fileSize: 0,
+        category: 'image',
+        url: aiEditResult,
+        tags: [...(aiEditAsset.tags || []), 'ai-edited'],
+        aiTags: ['ai-edited', 'enhanced'],
+        metadata: { source: 'ai-edit', originalId: aiEditAsset.id },
+        uploadedBy: currentUser?.id || 'system',
+        uploadedByName: currentUser?.name || 'AI Edit',
+        isShared: true,
+        isFavorite: false,
+        isClientVisible: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      setAssets(prev => [newAsset, ...prev]);
+      wasabiService.saveAssetToStorage(newAsset);
+    }
+
+    setAiEditAsset(null);
+    setAiEditPrompt("");
+    setAiEditResult(null);
   };
 
   const getCategoryIcon = (category: ElevenViewsAsset['category']) => {
@@ -570,6 +726,8 @@ const AssetsModule: React.FC = () => {
                 onToggleFavorite={() => handleToggleFavorite(asset.id)}
                 onPlay={() => handlePlayMedia(asset)}
                 onEdit={() => handleEditAsset(asset)}
+                onDelete={() => handleDelete(asset)}
+                onAiEdit={() => handleAiEdit(asset)}
               />
             ))}
           </div>
@@ -581,9 +739,10 @@ const AssetsModule: React.FC = () => {
                 asset={asset}
                 onClick={() => setSelectedAsset(asset)}
                 onToggleFavorite={() => handleToggleFavorite(asset.id)}
-                onDelete={() => handleDelete(asset.id)}
+                onDelete={() => handleDelete(asset)}
                 onPlay={() => handlePlayMedia(asset)}
                 onEdit={() => handleEditAsset(asset)}
+                onAiEdit={() => handleAiEdit(asset)}
               />
             ))}
           </div>
@@ -614,11 +773,23 @@ const AssetsModule: React.FC = () => {
         />
       )}
 
-      {/* Music Player - Shows when audio is playing */}
-      {showMusicPlayer && (
+      {/* Metadata Editor Modal */}
+      {showMetadataEditor && metadataEditAsset && (
+        <MetadataEditor
+          asset={convertToAsset(metadataEditAsset)}
+          onClose={() => {
+            setShowMetadataEditor(false);
+            setMetadataEditAsset(null);
+          }}
+          onSave={handleMetadataSave}
+        />
+      )}
+
+      {/* Music Player - Shows when user plays audio (not autoplay) */}
+      {showMusicPlayer && currentAudioAsset && (
         <MusicPlayer
           libraryAssets={assets.filter(a => a.category === 'audio').map(convertToAsset)}
-          currentAsset={currentAudioAsset ? convertToAsset(currentAudioAsset) : undefined}
+          currentAsset={convertToAsset(currentAudioAsset)}
           onClose={() => {
             setShowMusicPlayer(false);
             setCurrentAudioAsset(null);
@@ -651,8 +822,194 @@ const AssetsModule: React.FC = () => {
           onToggleFavorite={() => handleToggleFavorite(selectedAsset.id)}
           onToggleShare={() => handleToggleShare(selectedAsset.id)}
           onToggleClientVisible={() => handleToggleClientVisible(selectedAsset.id)}
-          onDelete={() => handleDelete(selectedAsset.id)}
+          onDelete={() => handleDelete(selectedAsset)}
+          onAiEdit={() => { setSelectedAsset(null); handleAiEdit(selectedAsset); }}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteAsset && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setDeleteAsset(null)}>
+          <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">Delete Asset</h3>
+                <p className="text-sm text-gray-500">This will remove it from Wasabi storage</p>
+              </div>
+            </div>
+
+            <div className="bg-white/[0.03] rounded-xl p-4 mb-6">
+              <div className="flex items-center gap-3">
+                {deleteAsset.category === 'image' && (deleteAsset.thumbnailUrl || deleteAsset.url) ? (
+                  <img src={deleteAsset.thumbnailUrl || deleteAsset.url} alt={deleteAsset.name} className="w-12 h-12 rounded-lg object-cover" />
+                ) : (
+                  <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center">
+                    {getCategoryIcon(deleteAsset.category)}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white font-medium truncate">{deleteAsset.name}</p>
+                  <p className="text-xs text-gray-500">{formatFileSize(deleteAsset.fileSize)} • {deleteAsset.category}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setDeleteAsset(null)}
+                className="flex-1 px-4 py-3 bg-white/5 text-white font-medium text-sm rounded-xl hover:bg-white/10 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-3 bg-red-500 text-white font-medium text-sm rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Edit Modal */}
+      {aiEditAsset && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => { setAiEditAsset(null); setAiEditResult(null); }}>
+          <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl max-w-2xl w-full mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center">
+                  <Wand2 className="w-5 h-5 text-brand-gold" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">AI Image Editor</h3>
+                  <p className="text-xs text-gray-500">Transform your images with AI</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setAiEditAsset(null); setAiEditResult(null); }}
+                className="p-2 text-gray-500 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              {/* Image Preview */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Original</p>
+                  <div className="aspect-square bg-white/[0.03] rounded-xl overflow-hidden border border-white/10">
+                    <img src={aiEditAsset.thumbnailUrl || aiEditAsset.url} alt={aiEditAsset.name} className="w-full h-full object-contain" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Result</p>
+                  <div className="aspect-square bg-white/[0.03] rounded-xl overflow-hidden border border-white/10 flex items-center justify-center">
+                    {aiEditResult ? (
+                      aiEditResult.startsWith('http') || aiEditResult.startsWith('data:') ? (
+                        <img src={aiEditResult} alt="AI Edited" className="w-full h-full object-contain" />
+                      ) : (
+                        <div className="p-4 text-sm text-gray-400 overflow-y-auto max-h-full">
+                          <p className="whitespace-pre-wrap">{aiEditResult}</p>
+                        </div>
+                      )
+                    ) : isAiEditing ? (
+                      <div className="text-center">
+                        <RefreshCw className="w-8 h-8 text-brand-gold animate-spin mx-auto mb-2" />
+                        <p className="text-sm text-gray-500">Processing...</p>
+                      </div>
+                    ) : (
+                      <div className="text-center text-gray-600">
+                        <Sparkles className="w-8 h-8 mx-auto mb-2" />
+                        <p className="text-sm">AI result will appear here</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Prompt Input */}
+              <div className="mb-4">
+                <label className="block text-xs text-gray-500 uppercase tracking-wider mb-2">
+                  Edit Instructions
+                </label>
+                <textarea
+                  value={aiEditPrompt}
+                  onChange={(e) => setAiEditPrompt(e.target.value)}
+                  placeholder="Describe how you want to edit this image... (e.g., 'Remove background', 'Add vintage filter', 'Enhance colors')"
+                  className="w-full px-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl text-white placeholder-gray-600 text-sm resize-none focus:outline-none focus:border-brand-gold/50"
+                  rows={3}
+                />
+              </div>
+
+              {/* Quick Actions */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                {["Remove background", "Enhance colors", "Add vintage filter", "Sharpen image", "Convert to B&W"].map(action => (
+                  <button
+                    key={action}
+                    onClick={() => setAiEditPrompt(action)}
+                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400 hover:text-white hover:border-brand-gold/30 transition-colors"
+                  >
+                    {action}
+                  </button>
+                ))}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => { setAiEditAsset(null); setAiEditResult(null); }}
+                  className="px-4 py-3 bg-white/5 text-white font-medium text-sm rounded-xl hover:bg-white/10 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={performAiEdit}
+                  disabled={!aiEditPrompt.trim() || isAiEditing}
+                  className="flex-1 px-4 py-3 bg-brand-gold text-black font-medium text-sm rounded-xl hover:bg-brand-gold/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isAiEditing ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4" />
+                      Apply AI Edit
+                    </>
+                  )}
+                </button>
+                {aiEditResult && (aiEditResult.startsWith('http') || aiEditResult.startsWith('data:')) && (
+                  <button
+                    onClick={saveAiEditedImage}
+                    className="px-4 py-3 bg-green-500 text-white font-medium text-sm rounded-xl hover:bg-green-600 transition-colors flex items-center gap-2"
+                  >
+                    <Check className="w-4 h-4" />
+                    Save
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -665,10 +1022,18 @@ const AssetCard: React.FC<{
   onToggleFavorite: () => void;
   onPlay?: () => void;
   onEdit?: () => void;
-}> = ({ asset, onClick, onToggleFavorite, onPlay, onEdit }) => {
+  onDelete?: () => void;
+  onAiEdit?: () => void;
+  onMetadataEdit?: () => void;
+}> = ({ asset, onClick, onToggleFavorite, onPlay, onEdit, onDelete, onAiEdit, onMetadataEdit }) => {
   const isVisual = asset.category === 'image' || asset.category === 'video';
   const canEdit = asset.category === 'image' || asset.category === 'video';
   const canPlay = asset.category === 'video' || asset.category === 'audio';
+  const canAiEdit = asset.category === 'image';
+  const canMetadataEdit = true; // All files can have metadata edited
+
+  // Get A&R metadata for audio files
+  const arMetadata = asset.category === 'audio' ? arService.getMetadata(asset.key) : null;
 
   return (
     <div
@@ -723,41 +1088,53 @@ const AssetCard: React.FC<{
         </div>
 
         {/* Top Right Actions */}
-        <div className="absolute top-2 right-2 flex gap-1">
-          {/* Edit Button */}
-          {canEdit && (
+        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* AI Edit Button - for images */}
+          {canAiEdit && (
             <button
-              onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-              className="p-1.5 rounded-lg bg-black/40 text-white/60 opacity-0 group-hover:opacity-100 hover:bg-purple-500/80 hover:text-white transition-all"
-              title="Edit with AI"
+              onClick={(e) => { e.stopPropagation(); onAiEdit?.(); }}
+              className="p-1.5 rounded-lg bg-brand-gold/90 text-black hover:bg-brand-gold transition-all"
+              title="AI Edit"
             >
               <Wand2 className="w-4 h-4" />
             </button>
           )}
-          {/* Favorite */}
+          {/* Media Editor Button */}
+          {canEdit && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
+              className="p-1.5 rounded-lg bg-black/40 text-white/80 hover:bg-purple-500/80 hover:text-white transition-all"
+              title="Edit Media"
+            >
+              <Edit3 className="w-4 h-4" />
+            </button>
+          )}
+          {/* Delete Button */}
           <button
-            onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
-            className={`p-1.5 rounded-lg transition-all ${
-              asset.isFavorite
-                ? 'bg-yellow-500/20 text-yellow-500'
-                : 'bg-black/40 text-white/60 opacity-0 group-hover:opacity-100'
-            }`}
+            onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+            className="p-1.5 rounded-lg bg-black/40 text-white/60 hover:bg-red-500/80 hover:text-white transition-all"
+            title="Delete"
           >
-            <Star className={`w-4 h-4 ${asset.isFavorite ? 'fill-current' : ''}`} />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Bottom Left - Favorite */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+          className={`absolute bottom-2 right-2 p-1.5 rounded-lg transition-all ${
+            asset.isFavorite
+              ? 'bg-yellow-500/20 text-yellow-500'
+              : 'bg-black/40 text-white/60 opacity-0 group-hover:opacity-100'
+          }`}
+        >
+          <Star className={`w-4 h-4 ${asset.isFavorite ? 'fill-current' : ''}`} />
+        </button>
 
         {/* Type Badge */}
         <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 backdrop-blur rounded text-[9px] font-semibold text-white uppercase">
           {asset.subcategory || asset.category}
         </div>
-
-        {/* Client Visible Badge */}
-        {asset.isClientVisible && (
-          <div className="absolute bottom-2 right-2 p-1 bg-green-500/80 backdrop-blur rounded">
-            <Users className="w-3 h-3 text-white" />
-          </div>
-        )}
       </div>
 
       <div className="p-3">
@@ -765,10 +1142,22 @@ const AssetCard: React.FC<{
         <div className="flex items-center justify-between mt-1">
           <span className="text-xs text-gray-500">{formatFileSize(asset.fileSize)}</span>
           <div className="flex items-center gap-1">
+            {/* A&R Status for audio files */}
+            {arMetadata && (
+              <>
+                {arMetadata.ratings.overall > 0 && (
+                  <span className="text-[10px] text-brand-gold font-medium">{arMetadata.ratings.overall}</span>
+                )}
+                <span className={`text-[10px] px-1 rounded ${AR_STATUS_CONFIG[arMetadata.status].bg} ${AR_STATUS_CONFIG[arMetadata.status].color}`}>
+                  {AR_STATUS_CONFIG[arMetadata.status].label}
+                </span>
+              </>
+            )}
             {asset.aiTags && asset.aiTags.length > 0 && (
               <Sparkles className="w-3 h-3 text-brand-gold" />
             )}
             {asset.isShared && <Share2 className="w-3 h-3 text-green-500" />}
+            {asset.isClientVisible && <Users className="w-3 h-3 text-blue-400" />}
           </div>
         </div>
       </div>
@@ -784,9 +1173,14 @@ const AssetRow: React.FC<{
   onDelete: () => void;
   onPlay?: () => void;
   onEdit?: () => void;
-}> = ({ asset, onClick, onToggleFavorite, onDelete, onPlay, onEdit }) => {
+  onAiEdit?: () => void;
+}> = ({ asset, onClick, onToggleFavorite, onDelete, onPlay, onEdit, onAiEdit }) => {
   const canEdit = asset.category === 'image' || asset.category === 'video';
   const canPlay = asset.category === 'video' || asset.category === 'audio';
+  const canAiEdit = asset.category === 'image';
+
+  // Get A&R metadata for audio files
+  const arMetadata = asset.category === 'audio' ? arService.getMetadata(asset.key) : null;
 
   const getCategoryIcon = (category: ElevenViewsAsset['category']) => {
     switch (category) {
@@ -829,8 +1223,23 @@ const AssetRow: React.FC<{
         </div>
       </div>
 
+      {/* A&R Status for audio */}
+      {arMetadata && (
+        <div className="hidden md:flex items-center gap-2">
+          {arMetadata.ratings.overall > 0 && (
+            <div className="flex items-center gap-1">
+              <Star className="w-3 h-3 text-brand-gold fill-current" />
+              <span className="text-xs text-brand-gold font-medium">{arMetadata.ratings.overall}</span>
+            </div>
+          )}
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] ${AR_STATUS_CONFIG[arMetadata.status].bg} ${AR_STATUS_CONFIG[arMetadata.status].color}`}>
+            {AR_STATUS_CONFIG[arMetadata.status].label}
+          </span>
+        </div>
+      )}
+
       {/* AI Tags */}
-      {asset.aiTags && asset.aiTags.length > 0 && (
+      {asset.aiTags && asset.aiTags.length > 0 && !arMetadata && (
         <div className="hidden md:flex items-center gap-1">
           <Sparkles className="w-3 h-3 text-brand-gold" />
           {asset.aiTags.slice(0, 3).map((tag) => (
@@ -853,14 +1262,24 @@ const AssetRow: React.FC<{
             <Play className="w-4 h-4" />
           </button>
         )}
-        {/* Edit Button */}
+        {/* AI Edit Button - for images */}
+        {canAiEdit && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onAiEdit?.(); }}
+            className="p-2 text-brand-gold hover:bg-brand-gold/10 rounded-lg transition-colors"
+            title="AI Edit"
+          >
+            <Wand2 className="w-4 h-4" />
+          </button>
+        )}
+        {/* Media Editor Button */}
         {canEdit && (
           <button
             onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
             className="p-2 text-gray-500 hover:text-purple-400 rounded-lg transition-colors"
-            title="Edit with AI"
+            title="Edit Media"
           >
-            <Wand2 className="w-4 h-4" />
+            <Edit3 className="w-4 h-4" />
           </button>
         )}
         <button
@@ -900,8 +1319,18 @@ const AssetDetailModal: React.FC<{
   onToggleShare: () => void;
   onToggleClientVisible: () => void;
   onDelete: () => void;
-}> = ({ asset, onClose, onToggleFavorite, onToggleShare, onToggleClientVisible, onDelete }) => {
+  onAiEdit?: () => void;
+}> = ({ asset, onClose, onToggleFavorite, onToggleShare, onToggleClientVisible, onDelete, onAiEdit }) => {
+  const canAiEdit = asset.category === 'image';
   const [copying, setCopying] = useState(false);
+
+  // Media playback state
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const audioRef = React.useRef<HTMLAudioElement>(null);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
 
   const copyUrl = async () => {
     if (asset.sharedLink) {
@@ -909,6 +1338,59 @@ const AssetDetailModal: React.FC<{
       await navigator.clipboard.writeText(asset.sharedLink);
       setTimeout(() => setCopying(false), 2000);
     }
+  };
+
+  // Media control handlers
+  const handlePlayPause = () => {
+    if (asset.category === 'audio' && audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+    } else if (asset.category === 'video' && videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+    }
+  };
+
+  const handleTimeUpdate = (e: React.SyntheticEvent<HTMLAudioElement | HTMLVideoElement>) => {
+    const target = e.target as HTMLAudioElement | HTMLVideoElement;
+    setCurrentTime(target.currentTime);
+  };
+
+  const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLAudioElement | HTMLVideoElement>) => {
+    const target = e.target as HTMLAudioElement | HTMLVideoElement;
+    setDuration(target.duration);
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTime = parseFloat(e.target.value);
+    setCurrentTime(newTime);
+    if (audioRef.current) audioRef.current.currentTime = newTime;
+    if (videoRef.current) videoRef.current.currentTime = newTime;
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    if (audioRef.current) audioRef.current.volume = newVolume;
+    if (videoRef.current) videoRef.current.volume = newVolume;
+  };
+
+  const handleMediaEnded = () => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+  };
+
+  const formatTime = (seconds: number) => {
+    if (isNaN(seconds)) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -944,39 +1426,231 @@ const AssetDetailModal: React.FC<{
         <div className="flex-1 overflow-y-auto p-6">
           {/* Preview */}
           <div className="mb-6">
-            {asset.category === 'image' && asset.previewUrl && (
-              <div className="rounded-xl overflow-hidden border border-white/10 bg-black/20">
-                <img src={asset.previewUrl} alt={asset.name} className="w-full h-auto max-h-[50vh] object-contain" />
+            {/* Image Preview - Show actual image */}
+            {asset.category === 'image' && (
+              <div className="rounded-xl overflow-hidden border border-white/10 bg-black/50">
+                <img
+                  src={asset.url || asset.thumbnailUrl}
+                  alt={asset.name}
+                  className="w-full h-auto max-h-[50vh] object-contain mx-auto"
+                />
               </div>
             )}
+
+            {/* Video Preview - Full player */}
             {asset.category === 'video' && (
-              <div className="rounded-xl overflow-hidden border border-white/10 bg-black text-center p-12">
-                <Video className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-                <p className="text-gray-400 mb-4">Video preview available</p>
-                <a
-                  href={asset.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                >
-                  <Eye className="w-4 h-4" /> Preview
-                </a>
+              <div className="rounded-xl overflow-hidden border border-white/10 bg-black">
+                <div className="aspect-video bg-black flex items-center justify-center">
+                  <video
+                    ref={videoRef}
+                    src={asset.url}
+                    className="w-full h-full object-contain"
+                    onTimeUpdate={handleTimeUpdate}
+                    onLoadedMetadata={handleLoadedMetadata}
+                    onEnded={handleMediaEnded}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                  />
+                </div>
+                {/* Video Controls */}
+                <div className="px-4 py-3 bg-white/[0.03] border-t border-white/10">
+                  {/* Progress Bar */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-xs text-gray-500 w-10 text-right font-mono">
+                      {formatTime(currentTime)}
+                    </span>
+                    <div className="flex-1">
+                      <input
+                        type="range"
+                        min="0"
+                        max={duration || 100}
+                        value={currentTime}
+                        onChange={handleSeek}
+                        className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer
+                          [&::-webkit-slider-thumb]:appearance-none
+                          [&::-webkit-slider-thumb]:w-4
+                          [&::-webkit-slider-thumb]:h-4
+                          [&::-webkit-slider-thumb]:rounded-full
+                          [&::-webkit-slider-thumb]:bg-purple-500
+                          [&::-webkit-slider-thumb]:cursor-pointer"
+                        style={{
+                          background: `linear-gradient(to right, #a855f7 0%, #a855f7 ${(currentTime / (duration || 1)) * 100}%, rgba(255,255,255,0.1) ${(currentTime / (duration || 1)) * 100}%, rgba(255,255,255,0.1) 100%)`
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-500 w-10 font-mono">
+                      {formatTime(duration)}
+                    </span>
+                  </div>
+                  {/* Playback Controls */}
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={handlePlayPause}
+                      className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center hover:bg-purple-600 transition-colors"
+                    >
+                      {isPlaying ? (
+                        <Pause className="w-5 h-5 text-white" />
+                      ) : (
+                        <Play className="w-5 h-5 text-white ml-0.5" />
+                      )}
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setVolume(volume > 0 ? 0 : 1)}
+                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                      >
+                        {volume === 0 ? (
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                          </svg>
+                        )}
+                      </button>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={volume}
+                        onChange={handleVolumeChange}
+                        className="w-20 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer
+                          [&::-webkit-slider-thumb]:appearance-none
+                          [&::-webkit-slider-thumb]:w-3
+                          [&::-webkit-slider-thumb]:h-3
+                          [&::-webkit-slider-thumb]:rounded-full
+                          [&::-webkit-slider-thumb]:bg-white
+                          [&::-webkit-slider-thumb]:cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
+
+            {/* Audio Preview - Full player with waveform */}
             {asset.category === 'audio' && (
-              <div className="p-8 rounded-xl bg-white/[0.03] border border-white/10 text-center">
-                <Music className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                <p className="text-white font-medium">{asset.fileName}</p>
-                <a
-                  href={asset.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                >
-                  <Eye className="w-4 h-4" /> Play
-                </a>
+              <div className="rounded-xl overflow-hidden border border-white/10 bg-black/50">
+                <div className="p-8">
+                  {/* Audio Visualization */}
+                  <div className="flex flex-col items-center mb-6">
+                    <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 flex items-center justify-center mb-4">
+                      <Music className="w-16 h-16 text-green-400" />
+                    </div>
+                    <h4 className="text-white font-medium text-lg">{asset.name}</h4>
+                    <p className="text-sm text-gray-500">{asset.fileName}</p>
+                  </div>
+                  {/* Audio Element (hidden) */}
+                  <audio
+                    ref={audioRef}
+                    src={asset.url}
+                    onTimeUpdate={handleTimeUpdate}
+                    onLoadedMetadata={handleLoadedMetadata}
+                    onEnded={handleMediaEnded}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                  />
+                  {/* Waveform visualization */}
+                  <div className="flex items-end justify-center gap-1 h-16 mb-4">
+                    {[...Array(40)].map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-1.5 rounded-full transition-all duration-150 ${
+                          isPlaying ? "bg-green-400" : "bg-gray-600"
+                        }`}
+                        style={{
+                          height: isPlaying
+                            ? `${Math.sin(i * 0.3 + currentTime * 2) * 30 + 35}%`
+                            : `${Math.sin(i * 0.5) * 20 + 30}%`,
+                          opacity: isPlaying ? 1 : 0.5
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                {/* Audio Controls */}
+                <div className="px-6 py-4 bg-white/[0.03] border-t border-white/10">
+                  {/* Progress Bar */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-xs text-gray-500 w-10 text-right font-mono">
+                      {formatTime(currentTime)}
+                    </span>
+                    <div className="flex-1">
+                      <input
+                        type="range"
+                        min="0"
+                        max={duration || 100}
+                        value={currentTime}
+                        onChange={handleSeek}
+                        className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer
+                          [&::-webkit-slider-thumb]:appearance-none
+                          [&::-webkit-slider-thumb]:w-4
+                          [&::-webkit-slider-thumb]:h-4
+                          [&::-webkit-slider-thumb]:rounded-full
+                          [&::-webkit-slider-thumb]:bg-green-500
+                          [&::-webkit-slider-thumb]:cursor-pointer"
+                        style={{
+                          background: `linear-gradient(to right, #22c55e 0%, #22c55e ${(currentTime / (duration || 1)) * 100}%, rgba(255,255,255,0.1) ${(currentTime / (duration || 1)) * 100}%, rgba(255,255,255,0.1) 100%)`
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-500 w-10 font-mono">
+                      {formatTime(duration)}
+                    </span>
+                  </div>
+                  {/* Playback Controls */}
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={handlePlayPause}
+                      className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center hover:bg-green-600 transition-colors"
+                    >
+                      {isPlaying ? (
+                        <Pause className="w-5 h-5 text-white" />
+                      ) : (
+                        <Play className="w-5 h-5 text-white ml-0.5" />
+                      )}
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setVolume(volume > 0 ? 0 : 1)}
+                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                      >
+                        {volume === 0 ? (
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                          </svg>
+                        )}
+                      </button>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={volume}
+                        onChange={handleVolumeChange}
+                        className="w-20 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer
+                          [&::-webkit-slider-thumb]:appearance-none
+                          [&::-webkit-slider-thumb]:w-3
+                          [&::-webkit-slider-thumb]:h-3
+                          [&::-webkit-slider-thumb]:rounded-full
+                          [&::-webkit-slider-thumb]:bg-white
+                          [&::-webkit-slider-thumb]:cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
+
+            {/* Document/Other Preview */}
             {!['image', 'video', 'audio'].includes(asset.category) && (
               <div className="p-12 rounded-xl bg-white/[0.03] border border-white/10 text-center">
                 <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
@@ -1113,6 +1787,15 @@ const AssetDetailModal: React.FC<{
             </button>
           </div>
           <div className="flex items-center gap-2">
+            {/* AI Edit Button */}
+            {canAiEdit && (
+              <button
+                onClick={onAiEdit}
+                className="flex items-center gap-2 px-4 py-2 bg-brand-gold text-black rounded-xl hover:bg-brand-gold/90"
+              >
+                <Wand2 className="w-4 h-4" /> AI Edit
+              </button>
+            )}
             <a
               href={asset.url}
               target="_blank"

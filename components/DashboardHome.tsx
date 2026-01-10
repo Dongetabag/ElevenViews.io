@@ -136,7 +136,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ user, stats, onNavigate }
           <div className="flex-1">
             <p className="text-sm font-semibold text-emerald-500">All Systems Operational</p>
             <p className="text-xs text-gray-500">
-              Production tools, AI suite, and client portal connected
+              Production tools, AI suite, and members portal connected
             </p>
           </div>
         </div>
