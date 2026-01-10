@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { GoogleGenAI } from '@google/genai';
 import { UserProfile } from '../types.ts';
 import { useAIAssets, useCurrentUser } from '../hooks/useAppStore';
+import { wasabiService, ElevenViewsAsset } from '../services/wasabiService';
 import {
   Sparkles, Image as ImageIcon, Download, Wand2,
   Loader2, Maximize2, Layers, Palette, RefreshCcw,
@@ -33,70 +35,131 @@ interface MediaSession {
 }
 
 const MAX_ASSETS_PER_SESSION = 25;
-const STORAGE_KEY = 'recipe-labs-media-studio-sessions';
+const STORAGE_KEY = 'eleven-views-media-studio-sessions';
 
-// Official Eleven Views Brand Colors
+// Official Eleven Views Brand Colors - Premium Design System
+// Extracted from official logo and brand guidelines
 const BRAND_COLORS = {
-  lemon: '#F5D547',           // Vibrant Lemon Yellow - Primary Accent
-  lemonLight: '#F7E07A',      // Light Lemon - Hover States
-  lemonDark: '#D4B83A',       // Dark Lemon/Gold - Secondary Accent
-  forest: '#4A7C4E',          // Forest Green - Tertiary Accent
-  mint: '#9AA590',            // Mint Green - Supporting
-  sage: '#6B8E6B',            // Sage Green - Supporting
-  bgPrimary: '#0f1410',       // Primary Dark Background
-  bgSecondary: '#141a16',     // Secondary Dark Background
-  bgTertiary: '#1a211c'       // Tertiary Dark Background
+  // Primary Gold Spectrum (from logo gradient)
+  goldBright: '#F5C242',      // Bright Gold - Primary accent, headlines
+  goldRich: '#D4A520',        // Rich Goldenrod - Premium feel
+  goldDeep: '#B8860B',        // Deep Gold/Bronze - Depth and luxury
+  goldAmber: '#D4A017',       // Amber Gold - Warmth
+
+  // Secondary Gold Tones
+  champagne: '#F7E7CE',       // Champagne - Elegant highlights
+  creamGold: '#F5DEB3',       // Cream Gold - Soft accents
+  antiqueGold: '#CFB53B',     // Antique Gold - Classic sophistication
+
+  // Accent Colors
+  bronze: '#B8860B',           // Deep Bronze - Rich warmth
+  amber: '#D4A017',            // Amber - Luxury warmth accent
+  copper: '#CD7F32',           // Copper - Supporting warm tones
+
+  // Background System (Dark Mode)
+  bgPrimary: '#0a0908',       // Near black with warm undertone
+  bgSecondary: '#0f1410',     // Primary dark background
+  bgTertiary: '#141a16',      // Card backgrounds
+  bgElevated: '#1a211c',      // Elevated surfaces
+
+  // Text & UI
+  textPrimary: '#FFFFFF',     // Pure white for primary text
+  textSecondary: '#9CA3AF',   // Gray for secondary text
+  textMuted: '#6B7280',       // Muted text
+
+  // Legacy compatibility
+  lemon: '#F5C242',
+  lemonLight: '#F7E07A',
+  lemonDark: '#D4B83A',
 };
 
 // Official Eleven Views branded style presets (matching backend)
 const STYLE_PRESETS = [
+  // ═══════════════════════════════════════════════════════════════════
+  // ELEVEN VIEWS MASTER TEMPLATE COLLECTION
+  // Curated by our Senior Creative Director with 45 years experience
+  // Working with: Apple, Nike, Rolex, Louis Vuitton, Ferrari
+  // ═══════════════════════════════════════════════════════════════════
+
   {
-    id: 'recipe-labs-premium',
-    name: 'Eleven Views Premium',
-    description: 'Official brand design with gold and green',
-    preset: 'recipe-labs-premium',
-    colors: { primary: '#F5D547', secondary: '#D4B83A', tertiary: '#4A7C4E', background: '#0f1410' },
-    gradient: 'from-[#F5D547]/20 via-[#D4B83A]/10 to-[#4A7C4E]/20'
+    id: 'ev-signature',
+    name: 'EV Signature',
+    description: 'The official Eleven Views look - gold gradient mastery',
+    preset: 'ev-signature',
+    colors: { primary: '#F5C242', secondary: '#D4A520', tertiary: '#B8860B', background: '#000000' },
+    gradient: 'from-[#F5C242]/25 via-[#D4A520]/15 to-[#000000]'
   },
   {
-    id: 'corporate-gold',
-    name: 'Corporate Gold',
-    description: 'Professional business design with gold emphasis',
-    preset: 'corporate-gold',
-    colors: { primary: '#D4B83A', secondary: '#F5D547', tertiary: '#4A7C4E', background: '#141a16' },
-    gradient: 'from-[#D4B83A]/20 to-[#141a16]'
+    id: 'black-gold-luxe',
+    name: 'Black & Gold Luxe',
+    description: 'Pure luxury - Rolex meets Versace elegance',
+    preset: 'black-gold-luxe',
+    colors: { primary: '#FFD700', secondary: '#F5C242', tertiary: '#CC9900', background: '#0a0a0a' },
+    gradient: 'from-[#FFD700]/30 to-[#0a0a0a]'
   },
   {
-    id: 'tech-noir',
-    name: 'Tech Noir',
-    description: 'Dark tech-forward with subtle accents',
-    preset: 'tech-noir',
-    colors: { primary: '#4A7C4E', secondary: '#F5D547', tertiary: '#D4B83A', background: '#0f1410' },
-    gradient: 'from-[#4A7C4E]/20 to-[#0f1410]'
+    id: 'champagne-elite',
+    name: 'Champagne Elite',
+    description: 'Soft sophistication - Dom Pérignon aesthetic',
+    preset: 'champagne-elite',
+    colors: { primary: '#F7E7CE', secondary: '#D4AF37', tertiary: '#C5B358', background: '#1a1a1a' },
+    gradient: 'from-[#F7E7CE]/20 via-[#D4AF37]/15 to-[#1a1a1a]'
   },
   {
-    id: 'forest-elegance',
-    name: 'Forest Elegance',
-    description: 'Nature-inspired with green emphasis',
-    preset: 'forest-elegance',
-    colors: { primary: '#4A7C4E', secondary: '#6B8E6B', tertiary: '#F5D547', background: '#0f1410' },
-    gradient: 'from-[#4A7C4E]/20 via-[#6B8E6B]/10 to-[#0f1410]'
+    id: 'bronze-dynasty',
+    name: 'Bronze Dynasty',
+    description: 'Old money elegance - Bentley & vintage prestige',
+    preset: 'bronze-dynasty',
+    colors: { primary: '#CD7F32', secondary: '#B8860B', tertiary: '#8B7355', background: '#0f0f0f' },
+    gradient: 'from-[#CD7F32]/25 via-[#B8860B]/15 to-[#0f0f0f]'
   },
   {
-    id: 'golden-hour',
-    name: 'Golden Hour',
-    description: 'Warm golden design with premium feel',
-    preset: 'golden-hour',
-    colors: { primary: '#F5D547', secondary: '#F7E07A', tertiary: '#D4B83A', background: '#1a211c' },
-    gradient: 'from-[#F5D547]/30 via-[#F7E07A]/20 to-[#1a211c]'
+    id: 'amber-nightfall',
+    name: 'Amber Nightfall',
+    description: 'Warm cinematic - Oscar night red carpet glow',
+    preset: 'amber-nightfall',
+    colors: { primary: '#FFBF00', secondary: '#FF8C00', tertiary: '#D4A520', background: '#0a0a0a' },
+    gradient: 'from-[#FFBF00]/30 via-[#FF8C00]/15 to-[#0a0a0a]'
   },
   {
-    id: 'midnight-lemon',
-    name: 'Midnight Lemon',
-    description: 'High contrast dark with vibrant yellow',
-    preset: 'midnight-lemon',
-    colors: { primary: '#F5D547', secondary: '#0f1410', tertiary: '#4A7C4E', background: '#0f1410' },
-    gradient: 'from-[#F5D547]/30 to-[#0f1410]'
+    id: 'platinum-gold',
+    name: 'Platinum Gold',
+    description: 'Ultra premium - credit black card exclusivity',
+    preset: 'platinum-gold',
+    colors: { primary: '#E5E4E2', secondary: '#FFD700', tertiary: '#C0C0C0', background: '#050505' },
+    gradient: 'from-[#E5E4E2]/20 via-[#FFD700]/25 to-[#050505]'
+  },
+  {
+    id: 'honey-obsidian',
+    name: 'Honey Obsidian',
+    description: 'Rich warmth - artisanal luxury feel',
+    preset: 'honey-obsidian',
+    colors: { primary: '#EB9605', secondary: '#C77E0A', tertiary: '#8B6914', background: '#0a0a0a' },
+    gradient: 'from-[#EB9605]/25 via-[#C77E0A]/15 to-[#0a0a0a]'
+  },
+  {
+    id: 'gilded-noir',
+    name: 'Gilded Noir',
+    description: 'Art deco drama - Great Gatsby grandeur',
+    preset: 'gilded-noir',
+    colors: { primary: '#CFB53B', secondary: '#AA8C2C', tertiary: '#856D1C', background: '#000000' },
+    gradient: 'from-[#CFB53B]/30 via-[#AA8C2C]/20 to-[#000000]'
+  },
+  {
+    id: 'sunrise-premium',
+    name: 'Sunrise Premium',
+    description: 'Dawn energy - golden hour photography magic',
+    preset: 'sunrise-premium',
+    colors: { primary: '#FFE135', secondary: '#FFC125', tertiary: '#FFAA00', background: '#1a1410' },
+    gradient: 'from-[#FFE135]/35 via-[#FFC125]/20 to-[#1a1410]'
+  },
+  {
+    id: 'midnight-empire',
+    name: 'Midnight Empire',
+    description: 'Maximum impact - Times Square billboard power',
+    preset: 'midnight-empire',
+    colors: { primary: '#FFD700', secondary: '#FFC000', tertiary: '#E5B800', background: '#000000' },
+    gradient: 'from-[#FFD700]/40 to-[#000000]'
   }
 ];
 
@@ -250,6 +313,39 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
   const confirmSaveToLibrary = () => {
     if (!saveModalAsset || !saveName.trim()) return;
 
+    // Save to wasabiService for Asset Library
+    const evAsset: ElevenViewsAsset = {
+      id: `ev_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      key: `ai-generated/${Date.now()}-${saveName.replace(/\s+/g, '-').toLowerCase()}.png`,
+      name: saveName,
+      fileName: `${saveName.replace(/\s+/g, '-').toLowerCase()}.png`,
+      fileType: 'image/png',
+      fileSize: Math.round(saveModalAsset.url.length * 0.75), // Approximate base64 size
+      category: 'image',
+      subcategory: 'ai-generated',
+      url: saveModalAsset.url,
+      thumbnailUrl: saveModalAsset.url,
+      tags: saveTags.split(',').map(t => t.trim()).filter(Boolean),
+      aiTags: ['ai-generated', saveModalAsset.style, 'media-studio'],
+      metadata: {
+        prompt: saveModalAsset.prompt,
+        style: saveModalAsset.style,
+        aspectRatio: saveModalAsset.aspectRatio,
+        model: 'Eleven Views Media Studio',
+        generatedAt: saveModalAsset.timestamp
+      },
+      uploadedBy: user?.id || 'system',
+      uploadedByName: user?.name || 'Media Studio',
+      isShared: true,
+      isFavorite: false,
+      isClientVisible: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    wasabiService.saveAssetToStorage(evAsset);
+
+    // Also save to AI assets for backward compatibility
     saveAsset({
       name: saveName,
       type: 'image',
@@ -277,7 +373,7 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
   const handleDownload = (asset: MediaAsset) => {
     const link = document.createElement('a');
     link.href = asset.url;
-    link.download = `recipe-labs-${asset.id}.png`;
+    link.download = `eleven-views-${asset.id}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -303,65 +399,127 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
     setIsGenerating(true);
 
     try {
-      // Call backend API for image generation with brand preset
-      // The backend will apply the full Eleven Views brand specifications
-      const response = await fetch('/api/v1/media/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: prompt,
-          preset: activeStyle.preset || activeStyle.id,  // Use official brand preset
-          style: activeStyle.name,
-          aspectRatio,
-          referenceImage: activeReference?.url || null,
-          context: {
-            user: user.name,
-            agency: user.agencyCoreCompetency
-          }
-        })
-      });
-
-      if (!response.ok) {
-        // Fallback: create placeholder with official brand colors
-        const placeholderAsset: MediaAsset = {
-          id: generateId(),
-          url: `data:image/svg+xml,${encodeURIComponent(`
-            <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-              <defs>
-                <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style="stop-color:${BRAND_COLORS.bgSecondary}"/>
-                  <stop offset="100%" style="stop-color:${BRAND_COLORS.bgPrimary}"/>
-                </linearGradient>
-                <linearGradient id="brand" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style="stop-color:${BRAND_COLORS.lemon}"/>
-                  <stop offset="50%" style="stop-color:${BRAND_COLORS.lemonDark}"/>
-                  <stop offset="100%" style="stop-color:${BRAND_COLORS.forest}"/>
-                </linearGradient>
-              </defs>
-              <rect fill="url(#bg)" width="512" height="512"/>
-              <text x="256" y="230" text-anchor="middle" fill="url(#brand)" font-family="Orbitron, Arial" font-size="28" font-weight="bold">RCPE LAB</text>
-              <text x="256" y="270" text-anchor="middle" fill="${BRAND_COLORS.sage}" font-family="Montserrat, Arial" font-size="14">${prompt.substring(0, 35)}...</text>
-              <rect x="156" y="310" width="200" height="4" rx="2" fill="url(#brand)" opacity="0.6"/>
-              <text x="256" y="360" text-anchor="middle" fill="${BRAND_COLORS.mint}" font-family="Arial" font-size="10">Generating with AI...</text>
-            </svg>
-          `)}`,
-          prompt: prompt,
-          timestamp: new Date().toISOString(),
-          style: activeStyle.name,
-          aspectRatio
-        };
-
-        updateActiveSessionAssets([placeholderAsset, ...generatedImages]);
-        setActiveReference(null);
-        return;
+      // Use Google AI for image generation
+      const apiKey = import.meta.env.VITE_GOOGLE_AI_API_KEY || '';
+      if (!apiKey) {
+        throw new Error('API key not configured');
       }
 
-      const data = await response.json();
+      const ai = new GoogleGenAI({ apiKey });
 
-      if (data.imageUrl) {
+      // ELEVEN VIEWS MASTER DESIGN SYSTEM
+      // 45 years of billion-dollar brand expertise distilled into AI prompts
+
+      const brandGuidelines = `
+        ELEVEN VIEWS - THE GOLD STANDARD IN VISUAL DESIGN
+
+        CORE IDENTITY:
+        - We are the Rolls-Royce of production studios
+        - Gold is not just a color, it's our signature
+        - Every pixel screams premium quality
+        - Black backgrounds make our gold SHINE
+
+        COLOR COMMANDMENTS:
+        - PRIMARY: Always gold spectrum (#FFD700, #F5C242, #D4A520, #B8860B)
+        - SECONDARY: Bronze, amber, honey, champagne tones
+        - BACKGROUNDS: Pure black #000000 to charcoal #1a1a1a
+        - FORBIDDEN: Green, teal, blue, red - NEVER use these
+
+        DESIGN PHILOSOPHY:
+        - Less is more, but what's there must be PERFECT
+        - Gold gradients create depth and luxury
+        - Negative space is as important as filled space
+        - Every element earns its place
+
+        INSPIRATION BRANDS:
+        - Rolex: Timeless elegance, crown authority
+        - Louis Vuitton: Pattern mastery, monogram power
+        - Ferrari: Speed meets sophistication
+        - Apple: Clean lines, premium materials
+        - Cartier: Jewelry-level craftsmanship
+      `;
+
+      const designPrinciples = `
+        DESIGN EXCELLENCE STANDARDS:
+        1. VISUAL HIERARCHY: Bold focal point, supporting elements create flow
+        2. COLOR MASTERY: Rich golds against dark backgrounds, never flat
+        3. TYPOGRAPHY: Modern sans-serif, generous spacing, luxury kerning
+        4. COMPOSITION: Rule of thirds, intentional white space, balance
+        5. TEXTURE: Subtle gradients, soft glows, depth without clutter
+        6. BRAND CONSISTENCY: Every element reflects premium production quality
+      `;
+
+      const styleInstructions: Record<string, string> = {
+        'ev-signature': 'THE Eleven Views signature look: Rich gold gradient from bright #F5C242 to deep bronze #B8860B on pure black. Subtle gold lens flares, premium metallic sheen. This is our bread and butter - luxury production studio perfection.',
+        'black-gold-luxe': 'Pure opulence: Bright gold (#FFD700) commanding attention on jet black. Think Rolex crown, Versace medusa - unapologetic luxury that demands respect. Bold, confident, impossibly elegant.',
+        'champagne-elite': 'Soft sophistication: Creamy champagne tones with antique gold accents. The aesthetic of a $500 bottle of Dom Pérignon - subtle wealth, refined taste, European elegance.',
+        'bronze-dynasty': 'Old money prestige: Deep bronze and burnished gold. The patina of inherited wealth - vintage Bentley, leather-bound books, generations of success. Timeless, not trendy.',
+        'amber-nightfall': 'Cinematic warmth: Amber and orange-gold creating sunset drama. Red carpet at the Oscars, Hollywood premiere energy. Warm, inviting, but unmistakably premium.',
+        'platinum-gold': 'Ultimate exclusivity: Cool platinum silver with gold accents. The Amex Centurion card aesthetic - reserved for those who have arrived. Minimal, powerful, elite.',
+        'honey-obsidian': 'Artisanal richness: Deep honey gold on obsidian black. Craft luxury - small batch whiskey, bespoke tailoring. Warm but sophisticated, approachable yet premium.',
+        'gilded-noir': 'Art Deco grandeur: Antique gold with dramatic black. The Great Gatsby, 1920s glamour reborn. Geometric patterns, bold contrasts, theatrical elegance.',
+        'sunrise-premium': 'Golden hour magic: Bright yellows to warm oranges. The energy of a new day, optimism backed by success. Fresh, vibrant, full of possibility.',
+        'midnight-empire': 'MAXIMUM IMPACT: Pure bright gold on absolute black. Times Square billboard, Super Bowl commercial, global brand launch. No subtlety - pure power and presence.'
+      };
+
+      const currentStyleGuide = styleInstructions[activeStyle.id] || styleInstructions['eleven-views-premium'];
+
+      const stylePrompt = `You are the creative director at Eleven Views, a premium production studio known for creating iconic visual brands for Fortune 500 companies.
+
+BRAND IDENTITY:
+${brandGuidelines}
+
+DESIGN STANDARDS:
+${designPrinciples}
+
+CURRENT STYLE: ${activeStyle.name}
+STYLE DIRECTION: ${currentStyleGuide}
+
+COLOR PALETTE:
+- Primary: ${activeStyle.colors.primary} (use prominently)
+- Secondary: ${activeStyle.colors.secondary} (supporting elements)
+- Tertiary: ${activeStyle.colors.tertiary} (accents)
+- Background: ${activeStyle.colors.background} (base layer)
+
+ASPECT RATIO: ${aspectRatio}
+
+CLIENT REQUEST: ${prompt}
+
+Create a stunning, award-winning visual that:
+1. Immediately communicates luxury and professionalism
+2. Uses the gold color palette masterfully with rich gradients
+3. Has perfect composition and visual balance
+4. Would be at home in a Super Bowl commercial or Times Square billboard
+5. Represents the pinnacle of modern graphic design
+6. Makes the viewer feel they're looking at a million-dollar brand asset
+
+Generate this as a photorealistic, high-quality image with impeccable attention to detail.`;
+
+      // Try Gemini 2.0 Flash with image generation
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.0-flash-exp',
+        contents: { parts: [{ text: stylePrompt }] },
+        config: { responseModalities: ['IMAGE', 'TEXT'] }
+      });
+
+      // Extract image from response
+      let imageUrl: string | null = null;
+      const candidates = response.candidates || [];
+      for (const candidate of candidates) {
+        const parts = candidate.content?.parts || [];
+        for (const part of parts) {
+          if (part.inlineData?.data && part.inlineData?.mimeType?.startsWith('image/')) {
+            imageUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+            break;
+          }
+        }
+        if (imageUrl) break;
+      }
+
+      if (imageUrl) {
         const newAsset: MediaAsset = {
           id: generateId(),
-          url: data.imageUrl,
+          url: imageUrl,
           prompt: prompt,
           timestamp: new Date().toISOString(),
           style: activeStyle.name,
@@ -369,6 +527,8 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
         };
         updateActiveSessionAssets([newAsset, ...generatedImages]);
         setActiveReference(null);
+      } else {
+        throw new Error('No image generated');
       }
     } catch (err) {
       console.error('Generation failed:', err);
@@ -380,11 +540,11 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
             <defs>
               <linearGradient id="errBrand" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" style="stop-color:${BRAND_COLORS.lemon}"/>
-                <stop offset="100%" style="stop-color:${BRAND_COLORS.forest}"/>
+                <stop offset="100%" style="stop-color:${BRAND_COLORS.goldDeep}"/>
               </linearGradient>
             </defs>
             <rect fill="${BRAND_COLORS.bgPrimary}" width="512" height="512"/>
-            <text x="256" y="240" text-anchor="middle" fill="url(#errBrand)" font-family="Orbitron, Arial" font-size="22" font-weight="bold">RCPE LAB</text>
+            <text x="256" y="240" text-anchor="middle" fill="url(#errBrand)" font-family="Orbitron, Arial" font-size="22" font-weight="bold">ELEVEN VIEWS</text>
             <text x="256" y="275" text-anchor="middle" fill="${BRAND_COLORS.lemon}" font-family="Montserrat, Arial" font-size="14">Media Studio</text>
             <text x="256" y="310" text-anchor="middle" fill="${BRAND_COLORS.sage}" font-family="Arial" font-size="11">Generating with AI...</text>
           </svg>
@@ -559,7 +719,7 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
         {/* Header */}
         <div className="h-14 border-b border-white/5 flex items-center justify-between px-6 bg-black/40">
           <div className="flex items-center gap-3">
-            <div className={`w-2 h-2 rounded-full ${isGenerating ? 'bg-brand-gold animate-pulse' : 'bg-green-500'}`}></div>
+            <div className={`w-2 h-2 rounded-full ${isGenerating ? 'bg-brand-gold animate-pulse' : 'bg-brand-gold'}`}></div>
             <div>
               <span className="text-sm font-medium text-white">
                 {isGenerating ? 'Generating...' : (activeSession?.title || 'New Project')}
@@ -691,15 +851,15 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
 
                   {/* Saved Badge */}
                   {img.isSaved && (
-                    <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 bg-green-500/80 text-white text-[10px] font-bold rounded-lg">
+                    <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 bg-brand-gold/80 text-white text-[10px] font-bold rounded-lg">
                       <Check className="w-3 h-3" /> Saved
                     </div>
                   )}
 
                   {/* Success Animation */}
                   {saveSuccess === img.id && (
-                    <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center animate-pulse">
-                      <div className="p-4 bg-green-500 rounded-full">
+                    <div className="absolute inset-0 bg-brand-gold/20 flex items-center justify-center animate-pulse">
+                      <div className="p-4 bg-brand-gold rounded-full">
                         <Check className="w-8 h-8 text-white" />
                       </div>
                     </div>
@@ -722,7 +882,7 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
                         </button>
                         <button
                           onClick={() => handleSaveToLibrary(img)}
-                          className="flex-1 py-2 bg-white/10 backdrop-blur-md text-white text-[10px] font-bold uppercase rounded-lg hover:bg-green-500 transition-all flex items-center justify-center gap-1"
+                          className="flex-1 py-2 bg-white/10 backdrop-blur-md text-white text-[10px] font-bold uppercase rounded-lg hover:bg-brand-gold transition-all flex items-center justify-center gap-1"
                           disabled={img.isSaved}
                         >
                           <FolderPlus className="w-3 h-3" /> {img.isSaved ? 'Saved' : 'Library'}
@@ -759,7 +919,7 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
         <div className="p-4 bg-white/5 border-t border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
+              <div className="w-2 h-2 rounded-full bg-brand-gold shadow-[0_0_8px_#22c55e]"></div>
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Eleven Views Media Engine</span>
             </div>
             <div className="h-3 w-px bg-white/10"></div>

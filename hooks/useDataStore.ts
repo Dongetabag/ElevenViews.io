@@ -3,7 +3,7 @@ import {
   Lead, Client, Campaign, TeamMember, Activity, Asset, Integration, AppData, DashboardStats
 } from '../types';
 
-const STORAGE_KEY = 'recipe-labs-data';
+const STORAGE_KEY = 'eleven-views-data';
 
 const getInitialData = (): AppData => {
   if (typeof window === 'undefined') {

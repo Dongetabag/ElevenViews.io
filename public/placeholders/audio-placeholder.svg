@@ -1,0 +1,17 @@
+<svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="300" fill="#0a0a0a"/>
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#C6A962;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#8B7355;stop-opacity:0.1" />
+    </linearGradient>
+  </defs>
+  <rect width="300" height="300" fill="url(#goldGradient)"/>
+  <circle cx="150" cy="130" r="60" fill="none" stroke="#C6A962" stroke-width="3" opacity="0.8"/>
+  <circle cx="150" cy="130" r="45" fill="none" stroke="#C6A962" stroke-width="2" opacity="0.5"/>
+  <circle cx="150" cy="130" r="12" fill="#C6A962"/>
+  <path d="M130 180 L130 220 Q130 230 140 230 L160 230 Q170 230 170 220 L170 180" stroke="#C6A962" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="140" cy="180" r="15" fill="#C6A962" opacity="0.8"/>
+  <circle cx="160" cy="180" r="15" fill="#C6A962" opacity="0.8"/>
+  <text x="150" y="270" text-anchor="middle" fill="#C6A962" font-family="system-ui, sans-serif" font-size="14" font-weight="600" opacity="0.6">ELEVEN VIEWS</text>
+</svg>

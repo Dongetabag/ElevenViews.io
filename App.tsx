@@ -16,12 +16,17 @@ import IntegrationsModule from './components/IntegrationsModule.tsx';
 import SettingsModule from './components/SettingsModule.tsx';
 import ARHubModule from './components/ARHubModule.tsx';
 import ProductionModule from './components/ProductionModule.tsx';
+import StudioEngine from './components/StudioEngine.tsx';
+import BrandEngine from './components/BrandEngine.tsx';
+import DesignAgent from './components/DesignAgent.tsx';
 import MusicPlayer from './components/MusicPlayer.tsx';
 import IntakeModal, { IntakeData } from './components/IntakeModal.tsx';
 import LoginModal from './components/LoginModal.tsx';
 import { UserProfile } from './types.ts';
 import { useDataStore } from './hooks/useDataStore.ts';
 import { appStore } from './services/appStore.ts';
+import { discordService } from './services/discordService.ts';
+import { profileMemory } from './services/profileMemory.ts';
 
 const App: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -40,6 +45,13 @@ const App: React.FC = () => {
         const parsed = JSON.parse(savedUser);
         console.log('Restored User Profile:', parsed);
         setUserProfile(parsed);
+
+        // Initialize profile memory with user ID
+        const userId = parsed.email || parsed.name?.replace(/\s+/g, '_').toLowerCase();
+        if (userId) {
+          profileMemory.init(userId);
+          console.log('Profile memory initialized for:', userId);
+        }
 
         // Re-register user in app store to ensure they appear in team
         if (parsed.name && parsed.email) {
@@ -92,6 +104,12 @@ const App: React.FC = () => {
     setUserProfile(userProfile);
     setShowLogin(false);
     setActiveModule('dashboard');
+
+    // Initialize profile memory
+    const userId = user.email || user.name?.replace(/\s+/g, '_').toLowerCase();
+    if (userId) {
+      profileMemory.init(userId);
+    }
   };
 
   const handleIntakeSubmit = (data: IntakeData) => {
@@ -129,6 +147,22 @@ const App: React.FC = () => {
     setUserProfile(newUser);
     setShowIntake(false);
     setActiveModule('dashboard');
+
+    // Initialize profile memory for new user
+    const userId = data.email || data.name?.replace(/\s+/g, '_').toLowerCase();
+    if (userId) {
+      profileMemory.init(userId);
+    }
+
+    // Send Discord notification for new registration
+    discordService.notifyNewProject({
+      name: data.name,
+      email: data.email,
+      company: data.agencyCoreCompetency,
+      industry: data.primaryClientIndustry,
+      location: data.targetLocation,
+      projectTypes: data.primaryGoals,
+    }).catch(err => console.error('Discord notification failed:', err));
   };
 
   const renderModule = () => {
@@ -169,6 +203,9 @@ const App: React.FC = () => {
             deleteCampaign={dataStore.deleteCampaign}
           />
         );
+      case 'studio-engine': return <StudioEngine />;
+      case 'brand-engine': return <BrandEngine />;
+      case 'design-agent': return <DesignAgent />;
       case 'ar-hub': return <ARHubModule />;
       case 'production': return <ProductionModule />;
       case 'ai-tools': return <AIToolsModule user={userProfile} />;
@@ -231,7 +268,16 @@ const App: React.FC = () => {
         }}
       />
       <div className="flex-1 flex flex-col min-w-0">
-        <TopBar user={userProfile} />
+        <TopBar
+          user={userProfile}
+          onLogout={() => {
+            appStore.logout();
+            localStorage.removeItem('agency_user_profile');
+            setUserProfile(null);
+            setActiveModule('dashboard');
+          }}
+          onNavigate={setActiveModule}
+        />
         <main className="flex-1 overflow-y-auto bg-brand-dark scrollbar-hide pb-20">
           {renderModule()}
         </main>

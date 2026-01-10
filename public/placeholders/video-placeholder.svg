@@ -1,0 +1,17 @@
+<svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="300" fill="#0a0a0a"/>
+  <defs>
+    <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9333ea;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:0.1" />
+    </linearGradient>
+  </defs>
+  <rect width="300" height="300" fill="url(#purpleGradient)"/>
+  <rect x="80" y="100" width="140" height="90" rx="8" fill="none" stroke="#C6A962" stroke-width="3" opacity="0.8"/>
+  <polygon points="135,125 135,170 175,147.5" fill="#C6A962" opacity="0.9"/>
+  <circle cx="90" cy="90" r="15" fill="none" stroke="#C6A962" stroke-width="2" opacity="0.5"/>
+  <circle cx="90" cy="90" r="8" fill="#C6A962" opacity="0.5"/>
+  <rect x="75" y="200" width="150" height="6" rx="3" fill="#C6A962" opacity="0.3"/>
+  <rect x="75" y="200" width="80" height="6" rx="3" fill="#C6A962" opacity="0.6"/>
+  <text x="150" y="260" text-anchor="middle" fill="#C6A962" font-family="system-ui, sans-serif" font-size="14" font-weight="600" opacity="0.6">ELEVEN VIEWS</text>
+</svg>

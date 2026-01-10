@@ -5,7 +5,6 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
-  // In a real app, this would have a form for email/password
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center">
       <div className="text-center p-8 bg-gray-900 rounded-lg">

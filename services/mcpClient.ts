@@ -1,12 +1,13 @@
 // MCP Client Service for Eleven Views
-// Connects to the unified MCP server and exposes tools to the AI agent
+// Connects to both Eleven Views MCP and AISIM MCP servers
 
-const MCP_BASE_URL = import.meta.env.VITE_MCP_URL || 'https://mcp.srv1167160.hstgr.cloud';
-const AGENT_API_URL = import.meta.env.VITE_AGENT_API_URL || 'http://72.61.72.94:5000';
+const ELEVEN_VIEWS_MCP_URL = import.meta.env.VITE_MCP_URL || 'https://mcp.elevenviews.io';
+const AISIM_MCP_URL = import.meta.env.VITE_AISIM_MCP_URL || 'https://aisim.elevenviews.io';
 
 export interface MCPTool {
   name: string;
   description: string;
+  server: 'eleven-views' | 'aisim';
   inputSchema: {
     type: string;
     properties: Record<string, any>;
@@ -19,7 +20,16 @@ export interface MCPToolResult {
   data?: any;
   error?: string;
   toolName: string;
+  server: string;
   timestamp: string;
+}
+
+export interface MCPServerStatus {
+  name: string;
+  url: string;
+  connected: boolean;
+  tools: MCPTool[];
+  lastChecked: string;
 }
 
 export interface SlackMessage {
@@ -49,111 +59,221 @@ export interface PipelineStats {
 }
 
 class MCPClient {
-  private baseUrl: string;
-  private agentUrl: string;
+  private elevenViewsUrl: string;
+  private aisimUrl: string;
   private tools: MCPTool[] = [];
-  private isConnected: boolean = false;
+  private servers: MCPServerStatus[] = [];
 
   constructor() {
-    this.baseUrl = MCP_BASE_URL;
-    this.agentUrl = AGENT_API_URL;
+    this.elevenViewsUrl = ELEVEN_VIEWS_MCP_URL;
+    this.aisimUrl = AISIM_MCP_URL;
   }
 
-  // Initialize connection and fetch available tools
-  async connect(): Promise<{ success: boolean; tools: MCPTool[] }> {
+  // Initialize connection to both MCP servers
+  async connect(): Promise<{ success: boolean; tools: MCPTool[]; servers: MCPServerStatus[] }> {
+    const results = await Promise.allSettled([
+      this.connectToServer('eleven-views', this.elevenViewsUrl),
+      this.connectToServer('aisim', this.aisimUrl)
+    ]);
+
+    this.servers = [];
+    this.tools = [];
+
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        this.servers.push(result.value);
+        this.tools.push(...result.value.tools);
+      }
+    });
+
+    const anyConnected = this.servers.some(s => s.connected);
+    console.log(`[MCP] Connected to ${this.servers.filter(s => s.connected).length}/${this.servers.length} servers with ${this.tools.length} total tools`);
+
+    return {
+      success: anyConnected,
+      tools: this.tools,
+      servers: this.servers
+    };
+  }
+
+  // Connect to individual MCP server
+  private async connectToServer(name: 'eleven-views' | 'aisim', url: string): Promise<MCPServerStatus> {
+    const status: MCPServerStatus = {
+      name,
+      url,
+      connected: false,
+      tools: [],
+      lastChecked: new Date().toISOString()
+    };
+
     try {
-      const response = await fetch(`${this.baseUrl}/health`);
-      if (!response.ok) throw new Error('MCP server not responding');
+      // Try health check
+      const healthResponse = await fetch(`${url}/health`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
 
-      const health = await response.json();
-      this.isConnected = health.status === 'healthy';
+      if (healthResponse.ok) {
+        status.connected = true;
 
-      // Fetch tool definitions
-      this.tools = await this.getToolDefinitions();
+        // Try to get tools list from server
+        try {
+          const toolsResponse = await fetch(`${url}/mcp/tools`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+          });
 
-      return { success: true, tools: this.tools };
+          if (toolsResponse.ok) {
+            const toolsData = await toolsResponse.json();
+            if (toolsData.tools && Array.isArray(toolsData.tools)) {
+              status.tools = toolsData.tools.map((t: any) => ({
+                name: t.name,
+                description: t.description,
+                server: name,
+                inputSchema: t.inputSchema || { type: 'object', properties: {}, required: [] }
+              }));
+            }
+          }
+        } catch (e) {
+          console.warn(`[MCP] Could not fetch tools from ${name}, using defaults`);
+          status.tools = this.getDefaultToolsForServer(name);
+        }
+
+        // If no tools from server, use defaults
+        if (status.tools.length === 0) {
+          status.tools = this.getDefaultToolsForServer(name);
+        }
+      }
     } catch (error) {
-      console.error('MCP connection failed:', error);
-      this.isConnected = false;
-      return { success: false, tools: [] };
+      console.warn(`[MCP] Failed to connect to ${name}:`, error);
+      // Still add default tools so they can be tried
+      status.tools = this.getDefaultToolsForServer(name);
+    }
+
+    return status;
+  }
+
+  // Get default tool definitions for each server
+  private getDefaultToolsForServer(server: 'eleven-views' | 'aisim'): MCPTool[] {
+    if (server === 'eleven-views') {
+      return [
+        {
+          name: 'list_files',
+          description: 'List files in storage',
+          server: 'eleven-views',
+          inputSchema: { type: 'object', properties: { prefix: { type: 'string' }, maxFiles: { type: 'number' } }, required: [] }
+        },
+        {
+          name: 'get_file_info',
+          description: 'Get file details',
+          server: 'eleven-views',
+          inputSchema: { type: 'object', properties: { key: { type: 'string' } }, required: ['key'] }
+        },
+        {
+          name: 'search_files',
+          description: 'Search for files',
+          server: 'eleven-views',
+          inputSchema: { type: 'object', properties: { query: { type: 'string' }, type: { type: 'string' } }, required: ['query'] }
+        },
+        {
+          name: 'get_storage_stats',
+          description: 'Get storage statistics',
+          server: 'eleven-views',
+          inputSchema: { type: 'object', properties: {}, required: [] }
+        },
+        {
+          name: 'write_file',
+          description: 'Write/upload a file',
+          server: 'eleven-views',
+          inputSchema: { type: 'object', properties: { key: { type: 'string' }, content: { type: 'string' }, contentType: { type: 'string' } }, required: ['key', 'content'] }
+        },
+        {
+          name: 'delete_file',
+          description: 'Delete a file',
+          server: 'eleven-views',
+          inputSchema: { type: 'object', properties: { key: { type: 'string' } }, required: ['key'] }
+        },
+        {
+          name: 'create_folder',
+          description: 'Create a folder',
+          server: 'eleven-views',
+          inputSchema: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] }
+        },
+        {
+          name: 'organize_file',
+          description: 'Smart organize a file by category/project/client',
+          server: 'eleven-views',
+          inputSchema: { type: 'object', properties: { key: { type: 'string' }, project: { type: 'string' }, client: { type: 'string' } }, required: ['key'] }
+        },
+        {
+          name: 'generate_share_url',
+          description: 'Get shareable URL for a file',
+          server: 'eleven-views',
+          inputSchema: { type: 'object', properties: { key: { type: 'string' }, expiresIn: { type: 'number' } }, required: ['key'] }
+        },
+        {
+          name: 'create_project',
+          description: 'Create project folder structure',
+          server: 'eleven-views',
+          inputSchema: { type: 'object', properties: { name: { type: 'string' }, type: { type: 'string' }, client: { type: 'string' } }, required: ['name'] }
+        }
+      ];
+    } else {
+      // AISIM MCP tools
+      return [
+        {
+          name: 'revenue-automation-orchestrator',
+          description: 'Orchestrate revenue automation workflows',
+          server: 'aisim',
+          inputSchema: { type: 'object', properties: { workflow: { type: 'string' } }, required: [] }
+        },
+        {
+          name: 'content-empire-builder',
+          description: 'Build content strategy',
+          server: 'aisim',
+          inputSchema: { type: 'object', properties: { industry: { type: 'string' }, goals: { type: 'array' } }, required: ['industry'] }
+        },
+        {
+          name: 'business-genesis-engine',
+          description: 'Generate business plans and strategies',
+          server: 'aisim',
+          inputSchema: { type: 'object', properties: { concept: { type: 'string' }, market: { type: 'string' } }, required: ['concept'] }
+        },
+        {
+          name: 'client-intelligence-synthesizer',
+          description: 'Analyze client data and insights',
+          server: 'aisim',
+          inputSchema: { type: 'object', properties: { clientData: { type: 'object' } }, required: [] }
+        },
+        {
+          name: 'conversion-optimizer',
+          description: 'Optimize conversion funnels',
+          server: 'aisim',
+          inputSchema: { type: 'object', properties: { funnel: { type: 'object' }, goals: { type: 'array' } }, required: [] }
+        },
+        {
+          name: 'visual-audit-engine',
+          description: 'Audit visual assets and designs',
+          server: 'aisim',
+          inputSchema: { type: 'object', properties: { url: { type: 'string' }, imageUrl: { type: 'string' } }, required: [] }
+        }
+      ];
     }
   }
 
-  // Get available tool definitions
-  private async getToolDefinitions(): Promise<MCPTool[]> {
-    return [
-      {
-        name: 'recipe_labs_health',
-        description: 'Check the health status of Eleven Views API and all connected services',
-        inputSchema: { type: 'object', properties: {}, required: [] }
-      },
-      {
-        name: 'recipe_labs_get_leads',
-        description: 'Get leads from the database with optional filters',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            category: { type: 'string', description: 'Filter by business category' },
-            city: { type: 'string', description: 'Filter by city' },
-            status: { type: 'string', description: 'Filter by status (new, contacted, qualified)' },
-            limit: { type: 'number', description: 'Max leads to return' }
-          },
-          required: []
-        }
-      },
-      {
-        name: 'recipe_labs_pipeline_stats',
-        description: 'Get pipeline analytics and statistics',
-        inputSchema: { type: 'object', properties: {}, required: [] }
-      },
-      {
-        name: 'recipe_labs_send_slack',
-        description: 'Send a message to the Eleven Views Slack channel',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            message: { type: 'string', description: 'Message to send to Slack' }
-          },
-          required: ['message']
-        }
-      },
-      {
-        name: 'recipe_labs_create_lead',
-        description: 'Create a new lead in the database',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            name: { type: 'string', description: 'Business or contact name' },
-            company: { type: 'string', description: 'Company name' },
-            email: { type: 'string', description: 'Email address' },
-            phone: { type: 'string', description: 'Phone number' },
-            category: { type: 'string', description: 'Business category' },
-            city: { type: 'string', description: 'City location' }
-          },
-          required: ['name']
-        }
-      },
-      {
-        name: 'recipe_labs_chat',
-        description: 'Chat with the AI agent for insights about leads and business data',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            message: { type: 'string', description: 'Question or query' }
-          },
-          required: ['message']
-        }
-      }
-    ];
-  }
-
-  // Execute an MCP tool
+  // Execute a tool on the appropriate server
   async executeTool(toolName: string, args: Record<string, any> = {}): Promise<MCPToolResult> {
+    // Find which server this tool belongs to
+    const tool = this.tools.find(t => t.name === toolName);
+    const serverName = tool?.server || 'eleven-views';
+    const baseUrl = serverName === 'aisim' ? this.aisimUrl : this.elevenViewsUrl;
+
     try {
-      const response = await fetch(`${this.baseUrl}/mcp/tools/call`, {
+      // Use the correct endpoint format: POST /mcp/tools/{toolName}
+      const response = await fetch(`${baseUrl}/mcp/tools/${toolName}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: toolName, arguments: args })
+        body: JSON.stringify(args)
       });
 
       const data = await response.json();
@@ -163,6 +283,7 @@ class MCPClient {
         data: data.result || data.content || data,
         error: data.error,
         toolName,
+        server: serverName,
         timestamp: new Date().toISOString()
       };
     } catch (error) {
@@ -170,53 +291,116 @@ class MCPClient {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
         toolName,
+        server: serverName,
         timestamp: new Date().toISOString()
       };
     }
   }
 
-  // Send message to Slack
-  async sendSlackMessage(message: string): Promise<MCPToolResult> {
-    return this.executeTool('recipe_labs_send_slack', { message });
-  }
-
-  // Get leads from database
-  async getLeads(filters: { category?: string; city?: string; status?: string; limit?: number } = {}): Promise<MCPToolResult> {
-    return this.executeTool('recipe_labs_get_leads', filters);
-  }
-
-  // Get pipeline statistics
-  async getPipelineStats(): Promise<MCPToolResult> {
-    return this.executeTool('recipe_labs_pipeline_stats', {});
-  }
-
-  // Create a new lead
-  async createLead(lead: LeadData): Promise<MCPToolResult> {
-    return this.executeTool('recipe_labs_create_lead', lead);
-  }
-
-  // Chat with AI agent
-  async chat(message: string): Promise<MCPToolResult> {
-    return this.executeTool('recipe_labs_chat', { message });
-  }
-
-  // Check health
+  // Eleven Views specific methods - using correct tool names
   async checkHealth(): Promise<MCPToolResult> {
-    return this.executeTool('recipe_labs_health', {});
+    try {
+      const response = await fetch(`${this.elevenViewsUrl}/health`);
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data,
+        toolName: 'health',
+        server: 'eleven-views',
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        toolName: 'health',
+        server: 'eleven-views',
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  async listFiles(prefix?: string, limit?: number): Promise<MCPToolResult> {
+    return this.executeTool('list_files', { prefix, maxFiles: limit });
+  }
+
+  async getStorageStats(): Promise<MCPToolResult> {
+    return this.executeTool('get_storage_stats', {});
+  }
+
+  async searchFiles(query: string, type?: string): Promise<MCPToolResult> {
+    return this.executeTool('search_files', { query, type });
+  }
+
+  async writeFile(key: string, content: string, contentType?: string): Promise<MCPToolResult> {
+    return this.executeTool('write_file', { key, content, contentType });
+  }
+
+  async deleteFile(key: string): Promise<MCPToolResult> {
+    return this.executeTool('delete_file', { key });
+  }
+
+  async createFolder(path: string): Promise<MCPToolResult> {
+    return this.executeTool('create_folder', { path });
+  }
+
+  async generateShareUrl(key: string, expiresIn?: number): Promise<MCPToolResult> {
+    return this.executeTool('generate_share_url', { key, expiresIn });
+  }
+
+  async createProject(name: string, type?: string, client?: string): Promise<MCPToolResult> {
+    return this.executeTool('create_project', { name, type, client });
+  }
+
+  // Backward compatibility aliases
+  async getPipelineStats(): Promise<MCPToolResult> {
+    return this.getStorageStats();
+  }
+
+  async getLeads(filters: { category?: string; city?: string; status?: string; limit?: number } = {}): Promise<MCPToolResult> {
+    // Route to local database via /stats or return empty
+    try {
+      const response = await fetch(`${this.elevenViewsUrl}/stats`);
+      const data = await response.json();
+      return {
+        success: true,
+        data: data.leads || [],
+        toolName: 'get_leads',
+        server: 'eleven-views',
+        timestamp: new Date().toISOString()
+      };
+    } catch {
+      return { success: false, error: 'Leads API not available', toolName: 'get_leads', server: 'eleven-views', timestamp: new Date().toISOString() };
+    }
+  }
+
+  // AISIM specific methods
+  async runAisimTool(skillName: string, args: Record<string, any> = {}): Promise<MCPToolResult> {
+    return this.executeTool(skillName, args);
   }
 
   // Get connection status
-  getStatus(): { connected: boolean; tools: MCPTool[]; baseUrl: string } {
+  getStatus(): { connected: boolean; tools: MCPTool[]; servers: MCPServerStatus[] } {
     return {
-      connected: this.isConnected,
+      connected: this.servers.some(s => s.connected),
       tools: this.tools,
-      baseUrl: this.baseUrl
+      servers: this.servers
     };
   }
 
-  // Get available tools
+  // Get tools filtered by server
+  getToolsByServer(server: 'eleven-views' | 'aisim'): MCPTool[] {
+    return this.tools.filter(t => t.server === server);
+  }
+
+  // Get all tools
   getTools(): MCPTool[] {
     return this.tools;
+  }
+
+  // Get servers
+  getServers(): MCPServerStatus[] {
+    return this.servers;
   }
 }
 
@@ -226,9 +410,10 @@ export const mcpClient = new MCPClient();
 // Auto-connect on import
 mcpClient.connect().then(result => {
   if (result.success) {
-    console.log('[MCP] Connected to server with', result.tools.length, 'tools available');
+    console.log('[MCP] Connected to servers:', result.servers.filter(s => s.connected).map(s => s.name).join(', '));
+    console.log('[MCP] Total tools available:', result.tools.length);
   } else {
-    console.warn('[MCP] Failed to connect to server');
+    console.warn('[MCP] Failed to connect to MCP servers');
   }
 });
 

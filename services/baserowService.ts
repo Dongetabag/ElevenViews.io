@@ -95,7 +95,6 @@ class BaserowService {
   }
 
   private getMockData(tableId: string): BaserowRecord[] {
-    // Mock data for development
     const mockData: Record<string, BaserowRecord[]> = {
       'leads': [
         { id: 1, name: 'Acme Corp', email: 'contact@acme.com', status: 'new', created: '2026-01-01' },
@@ -113,7 +112,6 @@ class BaserowService {
   async createRecord(tableId: string, data: any): Promise<BaserowRecord> {
     try {
       if (!this.baseUrl || !this.apiKey) {
-        // Mock creation
         return { id: Date.now(), ...data };
       }
 
@@ -142,7 +140,6 @@ class BaserowService {
   async updateRecord(tableId: string, recordId: number, data: any): Promise<BaserowRecord> {
     try {
       if (!this.baseUrl || !this.apiKey) {
-        // Mock update
         return { id: recordId, ...data };
       }
 
@@ -171,7 +168,7 @@ class BaserowService {
   async deleteRecord(tableId: string, recordId: number): Promise<void> {
     try {
       if (!this.baseUrl || !this.apiKey) {
-        return; // Mock deletion
+        return;
       }
 
       const response = await fetch(`${this.baseUrl}/database/rows/table/${tableId}/${recordId}/`, {

@@ -5,7 +5,8 @@ import { ArrowLeft, Play, AILoader, Check, AlertTriangle, Layers, X, Copy, Save,
 import HexGridBackground from './HexGridBackground.tsx';
 import { ALL_TOOLS } from '../constants.tsx';
 
-// In a real project, this would be in a shared components directory.
+const GOOGLE_AI_API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY || '';
+
 const FormattedResponse: React.FC<{ text: string }> = ({ text }) => {
   const codeBlockRegex = /```([\s\S]*?)```/g;
   const parts = text.split(codeBlockRegex);
@@ -113,7 +114,7 @@ Their #1 success metric is: "${user.successMetric}".
       setCurrentStep(i);
       const currentTool = steps[i];
       try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: GOOGLE_AI_API_KEY });
         const promptForThisStep = `
           ${userContext}
 
@@ -165,7 +166,7 @@ Their #1 success metric is: "${user.successMetric}".
     `;
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: GOOGLE_AI_API_KEY });
         const finalResponse = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: consolidationPrompt,

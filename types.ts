@@ -95,14 +95,68 @@ export interface Activity {
   createdAt: string;
 }
 
+// Media categories and subcategories
+export type MediaCategory = 'video' | 'image' | 'audio' | 'document' | 'project';
+export type AudioSubcategory = 'songs' | 'beats' | 'stems' | 'masters';
+export type VideoSubcategory = 'raw' | 'edits' | 'finals' | 'thumbnails';
+export type ImageSubcategory = 'photos' | 'graphics' | 'thumbnails' | 'ai-generated';
+
+// Enhanced metadata for media files
+export interface MediaMetadata {
+  category: MediaCategory;
+  subcategory?: AudioSubcategory | VideoSubcategory | ImageSubcategory | string;
+  tags: string[];
+
+  // Duration for audio/video (in seconds)
+  duration?: number;
+
+  // Dimensions for images/video
+  dimensions?: { width: number; height: number };
+
+  // Technical info
+  codec?: string;
+  bitrate?: number;
+  format?: string;
+
+  // Music-specific metadata
+  bpm?: number;
+  key?: string;
+  artist?: string;
+  album?: string;
+
+  // Optimization tracking
+  isOptimized: boolean;
+  originalKey?: string;  // Reference to original file if this is optimized version
+  optimizedKey?: string; // Reference to optimized version if this is original
+
+  // Revision system
+  revision?: number;
+  parentRevision?: string; // ID of parent asset
+  revisionHistory?: string[]; // Array of revision asset IDs
+
+  // Thumbnail
+  thumbnailUrl?: string;
+}
+
 export interface Asset {
   id: string;
   name: string;
   type: 'image' | 'document' | 'video' | 'audio' | 'other';
   size: number;
   url?: string;
+  key?: string; // S3/Wasabi key
   clientId?: string;
   tags?: string[];
+
+  // Enhanced metadata
+  metadata?: MediaMetadata;
+
+  // Quick access fields (also in metadata)
+  subcategory?: string;
+  duration?: number;
+  dimensions?: { width: number; height: number };
+  thumbnailUrl?: string;
+
   createdAt: string;
   updatedAt: string;
 }
@@ -147,6 +201,8 @@ export interface AIChatSession {
   id: string;
   title: string;
   messages: ChatMessage[];
+  summary?: string; // Auto-generated summary of older messages for context continuity
+  summarizedUpTo?: number; // Index of last summarized message
   createdAt: string;
   updatedAt: string;
 }
@@ -197,4 +253,70 @@ export interface DashboardStats {
   campaignsChange: number;
   conversionRate: number;
   conversionChange: number;
+}
+
+// User Memory & Persistence Types
+export interface UserPreferences {
+  viewMode: 'grid' | 'list';
+  sortBy: 'name' | 'date' | 'size' | 'type';
+  sortOrder: 'asc' | 'desc';
+  categoryFilter: string | null;
+  subcategoryFilter: string | null;
+}
+
+export interface RecentFile {
+  assetId: string;
+  name: string;
+  url: string;
+  type: string;
+  accessedAt: string;
+}
+
+export interface FavoriteFile {
+  assetId: string;
+  name: string;
+  url: string;
+  type: string;
+  addedAt: string;
+}
+
+export interface UserMemory {
+  userId: string;
+  preferences: UserPreferences;
+  recentFiles: RecentFile[];
+  favorites: FavoriteFile[];
+  chatSessions: AIChatSession[];
+  currentChatSessionId: string | null;
+  lastSyncedAt: string;
+}
+
+// Video Player Types
+export interface VideoTrack {
+  id: string;
+  title: string;
+  artist?: string;
+  thumbnailUrl?: string;
+  videoUrl: string;
+  duration: number;
+  category?: string;
+  subcategory?: string;
+  metadata?: MediaMetadata;
+}
+
+// Media Editor Types
+export interface EditOperation {
+  id: string;
+  type: 'background-removal' | 'background-replace' | 'style-transfer' | 'object-removal' | 'object-addition' | 'color-correction' | 'upscale' | 'trim' | 'text-overlay';
+  prompt?: string;
+  params?: Record<string, unknown>;
+  timestamp: string;
+}
+
+export interface MediaRevision {
+  id: string;
+  assetId: string;
+  revisionNumber: number;
+  url: string;
+  operations: EditOperation[];
+  createdAt: string;
 }

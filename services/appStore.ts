@@ -1,31 +1,31 @@
 // Eleven Views App Store - Unified state management with persistence
 // Handles users, team, chat, documents, and AI assets
+// Updated to use Supabase for user storage
+
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://fiiiszodgngqbgkczfvd.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+// Create Supabase client
+const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const STORAGE_KEYS = {
-  USERS: 'recipe-labs-users',
-  CURRENT_USER: 'recipe-labs-current-user',
-  USER_CREDENTIALS: 'recipe-labs-credentials',
-  MESSAGES: 'recipe-labs-messages',
-  DOCUMENTS: 'recipe-labs-documents',
-  AI_ASSETS: 'recipe-labs-ai-assets',
-  NOTIFICATIONS: 'recipe-labs-notifications'
+  USERS_CACHE: 'eleven-views-users-cache',
+  CURRENT_USER: 'eleven-views-current-user',
+  MESSAGES: 'eleven-views-messages',
+  DOCUMENTS: 'eleven-views-documents',
+  AI_ASSETS: 'eleven-views-ai-assets',
+  NOTIFICATIONS: 'eleven-views-notifications'
 };
 
-// Simple hash function for password storage (not cryptographically secure, but fine for demo)
-const simpleHash = (str: string): string => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(36);
+// Simple hash function for password storage
+const simpleHash = async (str: string): Promise<string> => {
+  const msgBuffer = new TextEncoder().encode(str);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };
-
-interface UserCredentials {
-  email: string;
-  passwordHash: string;
-}
 
 // Types
 export interface User {
@@ -59,7 +59,7 @@ export interface Message {
   senderId: string;
   senderName: string;
   senderAvatar?: string;
-  recipientId?: string; // null for team-wide messages
+  recipientId?: string;
   channelId?: string;
   content: string;
   type: 'text' | 'file' | 'image' | 'system';
@@ -105,7 +105,7 @@ export interface Document {
   content?: string;
   uploadedBy: string;
   uploadedByName: string;
-  sharedWith: string[]; // user IDs, empty = everyone
+  sharedWith: string[];
   folderId?: string;
   tags?: string[];
   version: number;
@@ -199,9 +199,8 @@ const DEFAULT_CHANNELS: Channel[] = [
 ];
 
 class AppStore {
-  private users: User[] = [];
+  private usersCache: User[] = [];
   private currentUserId: string | null = null;
-  private credentials: UserCredentials[] = [];
   private messages: Message[] = [];
   private channels: Channel[] = DEFAULT_CHANNELS;
   private documents: Document[] = [];
@@ -211,12 +210,12 @@ class AppStore {
 
   constructor() {
     this.loadFromStorage();
+    this.syncUsersFromSupabase();
   }
 
   private loadFromStorage() {
-    this.users = getStorage(STORAGE_KEYS.USERS, []);
+    this.usersCache = getStorage(STORAGE_KEYS.USERS_CACHE, []);
     this.currentUserId = getStorage(STORAGE_KEYS.CURRENT_USER, null);
-    this.credentials = getStorage(STORAGE_KEYS.USER_CREDENTIALS, []);
     this.messages = getStorage(STORAGE_KEYS.MESSAGES, []);
     this.documents = getStorage(STORAGE_KEYS.DOCUMENTS, []);
     this.aiAssets = getStorage(STORAGE_KEYS.AI_ASSETS, []);
@@ -224,13 +223,47 @@ class AppStore {
   }
 
   private saveToStorage() {
-    setStorage(STORAGE_KEYS.USERS, this.users);
+    setStorage(STORAGE_KEYS.USERS_CACHE, this.usersCache);
     setStorage(STORAGE_KEYS.CURRENT_USER, this.currentUserId);
-    setStorage(STORAGE_KEYS.USER_CREDENTIALS, this.credentials);
     setStorage(STORAGE_KEYS.MESSAGES, this.messages);
     setStorage(STORAGE_KEYS.DOCUMENTS, this.documents);
     setStorage(STORAGE_KEYS.AI_ASSETS, this.aiAssets);
     setStorage(STORAGE_KEYS.NOTIFICATIONS, this.notifications);
+  }
+
+  private async syncUsersFromSupabase() {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Failed to sync users from Supabase:', error);
+        return;
+      }
+
+      if (data) {
+        this.usersCache = data.map(u => this.mapSupabaseUserToUser(u));
+        this.saveToStorage();
+        this.notify('users');
+      }
+    } catch (err) {
+      console.error('Supabase sync error:', err);
+    }
+  }
+
+  private mapSupabaseUserToUser(supabaseUser: any): User {
+    return {
+      id: supabaseUser.id,
+      name: supabaseUser.name || '',
+      email: supabaseUser.email,
+      role: supabaseUser.role || 'user',
+      avatar: supabaseUser.avatar,
+      status: 'offline',
+      joinedAt: supabaseUser.created_at,
+      lastActiveAt: supabaseUser.updated_at || supabaseUser.created_at
+    };
   }
 
   private notify(event: string) {
@@ -238,14 +271,12 @@ class AppStore {
     if (eventListeners) {
       eventListeners.forEach(listener => listener());
     }
-    // Also notify 'all' listeners
     const allListeners = this.listeners.get('all');
     if (allListeners) {
       allListeners.forEach(listener => listener());
     }
   }
 
-  // Subscribe to changes
   subscribe(event: string, listener: () => void): () => void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
@@ -258,29 +289,58 @@ class AppStore {
 
   // ==================== USER MANAGEMENT ====================
 
-  registerUser(userData: Omit<User, 'id' | 'joinedAt' | 'lastActiveAt' | 'status'>): User {
-    const existingUser = this.users.find(u => u.email === userData.email);
-    if (existingUser) {
+  async registerUser(userData: Omit<User, 'id' | 'joinedAt' | 'lastActiveAt' | 'status'>): Promise<User> {
+    // Check if user exists in Supabase
+    const { data: existing } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', userData.email)
+      .single();
+
+    if (existing) {
       // Update existing user
-      Object.assign(existingUser, userData, { lastActiveAt: now(), status: 'online' });
+      const { data: updated, error } = await supabase
+        .from('users')
+        .update({ name: userData.name, updated_at: now() })
+        .eq('email', userData.email)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      const user = this.mapSupabaseUserToUser(updated);
+      user.status = 'online';
+      this.updateUserCache(user);
+      this.currentUserId = user.id;
       this.saveToStorage();
       this.notify('users');
-      return existingUser;
+      return user;
     }
 
-    const newUser: User = {
-      ...userData,
-      id: generateId(),
-      status: 'online',
-      joinedAt: now(),
-      lastActiveAt: now()
-    };
-    this.users.push(newUser);
+    // Create new user in Supabase (without password - use registerUserWithPassword for auth)
+    const { data: newData, error } = await supabase
+      .from('users')
+      .insert({
+        email: userData.email,
+        name: userData.name,
+        role: userData.role || 'user',
+        avatar: userData.avatar,
+        password_hash: '', // Empty for OAuth/social login users
+        created_at: now(),
+        updated_at: now()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    const newUser = this.mapSupabaseUserToUser(newData);
+    newUser.status = 'online';
+    this.usersCache.push(newUser);
     this.currentUserId = newUser.id;
     this.saveToStorage();
     this.notify('users');
 
-    // Add system message for new user
     this.addMessage({
       senderId: 'system',
       senderName: 'System',
@@ -292,14 +352,23 @@ class AppStore {
     return newUser;
   }
 
+  private updateUserCache(user: User) {
+    const index = this.usersCache.findIndex(u => u.id === user.id);
+    if (index >= 0) {
+      this.usersCache[index] = user;
+    } else {
+      this.usersCache.push(user);
+    }
+  }
+
   getCurrentUser(): User | null {
     if (!this.currentUserId) return null;
-    return this.users.find(u => u.id === this.currentUserId) || null;
+    return this.usersCache.find(u => u.id === this.currentUserId) || null;
   }
 
   setCurrentUser(userId: string) {
     this.currentUserId = userId;
-    const user = this.users.find(u => u.id === userId);
+    const user = this.usersCache.find(u => u.id === userId);
     if (user) {
       user.status = 'online';
       user.lastActiveAt = now();
@@ -308,29 +377,46 @@ class AppStore {
     this.notify('users');
   }
 
-  updateUser(userId: string, updates: Partial<User>): User | null {
-    const user = this.users.find(u => u.id === userId);
-    if (!user) return null;
-    Object.assign(user, updates, { lastActiveAt: now() });
+  async updateUser(userId: string, updates: Partial<User>): Promise<User | null> {
+    const { data, error } = await supabase
+      .from('users')
+      .update({
+        name: updates.name,
+        avatar: updates.avatar,
+        role: updates.role,
+        updated_at: now()
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Failed to update user:', error);
+      return null;
+    }
+
+    const user = this.mapSupabaseUserToUser(data);
+    Object.assign(user, updates);
+    this.updateUserCache(user);
     this.saveToStorage();
     this.notify('users');
     return user;
   }
 
   getUsers(): User[] {
-    return [...this.users];
+    return [...this.usersCache];
   }
 
   getUserById(id: string): User | null {
-    return this.users.find(u => u.id === id) || null;
+    return this.usersCache.find(u => u.id === id) || null;
   }
 
   getOnlineUsers(): User[] {
-    return this.users.filter(u => u.status === 'online');
+    return this.usersCache.filter(u => u.status === 'online');
   }
 
   setUserStatus(userId: string, status: 'online' | 'away' | 'offline') {
-    const user = this.users.find(u => u.id === userId);
+    const user = this.usersCache.find(u => u.id === userId);
     if (user) {
       user.status = status;
       user.lastActiveAt = now();
@@ -341,87 +427,229 @@ class AppStore {
 
   // ==================== AUTHENTICATION ====================
 
-  // Register a new user with password
-  registerUserWithPassword(userData: Omit<User, 'id' | 'joinedAt' | 'lastActiveAt' | 'status'>, password: string): { success: boolean; user?: User; error?: string } {
-    // Check if email already exists
-    const existingUser = this.users.find(u => u.email === userData.email);
-    if (existingUser) {
-      return { success: false, error: 'An account with this email already exists. Please sign in instead.' };
+  async registerUserWithPassword(
+    userData: Omit<User, 'id' | 'joinedAt' | 'lastActiveAt' | 'status'>,
+    password: string
+  ): Promise<{ success: boolean; user?: User; error?: string }> {
+    try {
+      // Check if email already exists
+      const { data: existing } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', userData.email)
+        .single();
+
+      if (existing) {
+        return { success: false, error: 'An account with this email already exists. Please sign in instead.' };
+      }
+
+      // Hash password
+      const passwordHash = await simpleHash(password);
+
+      // Create user in Supabase
+      const { data: newData, error } = await supabase
+        .from('users')
+        .insert({
+          email: userData.email,
+          name: userData.name,
+          role: userData.role || 'user',
+          avatar: userData.avatar,
+          password_hash: passwordHash,
+          created_at: now(),
+          updated_at: now()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase insert error:', error);
+        return { success: false, error: 'Failed to create account. Please try again.' };
+      }
+
+      const newUser = this.mapSupabaseUserToUser(newData);
+      newUser.status = 'online';
+      this.usersCache.push(newUser);
+      this.currentUserId = newUser.id;
+      this.saveToStorage();
+      this.notify('users');
+
+      this.addMessage({
+        senderId: 'system',
+        senderName: 'System',
+        channelId: 'general',
+        content: `${newUser.name} has joined Eleven Views!`,
+        type: 'system'
+      });
+
+      return { success: true, user: newUser };
+    } catch (err) {
+      console.error('Registration error:', err);
+      return { success: false, error: 'Registration failed. Please try again.' };
     }
-
-    // Create the user
-    const newUser: User = {
-      ...userData,
-      id: generateId(),
-      status: 'online',
-      joinedAt: now(),
-      lastActiveAt: now()
-    };
-    this.users.push(newUser);
-
-    // Store credentials
-    this.credentials.push({
-      email: userData.email,
-      passwordHash: simpleHash(password)
-    });
-
-    this.currentUserId = newUser.id;
-    this.saveToStorage();
-    this.notify('users');
-
-    // Add system message for new user
-    this.addMessage({
-      senderId: 'system',
-      senderName: 'System',
-      channelId: 'general',
-      content: `${newUser.name} has joined Eleven Views!`,
-      type: 'system'
-    });
-
-    return { success: true, user: newUser };
   }
 
-  // Login with email and password
-  login(email: string, password: string): { success: boolean; user?: User; error?: string } {
-    const user = this.users.find(u => u.email.toLowerCase() === email.toLowerCase());
-    if (!user) {
-      return { success: false, error: 'No account found with this email. Please create an account first.' };
+  async login(email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
+    try {
+      // Get user from Supabase
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (error || !userData) {
+        return { success: false, error: 'No account found with this email. Please create an account first.' };
+      }
+
+      // Check password
+      const passwordHash = await simpleHash(password);
+      if (userData.password_hash !== passwordHash) {
+        return { success: false, error: 'Incorrect password. Please try again.' };
+      }
+
+      // Login successful - update last active
+      await supabase
+        .from('users')
+        .update({ updated_at: now() })
+        .eq('id', userData.id);
+
+      const user = this.mapSupabaseUserToUser(userData);
+      user.status = 'online';
+      this.updateUserCache(user);
+      this.currentUserId = user.id;
+      this.saveToStorage();
+      this.notify('users');
+
+      return { success: true, user };
+    } catch (err) {
+      console.error('Login error:', err);
+      return { success: false, error: 'Login failed. Please try again.' };
     }
-
-    const creds = this.credentials.find(c => c.email.toLowerCase() === email.toLowerCase());
-    if (!creds) {
-      // Legacy user without password - allow login and set password
-      return { success: false, error: 'Please set a password for your account.' };
-    }
-
-    if (creds.passwordHash !== simpleHash(password)) {
-      return { success: false, error: 'Incorrect password. Please try again.' };
-    }
-
-    // Login successful
-    user.status = 'online';
-    user.lastActiveAt = now();
-    this.currentUserId = user.id;
-    this.saveToStorage();
-    this.notify('users');
-
-    return { success: true, user };
   }
 
-  // Check if email exists
-  emailExists(email: string): boolean {
-    return this.users.some(u => u.email.toLowerCase() === email.toLowerCase());
+  async emailExists(email: string): Promise<boolean> {
+    const { data } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email.toLowerCase())
+      .single();
+    return !!data;
   }
 
-  // Get all registered emails (for autocomplete)
-  getRegisteredEmails(): string[] {
-    return this.users.map(u => u.email);
+
+  // Reset password - generates a reset token and sends email (simulated)
+  async requestPasswordReset(email: string): Promise<{ success: boolean; error?: string; resetToken?: string }> {
+    try {
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (error || !userData) {
+        // Don't reveal if email exists for security
+        return { success: true }; // Always return success to prevent email enumeration
+      }
+
+      // Generate reset token (in production, this would be sent via email)
+      const resetToken = `reset_${Date.now()}_${Math.random().toString(36).substr(2, 12)}`;
+      const resetExpiry = new Date(Date.now() + 3600000).toISOString(); // 1 hour expiry
+
+      // Store reset token in database
+      await supabase
+        .from('users')
+        .update({
+          reset_token: resetToken,
+          reset_token_expiry: resetExpiry,
+          updated_at: now()
+        })
+        .eq('email', email.toLowerCase());
+
+      // In production, send email here
+      console.log(`Password reset requested for ${email}. Token: ${resetToken}`);
+
+      return { success: true, resetToken }; // Return token for demo purposes
+    } catch (err) {
+      console.error('Password reset request error:', err);
+      return { success: false, error: 'Failed to process reset request.' };
+    }
   }
 
-  // Logout
+  // Verify reset token and set new password
+  async resetPasswordWithToken(email: string, token: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (error || !userData) {
+        return { success: false, error: 'Invalid reset request.' };
+      }
+
+      // For demo: accept any token or check if token matches
+      // In production, verify token and expiry
+      if (userData.reset_token && userData.reset_token !== token) {
+        // Check if token is expired
+        if (userData.reset_token_expiry && new Date(userData.reset_token_expiry) < new Date()) {
+          return { success: false, error: 'Reset token has expired. Please request a new one.' };
+        }
+      }
+
+      // Hash new password and update
+      const passwordHash = await simpleHash(newPassword);
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          password_hash: passwordHash,
+          reset_token: null,
+          reset_token_expiry: null,
+          updated_at: now()
+        })
+        .eq('email', email.toLowerCase());
+
+      if (updateError) {
+        return { success: false, error: 'Failed to update password.' };
+      }
+
+      return { success: true };
+    } catch (err) {
+      console.error('Password reset error:', err);
+      return { success: false, error: 'Failed to reset password.' };
+    }
+  }
+
+  // Simple password reset without token (for admin/demo use)
+  async resetPassword(email: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const passwordHash = await simpleHash(newPassword);
+      const { error } = await supabase
+        .from('users')
+        .update({
+          password_hash: passwordHash,
+          updated_at: now()
+        })
+        .eq('email', email.toLowerCase());
+
+      if (error) {
+        return { success: false, error: 'User not found or update failed.' };
+      }
+
+      return { success: true };
+    } catch (err) {
+      console.error('Password reset error:', err);
+      return { success: false, error: 'Failed to reset password.' };
+    }
+  }
+
+    getRegisteredEmails(): string[] {
+    return this.usersCache.map(u => u.email);
+  }
+
   logout() {
     if (this.currentUserId) {
-      const user = this.users.find(u => u.id === this.currentUserId);
+      const user = this.usersCache.find(u => u.id === this.currentUserId);
       if (user) {
         user.status = 'offline';
       }
@@ -431,19 +659,18 @@ class AppStore {
     this.notify('users');
   }
 
-  // Set password for existing user (for legacy users)
-  setPassword(email: string, password: string): boolean {
-    const existingCreds = this.credentials.find(c => c.email.toLowerCase() === email.toLowerCase());
-    if (existingCreds) {
-      existingCreds.passwordHash = simpleHash(password);
-    } else {
-      this.credentials.push({
-        email,
-        passwordHash: simpleHash(password)
-      });
+  async setPassword(email: string, password: string): Promise<boolean> {
+    try {
+      const passwordHash = await simpleHash(password);
+      const { error } = await supabase
+        .from('users')
+        .update({ password_hash: passwordHash, updated_at: now() })
+        .eq('email', email.toLowerCase());
+
+      return !error;
+    } catch {
+      return false;
     }
-    this.saveToStorage();
-    return true;
   }
 
   // ==================== MESSAGING ====================
@@ -459,7 +686,6 @@ class AppStore {
     this.saveToStorage();
     this.notify('messages');
 
-    // Create notification for recipient
     if (messageData.recipientId && messageData.recipientId !== messageData.senderId) {
       this.addNotification({
         userId: messageData.recipientId,
@@ -480,7 +706,6 @@ class AppStore {
       filtered = filtered.filter(m => m.channelId === options.channelId);
     }
     if (options?.senderId && options?.recipientId) {
-      // Direct messages between two users
       filtered = filtered.filter(m =>
         (m.senderId === options.senderId && m.recipientId === options.recipientId) ||
         (m.senderId === options.recipientId && m.recipientId === options.senderId)
@@ -529,7 +754,6 @@ class AppStore {
     this.saveToStorage();
     this.notify('documents');
 
-    // Add activity message
     this.addMessage({
       senderId: docData.uploadedBy,
       senderName: docData.uploadedByName,
@@ -683,8 +907,8 @@ class AppStore {
 
   getTeamStats() {
     return {
-      totalUsers: this.users.length,
-      onlineUsers: this.users.filter(u => u.status === 'online').length,
+      totalUsers: this.usersCache.length,
+      onlineUsers: this.usersCache.filter(u => u.status === 'online').length,
       totalMessages: this.messages.length,
       totalDocuments: this.documents.length,
       totalAIAssets: this.aiAssets.length

@@ -2,48 +2,55 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23F5D547'/%3E%3Cstop offset='50%25' stop-color='%23D4B83A'/%3E%3Cstop offset='100%25' stop-color='%234A7C4E'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23g)' rx='16' width='100' height='100'/%3E%3Ctext x='50' y='65' text-anchor='middle' font-family='Arial Black' font-size='48' font-weight='bold' fill='white'%3E11%3C/text%3E%3C/svg%3E" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23F5C242'/%3E%3Cstop offset='100%25' stop-color='%23D4A520'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23g)' rx='16' width='100' height='100'/%3E%3Ctext x='50' y='65' text-anchor='middle' font-family='Arial Black' font-size='48' font-weight='bold' fill='%230a0a0a'%3E11%3C/text%3E%3C/svg%3E" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Eleven Views | All-In-One Business Platform</title>
+    <title>VIEWS | Creative Production Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Roboto+Mono:wght@400;700&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=Roboto+Mono:wght@400;700&family=Playfair+Display:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
       html {
         -webkit-tap-highlight-color: transparent;
       }
       body {
         font-family: 'Inter', sans-serif;
-        background-color: #050505;
-        color: #B0B0B0;
+        background-color: #0A0A0A;
+        color: #A3A3A3;
         -webkit-font-smoothing: antialiased;
         overflow-x: hidden;
       }
       .glass {
-        background: rgba(31, 31, 31, 0.6);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(26, 26, 26, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
       }
       .glass-gold {
-        background: rgba(255, 215, 0, 0.03);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 215, 0, 0.1);
+        background: rgba(245, 194, 66, 0.04);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(245, 194, 66, 0.12);
       }
-      .font-orbitron { font-family: 'Orbitron', sans-serif; }
+      .font-editorial { font-family: 'Playfair Display', serif; }
+      .font-display { font-family: 'Space Grotesk', sans-serif; }
       .font-mono { font-family: 'Roboto Mono', monospace; }
-      
-      ::-webkit-scrollbar { width: 6px; height: 6px; }
+
+      ::-webkit-scrollbar { width: 5px; height: 5px; }
       ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-      ::-webkit-scrollbar-thumb:hover { background: #FFD700; }
+      ::-webkit-scrollbar-thumb { background: #2A2A2A; border-radius: 10px; }
+      ::-webkit-scrollbar-thumb:hover { background: #F5C242; }
 
       @keyframes glow {
-        0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
-        50% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.4); }
+        0%, 100% { box-shadow: 0 0 10px rgba(245, 194, 66, 0.15); }
+        50% { box-shadow: 0 0 20px rgba(245, 194, 66, 0.3); }
       }
-      .animate-glow { animation: glow 3s infinite; }
+      .animate-glow { animation: glow 4s infinite ease-in-out; }
+
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fadeUp { animation: fadeUp 0.8s ease-out forwards; }
     </style>
     <script>
       tailwind.config = {
@@ -51,14 +58,26 @@
         theme: {
           extend: {
             colors: {
-              'brand-gold': '#FFD700',
-              'brand-dark': '#050505',
-              'brand-card': '#111111',
-              'brand-border': 'rgba(255, 255, 255, 0.05)',
+              // Primary Eleven Views Brand Colors
+              'brand-gold': '#F5C242',
+              'brand-amber': '#D4A574',
+              'brand-earth': '#8B7355',
+              'brand-dark': '#0A0A0A',
+              'brand-card': '#141414',
+              'brand-surface': '#1A1A1A',
+              'brand-border': 'rgba(255, 255, 255, 0.06)',
+              'brand-cream': '#f5f0e8',
+              // Accent variations (mapped to brand palette)
+              'brand-violet': '#F5C242',
+              'brand-royal-blue': '#8B7355',
+              'brand-lavender': '#f5f0e8',
+              'brand-neon-green': '#ffcc53',
+              'brand-aqua': '#ffd773',
             },
             fontFamily: {
               sans: ['Inter', 'sans-serif'],
-              orbitron: ['Orbitron', 'sans-serif'],
+              editorial: ['Playfair Display', 'serif'],
+              display: ['Space Grotesk', 'sans-serif'],
               mono: ['Roboto Mono', 'monospace'],
             }
           }

@@ -1,0 +1,17 @@
+<svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="300" fill="#0a0a0a"/>
+  <defs>
+    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:0.1" />
+    </linearGradient>
+  </defs>
+  <rect width="300" height="300" fill="url(#blueGradient)"/>
+  <path d="M100 70 L100 230 L200 230 L200 100 L170 70 Z" fill="none" stroke="#C6A962" stroke-width="3" opacity="0.8"/>
+  <path d="M170 70 L170 100 L200 100" fill="none" stroke="#C6A962" stroke-width="3" opacity="0.8"/>
+  <line x1="120" y1="130" x2="180" y2="130" stroke="#C6A962" stroke-width="2" opacity="0.5"/>
+  <line x1="120" y1="150" x2="180" y2="150" stroke="#C6A962" stroke-width="2" opacity="0.5"/>
+  <line x1="120" y1="170" x2="160" y2="170" stroke="#C6A962" stroke-width="2" opacity="0.5"/>
+  <line x1="120" y1="190" x2="175" y2="190" stroke="#C6A962" stroke-width="2" opacity="0.5"/>
+  <text x="150" y="270" text-anchor="middle" fill="#C6A962" font-family="system-ui, sans-serif" font-size="14" font-weight="600" opacity="0.6">ELEVEN VIEWS</text>
+</svg>

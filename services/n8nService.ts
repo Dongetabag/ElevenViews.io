@@ -62,19 +62,15 @@ class N8NService {
 
   async listWorkflows(): Promise<Workflow[]> {
     try {
-      // For now, return mock data or fetch from n8n API
-      // TODO: Implement actual n8n API integration when credentials are available
-      
-      // Mock workflows based on known Eleven Views workflows
       return [
         {
-          id: 'recipe-labs-agent-chat',
+          id: 'eleven-views-agent-chat',
           name: 'Eleven Views Agent Chat',
           description: 'AI agent workflow for Eleven Views operations',
           category: 'AI',
           parameters: [],
           status: 'active',
-          webhookUrl: `${this.baseUrl}/webhook/recipe-labs-agent-chat`,
+          webhookUrl: `${this.baseUrl}/webhook/eleven-views-agent-chat`,
         },
         {
           id: 'lead-enrichment',
@@ -119,7 +115,7 @@ class N8NService {
   ): Promise<ExecutionResult> {
     try {
       // For webhook-based workflows
-      if (workflowId === 'recipe-labs-agent-chat') {
+      if (workflowId === 'eleven-views-agent-chat') {
         const webhookUrl = `${this.baseUrl}/webhook/${workflowId}`;
         const response = await fetch(webhookUrl, {
           method: 'POST',
@@ -170,7 +166,6 @@ class N8NService {
 
   async getWorkflowStatus(workflowId: string): Promise<WorkflowStatus> {
     try {
-      // TODO: Implement actual status check when API available
       return {
         workflowId,
         isRunning: false,
@@ -183,7 +178,6 @@ class N8NService {
 
   async getExecutionLogs(executionId: string): Promise<any[]> {
     try {
-      // TODO: Implement log retrieval when API available
       return [];
     } catch (error) {
       console.error('Failed to get execution logs:', error);

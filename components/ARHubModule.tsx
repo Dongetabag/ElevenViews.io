@@ -3,7 +3,8 @@ import {
   Music, Play, Pause, SkipBack, SkipForward, Volume2, VolumeX,
   Upload, Star, MessageSquare, Clock, User, Filter, Search,
   ChevronDown, MoreVertical, ThumbsUp, ThumbsDown, Send, X,
-  Headphones, Mic2, TrendingUp, CheckCircle, XCircle, AlertCircle
+  Headphones, Mic2, TrendingUp, CheckCircle, XCircle, AlertCircle,
+  Loader2, Sparkles
 } from 'lucide-react';
 
 interface Demo {
@@ -41,51 +42,54 @@ interface Comment {
 const MOCK_DEMOS: Demo[] = [
   {
     id: '1',
-    title: 'Midnight Dreams',
-    artistName: 'Luna Wave',
-    artistEmail: 'luna@email.com',
-    genre: 'R&B',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    duration: 234,
-    status: 'pending',
-    priority: 'high',
-    submittedAt: '2026-01-07T10:30:00Z',
-    ratings: { overall: 0, production: 0, vocals: 0, lyrics: 0, commercial: 0 },
-    comments: [],
+    title: 'Like That',
+    artistName: 'Simeon Views',
+    artistEmail: 'simeon@elevenviews.com',
+    genre: 'Alternative R&B',
+    audioUrl: '/assets/music/pgws/01-like-that.m4a',
+    duration: 168,
+    status: 'approved',
+    priority: 'urgent',
+    submittedAt: '2026-01-05T08:00:00Z',
+    ratings: { overall: 9.4, production: 9.5, vocals: 9.5, lyrics: 9, commercial: 9.5 },
+    comments: [
+      { id: '1', userId: '1', userName: 'A&R Lead', userAvatar: '', comment: 'Strong opener. The production is crisp and the vocals sit perfectly in the mix.', timestampSeconds: 30, createdAt: '2026-01-06T11:00:00Z' },
+      { id: '2', userId: '2', userName: 'Creative Director', userAvatar: '', comment: 'This sets the tone for the whole album. Release ready.', timestampSeconds: 90, createdAt: '2026-01-06T14:30:00Z' }
+    ],
     waveformData: Array.from({ length: 100 }, () => Math.random() * 0.8 + 0.2)
   },
   {
     id: '2',
-    title: 'City Lights',
-    artistName: 'Metro Pulse',
-    artistEmail: 'metro@email.com',
-    genre: 'Hip-Hop',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-    duration: 198,
-    status: 'under_review',
-    priority: 'normal',
-    submittedAt: '2026-01-06T14:20:00Z',
-    ratings: { overall: 7.5, production: 8, vocals: 7, lyrics: 7.5, commercial: 7.5 },
+    title: 'Lost in the Game',
+    artistName: 'Simeon Views',
+    artistEmail: 'simeon@elevenviews.com',
+    genre: 'Alternative R&B',
+    audioUrl: '/assets/music/pgws/02-lost-in-the-game.m4a',
+    duration: 222,
+    status: 'approved',
+    priority: 'high',
+    submittedAt: '2026-01-06T10:00:00Z',
+    ratings: { overall: 9.2, production: 9, vocals: 9.5, lyrics: 9, commercial: 9 },
     comments: [
-      { id: '1', userId: '1', userName: 'A&R Team', userAvatar: '', comment: 'Strong production, vocals need work', createdAt: '2026-01-07T09:00:00Z' }
+      { id: '1', userId: '1', userName: 'A&R Lead', userAvatar: '', comment: 'The storytelling here is incredible. Emotional depth.', timestampSeconds: 60, createdAt: '2026-01-07T09:00:00Z' }
     ],
     waveformData: Array.from({ length: 100 }, () => Math.random() * 0.8 + 0.2)
   },
   {
     id: '3',
-    title: 'Wild Stories',
+    title: 'Her Stage',
     artistName: 'Simeon Views',
     artistEmail: 'simeon@elevenviews.com',
     genre: 'Alternative R&B',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-    duration: 267,
+    audioUrl: '/assets/music/pgws/03-her-stage.m4a',
+    duration: 238,
     status: 'approved',
-    priority: 'urgent',
-    submittedAt: '2026-01-05T08:00:00Z',
-    ratings: { overall: 9.2, production: 9.5, vocals: 9, lyrics: 9, commercial: 9.5 },
+    priority: 'high',
+    submittedAt: '2026-01-07T08:00:00Z',
+    ratings: { overall: 9.5, production: 9.5, vocals: 9.5, lyrics: 9.5, commercial: 9.5 },
     comments: [
-      { id: '1', userId: '1', userName: 'A&R Lead', userAvatar: '', comment: 'Exceptional track. Ready for release.', timestampSeconds: 45, createdAt: '2026-01-06T11:00:00Z' },
-      { id: '2', userId: '2', userName: 'Producer', userAvatar: '', comment: 'The hook at 1:30 is incredible', timestampSeconds: 90, createdAt: '2026-01-06T12:30:00Z' }
+      { id: '1', userId: '1', userName: 'A&R Lead', userAvatar: '', comment: 'Perfect closer for the EP. The build is phenomenal.', timestampSeconds: 120, createdAt: '2026-01-07T11:00:00Z' },
+      { id: '2', userId: '2', userName: 'Producer', userAvatar: '', comment: 'The bridge section is hauntingly beautiful', timestampSeconds: 150, createdAt: '2026-01-07T12:30:00Z' }
     ],
     waveformData: Array.from({ length: 100 }, () => Math.random() * 0.8 + 0.2)
   }
@@ -105,16 +109,22 @@ const PRIORITY_CONFIG = {
   urgent: { label: 'Urgent', color: 'text-red-400' }
 };
 
+const GOOGLE_AI_API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY || '';
+
 const ARHubModule: React.FC = () => {
   const [demos, setDemos] = useState<Demo[]>(MOCK_DEMOS);
   const [selectedDemo, setSelectedDemo] = useState<Demo | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const [isMuted, setIsMuted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [newComment, setNewComment] = useState('');
+  const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -130,24 +140,55 @@ const ARHubModule: React.FC = () => {
 
     const updateTime = () => setCurrentTime(audio.currentTime);
     const handleEnded = () => setIsPlaying(false);
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+      setIsLoading(false);
+      setAudioError(null);
+    };
+    const handleCanPlay = () => {
+      setIsLoading(false);
+    };
+    const handleError = () => {
+      setAudioError('Unable to load audio file');
+      setIsLoading(false);
+      setIsPlaying(false);
+    };
+    const handleLoadStart = () => {
+      setIsLoading(true);
+      setAudioError(null);
+    };
 
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('loadstart', handleLoadStart);
 
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('loadstart', handleLoadStart);
     };
   }, [selectedDemo]);
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     if (!audioRef.current || !selectedDemo) return;
     if (isPlaying) {
       audioRef.current.pause();
+      setIsPlaying(false);
     } else {
-      audioRef.current.play();
+      try {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      } catch (err) {
+        console.error('Playback error:', err);
+        setAudioError('Unable to play audio');
+      }
     }
-    setIsPlaying(!isPlaying);
   };
 
   const seekTo = (time: number) => {
@@ -205,6 +246,67 @@ const ARHubModule: React.FC = () => {
     setSelectedDemo(updatedDemo);
     setDemos(demos.map(d => d.id === selectedDemo.id ? updatedDemo : d));
     setNewComment('');
+  };
+
+  const generateAIFeedback = async () => {
+    if (!selectedDemo || isGeneratingFeedback) return;
+    setIsGeneratingFeedback(true);
+
+    try {
+      const prompt = `You are an A&R professional at Eleven Views, a boutique production company. Generate constructive feedback for a demo submission.
+
+Track: "${selectedDemo.title}"
+Artist: ${selectedDemo.artistName}
+Genre: ${selectedDemo.genre}
+Current Ratings: Production ${selectedDemo.ratings.production}/10, Vocals ${selectedDemo.ratings.vocals}/10, Lyrics ${selectedDemo.ratings.lyrics}/10, Commercial Potential ${selectedDemo.ratings.commercial}/10
+
+Provide brief, professional A&R feedback (2-3 sentences) focusing on:
+- What works well in this track
+- One specific area for improvement
+- Commercial viability assessment
+
+Keep the tone supportive but honest. Be specific, not generic.`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_AI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 256
+            }
+          })
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const feedback = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (feedback) {
+          const comment: Comment = {
+            id: Date.now().toString(),
+            userId: 'ai',
+            userName: 'AI A&R Assistant',
+            userAvatar: '',
+            comment: feedback,
+            createdAt: new Date().toISOString()
+          };
+          const updatedDemo = {
+            ...selectedDemo,
+            comments: [...selectedDemo.comments, comment]
+          };
+          setSelectedDemo(updatedDemo);
+          setDemos(demos.map(d => d.id === selectedDemo.id ? updatedDemo : d));
+        }
+      }
+    } catch (err) {
+      console.error('AI feedback error:', err);
+    } finally {
+      setIsGeneratingFeedback(false);
+    }
   };
 
   const filteredDemos = demos.filter(demo => {
@@ -346,7 +448,13 @@ const ARHubModule: React.FC = () => {
           {selectedDemo ? (
             <div className="glass rounded-xl overflow-hidden">
               {/* Audio Element */}
-              <audio ref={audioRef} src={selectedDemo.audioUrl} preload="metadata" />
+              <audio
+                ref={audioRef}
+                key={selectedDemo.id}
+                src={selectedDemo.audioUrl}
+                preload="metadata"
+                crossOrigin="anonymous"
+              />
 
               {/* Player Header */}
               <div className="p-6 border-b border-white/5">
@@ -402,15 +510,25 @@ const ARHubModule: React.FC = () => {
                 <div className="mt-4 flex items-center gap-4">
                   <button
                     onClick={togglePlay}
-                    className="w-14 h-14 rounded-full bg-brand-gold text-black flex items-center justify-center hover:scale-105 transition-transform"
+                    disabled={isLoading || !!audioError}
+                    className="w-14 h-14 rounded-full bg-brand-gold text-black flex items-center justify-center hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
+                    {isLoading ? (
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                    ) : isPlaying ? (
+                      <Pause className="w-6 h-6" />
+                    ) : (
+                      <Play className="w-6 h-6 ml-1" />
+                    )}
                   </button>
                   <div className="flex-1">
                     <div className="flex items-center justify-between text-sm text-gray-400">
                       <span>{formatTime(currentTime)}</span>
-                      <span>{formatTime(selectedDemo.duration)}</span>
+                      <span>{formatTime(duration || selectedDemo.duration)}</span>
                     </div>
+                    {audioError && (
+                      <p className="text-xs text-red-400 mt-1">{audioError}</p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={() => setIsMuted(!isMuted)} className="p-2 text-gray-400 hover:text-white">
@@ -457,9 +575,23 @@ const ARHubModule: React.FC = () => {
 
               {/* Comments */}
               <div className="p-6">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
-                  Team Comments ({selectedDemo.comments.length})
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+                    Team Comments ({selectedDemo.comments.length})
+                  </h3>
+                  <button
+                    onClick={generateAIFeedback}
+                    disabled={isGeneratingFeedback}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-brand-gold/10 text-brand-gold text-xs font-medium rounded-lg hover:bg-brand-gold/20 transition-colors disabled:opacity-50"
+                  >
+                    {isGeneratingFeedback ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3 h-3" />
+                    )}
+                    {isGeneratingFeedback ? 'Generating...' : 'AI Feedback'}
+                  </button>
+                </div>
                 <div className="space-y-3 max-h-48 overflow-y-auto mb-4">
                   {selectedDemo.comments.map(comment => (
                     <div key={comment.id} className="flex gap-3 p-3 bg-white/5 rounded-lg">

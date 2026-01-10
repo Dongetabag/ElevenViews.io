@@ -7,10 +7,13 @@ import {
   BarChart3, Lightbulb, PenTool, MessageCircle, Award,
   Plus, Trash2, MessageSquare, MoreVertical, X, Edit3
 } from 'lucide-react';
-import { mcpClient, MCPTool } from '../services/mcpClient.ts';
+import { mcpClient, MCPTool, MCPServerStatus } from '../services/mcpClient.ts';
 
-const MAX_MESSAGES_PER_CHAT = 25;
-const STORAGE_KEY = 'recipe-labs-ai-assistant-sessions';
+// No message limit - unlimited chat history
+const CONTEXT_WINDOW_SIZE = 20; // Messages to send to AI for context
+const SUMMARIZE_THRESHOLD = 30; // Auto-summarize when messages exceed this
+const GOOGLE_AI_API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY || '';
+const STORAGE_KEY = 'eleven-views-ai-assistant-sessions';
 
 interface AIToolsModuleProps {
   user: UserProfile;
@@ -146,6 +149,7 @@ const AIToolsModule: React.FC<AIToolsModuleProps> = ({ user }) => {
   const [isTyping, setIsTyping] = useState(false);
   const [mcpConnected, setMcpConnected] = useState(false);
   const [mcpTools, setMcpTools] = useState<MCPTool[]>([]);
+  const [mcpServers, setMcpServers] = useState<MCPServerStatus[]>([]);
   const [slackMessage, setSlackMessage] = useState('');
   const [sendingSlack, setSendingSlack] = useState(false);
   const [showMcpPanel, setShowMcpPanel] = useState(false);
@@ -222,35 +226,79 @@ const AIToolsModule: React.FC<AIToolsModuleProps> = ({ user }) => {
     setEditTitle('');
   }, []);
 
-  // Update messages in active session
-  const updateActiveSessionMessages = useCallback((newMessages: ChatMessage[]) => {
+  // Update messages in active session - unlimited messages
+  const updateActiveSessionMessages = useCallback((newMessages: ChatMessage[], newSummary?: string, summarizedUpTo?: number) => {
     if (!activeSessionId) return;
-
-    // Limit to MAX_MESSAGES_PER_CHAT
-    const limitedMessages = newMessages.slice(-MAX_MESSAGES_PER_CHAT);
 
     setSessions(prev => prev.map(s => {
       if (s.id === activeSessionId) {
         // Auto-generate title from first user message if still "New Chat"
         let title = s.title;
-        if (title === 'New Chat' && limitedMessages.length > 0) {
-          const firstUserMsg = limitedMessages.find(m => m.role === 'user');
+        if (title === 'New Chat' && newMessages.length > 0) {
+          const firstUserMsg = newMessages.find(m => m.role === 'user');
           if (firstUserMsg) {
             title = generateTitle(firstUserMsg.text);
           }
         }
-        return { ...s, messages: limitedMessages, title, updatedAt: new Date().toISOString() };
+        return {
+          ...s,
+          messages: newMessages,
+          title,
+          summary: newSummary !== undefined ? newSummary : s.summary,
+          summarizedUpTo: summarizedUpTo !== undefined ? summarizedUpTo : s.summarizedUpTo,
+          updatedAt: new Date().toISOString()
+        };
       }
       return s;
     }));
   }, [activeSessionId]);
 
-  // Initialize MCP connection
+  // Auto-summarize older messages when context gets large
+  const summarizeConversation = useCallback(async (messages: ChatMessage[], existingSummary?: string): Promise<string> => {
+    const messagesToSummarize = messages.slice(0, -CONTEXT_WINDOW_SIZE);
+    if (messagesToSummarize.length === 0) return existingSummary || '';
+
+    const conversationText = messagesToSummarize.map(m =>
+      `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`
+    ).join('\n\n');
+
+    const summaryPrompt = existingSummary
+      ? `You have an existing conversation summary:\n\n"${existingSummary}"\n\nHere are additional messages to incorporate into the summary:\n\n${conversationText}\n\nCreate an updated, comprehensive summary that captures all key points, decisions, topics discussed, and any action items or ongoing threads. Keep it concise but thorough (2-4 paragraphs).`
+      : `Summarize the following conversation, capturing key points, decisions made, topics discussed, and any ongoing threads or action items:\n\n${conversationText}\n\nProvide a comprehensive but concise summary (2-4 paragraphs) that would help continue this conversation seamlessly.`;
+
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_AI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: summaryPrompt }] }],
+            generationConfig: {
+              temperature: 0.3,
+              maxOutputTokens: 1024
+            }
+          })
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || existingSummary || '';
+      }
+    } catch (err) {
+      console.error('Summarization error:', err);
+    }
+    return existingSummary || '';
+  }, []);
+
+  // Initialize MCP connection to both servers
   useEffect(() => {
     const initMCP = async () => {
       const result = await mcpClient.connect();
       setMcpConnected(result.success);
       setMcpTools(result.tools);
+      setMcpServers(result.servers || []);
     };
     initMCP();
   }, []);
@@ -362,14 +410,72 @@ Would you like me to dig deeper into any of these metrics?`;
       }
     }
 
+    // AISIM Market Analysis
+    if (lowerCommand.includes('market') && (lowerCommand.includes('analysis') || lowerCommand.includes('analyze') || lowerCommand.includes('research'))) {
+      const industryMatch = command.match(/(?:market|industry|sector)[:\s]+["']?([^"']+)["']?/i) ||
+                           command.match(/analyze\s+(?:the\s+)?["']?([^"']+?)["']?\s+(?:market|industry)/i);
+      const industry = industryMatch?.[1] || 'marketing agencies';
+      const result = await mcpClient.runMarketAnalysis(industry);
+      if (result.success) {
+        return `**Market Analysis: ${industry}**\n\n${typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2)}`;
+      }
+    }
+
+    // AISIM Competitor Intelligence
+    if (lowerCommand.includes('competitor') && (lowerCommand.includes('intel') || lowerCommand.includes('analysis') || lowerCommand.includes('research'))) {
+      const competitorMatch = command.match(/competitors?[:\s]+["']?([^"']+)["']?/i);
+      const competitors = competitorMatch?.[1]?.split(/[,;]/).map(c => c.trim()) || [];
+      if (competitors.length > 0) {
+        const result = await mcpClient.getCompetitorIntel(competitors);
+        if (result.success) {
+          return `**Competitor Intelligence**\n\n${typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2)}`;
+        }
+      }
+    }
+
+    // AISIM Campaign Forecast
+    if (lowerCommand.includes('campaign') && (lowerCommand.includes('forecast') || lowerCommand.includes('predict') || lowerCommand.includes('projection'))) {
+      const budgetMatch = command.match(/budget[:\s]+\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/i);
+      const budget = budgetMatch ? parseFloat(budgetMatch[1].replace(/,/g, '')) : 10000;
+      const channelsMatch = command.match(/channels?[:\s]+["']?([^"']+)["']?/i);
+      const channels = channelsMatch?.[1]?.split(/[,;]/).map(c => c.trim()) || ['social', 'email'];
+      const result = await mcpClient.forecastCampaign(budget, channels);
+      if (result.success) {
+        return `**Campaign Forecast**\n\nBudget: $${budget.toLocaleString()}\nChannels: ${channels.join(', ')}\n\n${typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2)}`;
+      }
+    }
+
+    // AISIM Audience Insights
+    if (lowerCommand.includes('audience') && (lowerCommand.includes('insight') || lowerCommand.includes('persona') || lowerCommand.includes('profile'))) {
+      const industryMatch = command.match(/(?:industry|vertical)[:\s]+["']?([^"']+)["']?/i);
+      const industry = industryMatch?.[1] || 'marketing';
+      const result = await mcpClient.getAudienceInsights(industry);
+      if (result.success) {
+        return `**Audience Insights: ${industry}**\n\n${typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2)}`;
+      }
+    }
+
+    // AISIM Trend Prediction
+    if (lowerCommand.includes('trend') && (lowerCommand.includes('predict') || lowerCommand.includes('forecast') || lowerCommand.includes('upcoming'))) {
+      const industryMatch = command.match(/(?:industry|market|sector)[:\s]+["']?([^"']+)["']?/i);
+      const industry = industryMatch?.[1] || 'digital marketing';
+      const result = await mcpClient.predictTrends(industry);
+      if (result.success) {
+        return `**Trend Predictions: ${industry}**\n\n${typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2)}`;
+      }
+    }
+
     return null; // Not an MCP command
   };
 
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
 
+    let currentSessionId = activeSessionId;
+    let currentHistory = [...history];
+
     // Create a new session if none exists
-    if (!activeSessionId) {
+    if (!currentSessionId) {
       const newSession: AIChatSession = {
         id: generateId(),
         title: 'New Chat',
@@ -377,25 +483,52 @@ Would you like me to dig deeper into any of these metrics?`;
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
+      currentSessionId = newSession.id;
+      currentHistory = [];
       setSessions(prev => [newSession, ...prev]);
       setActiveSessionId(newSession.id);
-      // Wait for state update
-      await new Promise(resolve => setTimeout(resolve, 50));
     }
 
     const userMsg: ChatMessage = { role: 'user', text: input, timestamp: new Date().toISOString() };
-    const updatedHistory = [...history, userMsg];
-    updateActiveSessionMessages(updatedHistory);
+    const updatedHistory = [...currentHistory, userMsg];
     const userInput = input;
     setInput('');
     setIsTyping(true);
+
+    // Update session messages directly with the session ID
+    setSessions(prev => prev.map(s => {
+      if (s.id === currentSessionId) {
+        let title = s.title;
+        if (title === 'New Chat') {
+          title = generateTitle(userMsg.text);
+        }
+        return { ...s, messages: updatedHistory, title, updatedAt: new Date().toISOString() };
+      }
+      return s;
+    }));
+
+    // Helper to update session messages directly
+    const updateSession = (messages: ChatMessage[], summary?: string, summarizedUpTo?: number) => {
+      setSessions(prev => prev.map(s => {
+        if (s.id === currentSessionId) {
+          return {
+            ...s,
+            messages,
+            summary: summary !== undefined ? summary : s.summary,
+            summarizedUpTo: summarizedUpTo !== undefined ? summarizedUpTo : s.summarizedUpTo,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return s;
+      }));
+    };
 
     try {
       // Check for MCP commands first
       if (mcpConnected) {
         const mcpResponse = await executeMCPCommand(userInput);
         if (mcpResponse) {
-          updateActiveSessionMessages([...updatedHistory, {
+          updateSession([...updatedHistory, {
             role: 'model',
             text: mcpResponse,
             timestamp: new Date().toISOString()
@@ -405,43 +538,88 @@ Would you like me to dig deeper into any of these metrics?`;
         }
       }
 
-      // Build the context for the backend API
-      const context = {
-        user: user.name,
-        role: user.role || 'Agency Professional',
-        agencyFocus: user.agencyCoreCompetency || 'Marketing & Advertising',
-        primaryIndustry: user.primaryClientIndustry || 'Various',
-        mcpConnected: mcpConnected,
-        conversationHistory: updatedHistory.slice(-6).map(m => ({ role: m.role, text: m.text }))
-      };
+      // Get current session for summary (use sessions state directly)
+      const currentSession = sessions.find(s => s.id === currentSessionId);
+      const existingSummary = currentSession?.summary;
 
-      // Call the backend API (Eleven Views Agent) - uses nginx proxy
-      const response = await fetch('/api/v1/agent/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: userInput,
-          context: context
-        })
-      });
+      // Build conversation history for Gemini - use CONTEXT_WINDOW_SIZE
+      const conversationParts = updatedHistory.slice(-CONTEXT_WINDOW_SIZE).map(m => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        parts: [{ text: m.text }]
+      }));
+
+      // Build context-aware system prompt with conversation summary
+      let contextPrompt = `${EXECUTIVE_ASSISTANT_PROMPT}
+
+## Current Context
+- User: ${user.name}
+- Role: ${user.role || 'Agency Professional'}
+- Agency Focus: ${user.agencyCoreCompetency || 'Marketing & Advertising'}
+- Primary Industry: ${user.primaryClientIndustry || 'Various'}
+- MCP Systems: ${mcpConnected ? 'Connected' : 'Offline'}
+- Total Messages in Chat: ${updatedHistory.length}`;
+
+      // Add conversation summary if available
+      if (existingSummary) {
+        contextPrompt += `
+
+## Earlier Conversation Summary
+The following is a summary of earlier parts of this conversation that are not in the recent messages:
+
+${existingSummary}
+
+Use this context to maintain continuity and remember previous discussions, decisions, and topics.`;
+      }
+
+      // Call Google Gemini API
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_AI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: conversationParts,
+            systemInstruction: {
+              parts: [{ text: contextPrompt }]
+            },
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 2048,
+              topP: 0.9
+            }
+          })
+        }
+      );
 
       if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
       }
 
       const data = await response.json();
+      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
       const modelMsg: ChatMessage = {
         role: 'model',
-        text: data.response || "I'm here to help. Could you tell me more about what you're working on?",
+        text: aiResponse || "I'm here to help. Could you tell me more about what you're working on?",
         timestamp: new Date().toISOString()
       };
-      updateActiveSessionMessages([...updatedHistory, modelMsg]);
+
+      const finalHistory = [...updatedHistory, modelMsg];
+
+      // Auto-summarize if conversation is getting long
+      if (finalHistory.length >= SUMMARIZE_THRESHOLD && finalHistory.length > (currentSession?.summarizedUpTo || 0) + CONTEXT_WINDOW_SIZE) {
+        // Summarize in the background
+        summarizeConversation(finalHistory, existingSummary).then(newSummary => {
+          if (newSummary) {
+            updateSession(finalHistory, newSummary, finalHistory.length - CONTEXT_WINDOW_SIZE);
+          }
+        });
+      }
+      updateSession(finalHistory);
     } catch (err) {
       console.error('AI Error:', err);
-      updateActiveSessionMessages([...updatedHistory, {
+      updateSession([...updatedHistory, {
         role: 'model',
         text: "I apologize—I encountered a technical issue processing your request. Could you try rephrasing, or let me know if there's another way I can help?",
         timestamp: new Date().toISOString()
@@ -618,43 +796,102 @@ Would you like me to dig deeper into any of these metrics?`;
                   <Database className="w-4 h-4" />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm text-white">Eleven Views Systems</p>
+                  <p className="text-sm text-white">MCP Servers</p>
                   <p className={`text-[10px] ${mcpConnected ? 'text-green-500' : 'text-red-500'}`}>
-                    {mcpConnected ? `${mcpTools.length} tools connected` : 'Offline'}
+                    {mcpConnected ? `${mcpServers.filter(s => s.connected).length} servers • ${mcpTools.length} tools` : 'Offline'}
                   </p>
                 </div>
               </div>
               <Terminal className={`w-4 h-4 text-gray-500 transition-transform ${showMcpPanel ? 'rotate-90' : ''}`} />
             </button>
 
-            {showMcpPanel && mcpConnected && (
+            {showMcpPanel && (
               <div className="mt-3 space-y-3 px-2">
-                {/* Quick Commands */}
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setInput('Show me our pipeline stats')}
-                    className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
-                  >
-                    Pipeline Stats
-                  </button>
-                  <button
-                    onClick={() => setInput('Get our latest leads')}
-                    className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
-                  >
-                    View Leads
-                  </button>
-                  <button
-                    onClick={() => setInput('Check system health')}
-                    className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
-                  >
-                    System Health
-                  </button>
-                  <button
-                    onClick={() => setShowMcpPanel(false)}
-                    className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors flex items-center justify-center gap-1"
-                  >
-                    <Slack className="w-3 h-3" /> Slack
-                  </button>
+                {/* Server Status */}
+                <div className="space-y-2">
+                  {mcpServers.map(server => (
+                    <div key={server.name} className="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${server.connected ? 'bg-green-500' : 'bg-red-500'}`} />
+                        <span className="text-xs text-white capitalize">{server.name.replace('-', ' ')}</span>
+                      </div>
+                      <span className="text-[10px] text-gray-500">{server.tools.length} tools</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Eleven Views Commands */}
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Eleven Views</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setInput('Show me our pipeline stats')}
+                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      Pipeline Stats
+                    </button>
+                    <button
+                      onClick={() => setInput('Get our latest leads')}
+                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      View Leads
+                    </button>
+                    <button
+                      onClick={() => setInput('Check system health')}
+                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      System Health
+                    </button>
+                    <button
+                      onClick={() => setInput('Send slack message: ')}
+                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors flex items-center justify-center gap-1"
+                    >
+                      <Slack className="w-3 h-3" /> Slack
+                    </button>
+                  </div>
+                </div>
+
+                {/* AISIM Commands */}
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">AISIM AI Tools</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setInput('Run market analysis for digital marketing industry')}
+                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
+                    >
+                      Market Analysis
+                    </button>
+                    <button
+                      onClick={() => setInput('Get competitor intel for competitors: ')}
+                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
+                    >
+                      Competitor Intel
+                    </button>
+                    <button
+                      onClick={() => setInput('Forecast campaign with budget: $10000 channels: social, email')}
+                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
+                    >
+                      Campaign Forecast
+                    </button>
+                    <button
+                      onClick={() => setInput('Get audience insights for marketing industry')}
+                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
+                    >
+                      Audience Insights
+                    </button>
+                    <button
+                      onClick={() => setInput('Predict trends for digital marketing industry')}
+                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
+                    >
+                      Trend Predictor
+                    </button>
+                    <button
+                      onClick={() => setInput('Optimize content: [paste content] goals: engagement, conversion')}
+                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
+                    >
+                      Content Optimizer
+                    </button>
+                  </div>
                 </div>
 
                 {/* Slack Quick Send */}
@@ -704,7 +941,7 @@ Would you like me to dig deeper into any of these metrics?`;
               </span>
               {activeSession && (
                 <span className="text-[10px] text-gray-500 ml-2">
-                  {history.length}/{MAX_MESSAGES_PER_CHAT} messages
+                  {history.length} messages{activeSession.summary ? ' • Context indexed' : ''}
                 </span>
               )}
             </div>

@@ -1,8 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX,
-  Repeat, Shuffle, Heart, ListMusic, X, ChevronUp, ChevronDown
+  Repeat, Shuffle, Heart, ListMusic, X, ChevronUp, ChevronDown, Music
 } from 'lucide-react';
+import { Asset } from '../types';
+import { getAssetStreamUrl } from '../services/wasabiService';
 
 interface Track {
   id: string;
@@ -16,48 +18,62 @@ interface Track {
 
 interface MusicPlayerProps {
   playlist?: Track[];
+  libraryAssets?: Asset[]; // Accept library assets directly
   initialTrack?: Track;
+  currentAsset?: Asset; // Currently selected asset from library
   onClose?: () => void;
+  onTrackChange?: (asset: Asset | null) => void;
   minimized?: boolean;
 }
 
-const DEFAULT_TRACKS: Track[] = [
-  {
-    id: '1',
-    title: 'Pretty Girls Have Wild Stories',
-    artist: 'Simeon Views',
-    album: 'PGWS',
-    coverUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    duration: 234
-  },
-  {
-    id: '2',
-    title: 'Midnight in Morocco',
-    artist: 'Eleven Views',
-    album: 'Global Sessions',
-    coverUrl: 'https://images.unsplash.com/photo-1489749798305-4fea3ae63d43?w=300&h=300&fit=crop',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-    duration: 198
-  },
-  {
-    id: '3',
-    title: 'Tokyo Drift',
-    artist: 'Eleven Views',
-    album: 'Global Sessions',
-    coverUrl: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=300&h=300&fit=crop',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-    duration: 267
-  }
-];
+// Eleven Views branded audio placeholder
+const AUDIO_PLACEHOLDER = '/placeholders/audio-placeholder.svg';
+
+// Convert Asset to Track format
+const assetToTrack = (asset: Asset): Track => {
+  return {
+    id: asset.id,
+    title: asset.name || 'Untitled Track',
+    artist: asset.metadata?.artist || 'Eleven Views',
+    album: asset.metadata?.album || '',
+    coverUrl: asset.thumbnailUrl || asset.metadata?.thumbnailUrl || AUDIO_PLACEHOLDER,
+    audioUrl: getAssetStreamUrl(asset),
+    duration: asset.duration || asset.metadata?.duration || 0,
+  };
+};
+
+// Empty default - music only plays when library has assets
+const DEFAULT_TRACKS: Track[] = [];
 
 const MusicPlayer: React.FC<MusicPlayerProps> = ({
   playlist = DEFAULT_TRACKS,
+  libraryAssets,
   initialTrack,
+  currentAsset,
   onClose,
+  onTrackChange,
   minimized: initialMinimized = true
 }) => {
-  const [currentTrack, setCurrentTrack] = useState<Track>(initialTrack || playlist[0]);
+  // Convert library assets to tracks if provided
+  const tracksFromLibrary = useMemo(() => {
+    if (libraryAssets && libraryAssets.length > 0) {
+      return libraryAssets
+        .filter(asset => asset.type === 'audio')
+        .map(assetToTrack);
+    }
+    return playlist;
+  }, [libraryAssets, playlist]);
+
+  // Use library tracks or provided playlist
+  const activePlaylist = tracksFromLibrary.length > 0 ? tracksFromLibrary : playlist;
+
+  // Convert currentAsset to track if provided
+  const initialTrackFromAsset = useMemo(() => {
+    if (currentAsset) return assetToTrack(currentAsset);
+    return initialTrack || (activePlaylist.length > 0 ? activePlaylist[0] : null);
+  }, [currentAsset, initialTrack, activePlaylist]);
+
+  const [currentTrack, setCurrentTrack] = useState<Track | null>(initialTrackFromAsset);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -68,7 +84,28 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   const [isLiked, setIsLiked] = useState(false);
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [minimized, setMinimized] = useState(initialMinimized);
+  const [audioError, setAudioError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Update current track when currentAsset changes
+  useEffect(() => {
+    if (currentAsset) {
+      const track = assetToTrack(currentAsset);
+      setCurrentTrack(track);
+      setCurrentTime(0);
+      setAudioError(null);
+      // Auto-play when a new asset is selected
+      setTimeout(() => {
+        if (audioRef.current) {
+          audioRef.current.play().catch(err => {
+            console.error('Playback failed:', err);
+            setAudioError('Unable to play this track');
+          });
+          setIsPlaying(true);
+        }
+      }, 100);
+    }
+  }, [currentAsset]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -124,17 +161,19 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   };
 
   const playNext = () => {
-    const currentIndex = playlist.findIndex(t => t.id === currentTrack.id);
+    if (activePlaylist.length === 0 || !currentTrack) return;
+    const currentIndex = activePlaylist.findIndex(t => t.id === currentTrack.id);
     let nextIndex;
     if (isShuffled) {
-      nextIndex = Math.floor(Math.random() * playlist.length);
+      nextIndex = Math.floor(Math.random() * activePlaylist.length);
     } else {
-      nextIndex = (currentIndex + 1) % playlist.length;
+      nextIndex = (currentIndex + 1) % activePlaylist.length;
     }
-    playTrack(playlist[nextIndex]);
+    playTrack(activePlaylist[nextIndex]);
   };
 
   const playPrevious = () => {
+    if (activePlaylist.length === 0 || !currentTrack) return;
     if (currentTime > 3) {
       // If more than 3 seconds in, restart current track
       if (audioRef.current) {
@@ -142,9 +181,9 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       }
       return;
     }
-    const currentIndex = playlist.findIndex(t => t.id === currentTrack.id);
-    const prevIndex = currentIndex === 0 ? playlist.length - 1 : currentIndex - 1;
-    playTrack(playlist[prevIndex]);
+    const currentIndex = activePlaylist.findIndex(t => t.id === currentTrack.id);
+    const prevIndex = currentIndex === 0 ? activePlaylist.length - 1 : currentIndex - 1;
+    playTrack(activePlaylist[prevIndex]);
   };
 
   const seekTo = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -167,10 +206,24 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     setRepeatMode(modes[(currentIndex + 1) % 3]);
   };
 
+  // Don't render if no tracks available and no current track
+  if (!currentTrack && activePlaylist.length === 0) {
+    return null;
+  }
+
   if (minimized) {
     return (
       <div className="fixed bottom-0 left-0 right-0 h-20 bg-black/95 backdrop-blur-xl border-t border-white/5 z-50">
-        <audio ref={audioRef} src={currentTrack.audioUrl} preload="metadata" />
+        <audio
+          ref={audioRef}
+          src={currentTrack?.audioUrl || ''}
+          preload="metadata"
+          crossOrigin="anonymous"
+          onError={(e) => {
+            console.error('Audio error:', e);
+            setAudioError('Unable to load audio file');
+          }}
+        />
 
         {/* Progress bar */}
         <div
@@ -190,18 +243,19 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         <div className="flex items-center justify-between h-full px-4">
           {/* Track Info */}
           <div className="flex items-center gap-4 w-1/4">
-            <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/10 flex-shrink-0">
-              {currentTrack.coverUrl ? (
-                <img src={currentTrack.coverUrl} alt={currentTrack.title} className="w-full h-full object-cover" />
+            <div className="w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-br from-brand-gold/20 to-purple-500/20 flex-shrink-0">
+              {currentTrack?.coverUrl && currentTrack.coverUrl !== AUDIO_PLACEHOLDER ? (
+                <img src={currentTrack.coverUrl} alt={currentTrack.title} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = AUDIO_PLACEHOLDER; }} />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-brand-gold">
-                  <ListMusic className="w-6 h-6" />
+                <div className="w-full h-full flex items-center justify-center">
+                  <Music className="w-6 h-6 text-brand-gold" />
                 </div>
               )}
             </div>
             <div className="min-w-0">
-              <p className="font-medium text-white truncate">{currentTrack.title}</p>
-              <p className="text-sm text-gray-400 truncate">{currentTrack.artist}</p>
+              <p className="font-medium text-white truncate">{currentTrack?.title || 'No Track Selected'}</p>
+              <p className="text-sm text-gray-400 truncate">{currentTrack?.artist || 'Select a track to play'}</p>
+              {audioError && <p className="text-xs text-red-400 truncate">{audioError}</p>}
             </div>
             <button
               onClick={() => setIsLiked(!isLiked)}
@@ -289,38 +343,50 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         {showPlaylist && (
           <div className="absolute bottom-full right-4 mb-2 w-80 max-h-96 bg-black/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden">
             <div className="p-3 border-b border-white/5">
-              <h3 className="font-semibold text-white">Queue</h3>
+              <h3 className="font-semibold text-white">Queue ({activePlaylist.length} tracks)</h3>
             </div>
             <div className="overflow-y-auto max-h-72">
-              {playlist.map((track, i) => (
-                <button
-                  key={track.id}
-                  onClick={() => playTrack(track)}
-                  className={`w-full flex items-center gap-3 p-3 hover:bg-white/5 transition-colors ${
-                    track.id === currentTrack.id ? 'bg-brand-gold/10' : ''
-                  }`}
-                >
-                  <span className="w-6 text-center text-sm text-gray-500">
-                    {track.id === currentTrack.id && isPlaying ? (
-                      <span className="text-brand-gold">♪</span>
-                    ) : (
-                      i + 1
-                    )}
-                  </span>
-                  <div className="w-10 h-10 rounded overflow-hidden bg-white/10 flex-shrink-0">
-                    {track.coverUrl && (
-                      <img src={track.coverUrl} alt="" className="w-full h-full object-cover" />
-                    )}
-                  </div>
-                  <div className="flex-1 text-left min-w-0">
-                    <p className={`text-sm truncate ${track.id === currentTrack.id ? 'text-brand-gold' : 'text-white'}`}>
-                      {track.title}
-                    </p>
-                    <p className="text-xs text-gray-400 truncate">{track.artist}</p>
-                  </div>
-                  <span className="text-xs text-gray-500">{formatTime(track.duration)}</span>
-                </button>
-              ))}
+              {activePlaylist.length === 0 ? (
+                <div className="p-6 text-center text-gray-500">
+                  <Music className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No audio files in library</p>
+                  <p className="text-xs mt-1">Upload music to start playing</p>
+                </div>
+              ) : (
+                activePlaylist.map((track, i) => (
+                  <button
+                    key={track.id}
+                    onClick={() => playTrack(track)}
+                    className={`w-full flex items-center gap-3 p-3 hover:bg-white/5 transition-colors ${
+                      track.id === currentTrack?.id ? 'bg-brand-gold/10' : ''
+                    }`}
+                  >
+                    <span className="w-6 text-center text-sm text-gray-500">
+                      {track.id === currentTrack?.id && isPlaying ? (
+                        <span className="text-brand-gold">♪</span>
+                      ) : (
+                        i + 1
+                      )}
+                    </span>
+                    <div className="w-10 h-10 rounded overflow-hidden bg-gradient-to-br from-brand-gold/20 to-purple-500/20 flex-shrink-0">
+                      {track.coverUrl && track.coverUrl !== AUDIO_PLACEHOLDER ? (
+                        <img src={track.coverUrl} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Music className="w-4 h-4 text-brand-gold" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 text-left min-w-0">
+                      <p className={`text-sm truncate ${track.id === currentTrack?.id ? 'text-brand-gold' : 'text-white'}`}>
+                        {track.title}
+                      </p>
+                      <p className="text-xs text-gray-400 truncate">{track.artist}</p>
+                    </div>
+                    <span className="text-xs text-gray-500">{formatTime(track.duration)}</span>
+                  </button>
+                ))
+              )}
             </div>
           </div>
         )}
@@ -331,7 +397,16 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   // Expanded view
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col">
-      <audio ref={audioRef} src={currentTrack.audioUrl} preload="metadata" />
+      <audio
+        ref={audioRef}
+        src={currentTrack?.audioUrl || ''}
+        preload="metadata"
+        crossOrigin="anonymous"
+        onError={(e) => {
+          console.error('Audio error:', e);
+          setAudioError('Unable to load audio file');
+        }}
+      />
 
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-white/5">
@@ -354,19 +429,20 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center max-w-md">
           {/* Album Art */}
-          <div className="w-80 h-80 mx-auto rounded-2xl overflow-hidden shadow-2xl mb-8">
-            {currentTrack.coverUrl ? (
-              <img src={currentTrack.coverUrl} alt={currentTrack.title} className="w-full h-full object-cover" />
+          <div className="w-80 h-80 mx-auto rounded-2xl overflow-hidden shadow-2xl mb-8 bg-gradient-to-br from-brand-gold/20 to-purple-500/20">
+            {currentTrack?.coverUrl && currentTrack.coverUrl !== AUDIO_PLACEHOLDER ? (
+              <img src={currentTrack.coverUrl} alt={currentTrack.title} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-brand-gold/20 to-purple-500/20 flex items-center justify-center">
-                <ListMusic className="w-24 h-24 text-brand-gold" />
+              <div className="w-full h-full flex items-center justify-center">
+                <Music className="w-24 h-24 text-brand-gold" />
               </div>
             )}
           </div>
 
           {/* Track Info */}
-          <h2 className="text-2xl font-bold text-white mb-2">{currentTrack.title}</h2>
-          <p className="text-gray-400 mb-8">{currentTrack.artist}</p>
+          <h2 className="text-2xl font-bold text-white mb-2">{currentTrack?.title || 'No Track Selected'}</h2>
+          <p className="text-gray-400 mb-2">{currentTrack?.artist || 'Select a track to play'}</p>
+          {audioError && <p className="text-sm text-red-400 mb-4">{audioError}</p>}
 
           {/* Progress */}
           <div className="mb-6">

@@ -64,7 +64,7 @@ interface EmailBuilderModuleProps {
 const N8N_WEBHOOK_URL = 'https://n8n.srv1167160.hstgr.cloud/webhook/send-email';
 const N8N_CLAUDE_WEBHOOK = 'https://n8n.srv1167160.hstgr.cloud/webhook/claude-playbook';
 const SCRAPER_API_URL = 'https://scraper.elevenviews.com/api';
-const GEMINI_API_KEY = 'AIzaSyBXNZAf1hqc8d4BQWfkwxPBLTF-wyEdU6E';
+const GEMINI_API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY || '';
 
 const DEFAULT_TEMPLATES: EmailTemplate[] = [
   {
@@ -168,7 +168,7 @@ const EmailBuilderModule: React.FC<EmailBuilderModuleProps> = ({ user }) => {
   });
 
   useEffect(() => {
-    const saved = localStorage.getItem('recipe-labs-sent-emails');
+    const saved = localStorage.getItem('eleven-views-sent-emails');
     if (saved) {
       const emails = JSON.parse(saved);
       setSentEmails(emails);
@@ -231,7 +231,7 @@ const EmailBuilderModule: React.FC<EmailBuilderModuleProps> = ({ user }) => {
 
       const updatedEmails = [emailRecord, ...sentEmails];
       setSentEmails(updatedEmails);
-      localStorage.setItem('recipe-labs-sent-emails', JSON.stringify(updatedEmails));
+      localStorage.setItem('eleven-views-sent-emails', JSON.stringify(updatedEmails));
       updateStats(updatedEmails);
 
       setRecipient('');

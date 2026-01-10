@@ -22,7 +22,7 @@ interface SessionMemoryData {
 }
 
 const MAX_MESSAGES_PER_SESSION = 25;
-const STORAGE_PREFIX = 'recipe-labs-sessions-';
+const STORAGE_PREFIX = 'eleven-views-sessions-';
 
 // Generate unique ID
 const generateId = () => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

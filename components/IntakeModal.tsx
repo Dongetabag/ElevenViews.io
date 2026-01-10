@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import {
-  User, Palette, Edit3, Compass, Users, Shield, Target,
-  FlaskConical, Globe, Rocket, Zap, X, Briefcase, AlertCircle,
-  Lock, Eye, EyeOff, Mail
+  User, Camera, Film, Globe, MapPin, Target,
+  Aperture, X, Briefcase, AlertCircle,
+  Lock, Eye, EyeOff, Mail, Rocket, Play, Image
 } from 'lucide-react';
 
 export type IntakeData = {
   name: string;
   email: string;
   password: string;
-  role: 'Designer' | 'Copywriter' | 'Strategist' | 'Account Manager';
+  role: 'Director' | 'Producer' | 'Cinematographer' | 'Client';
   agencyBrandVoice: string;
   agencyCoreCompetency: string;
   primaryClientIndustry: string;
@@ -33,7 +33,7 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
     name: '',
     email: '',
     password: '',
-    role: 'Strategist',
+    role: 'Client',
     agencyBrandVoice: '',
     agencyCoreCompetency: '',
     primaryClientIndustry: '',
@@ -42,7 +42,7 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
     clientWorkExamples: '',
     primaryGoals: [],
     successMetric: '',
-    platformTheme: 'violet',
+    platformTheme: 'cinematic',
     toolLayout: 'grid'
   });
 
@@ -52,18 +52,18 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
 
   if (!show) return null;
 
-  const roles: { id: IntakeData['role']; icon: any }[] = [
-    { id: 'Strategist', icon: Compass },
-    { id: 'Designer', icon: Palette },
-    { id: 'Copywriter', icon: Edit3 },
-    { id: 'Account Manager', icon: Users },
+  const roles: { id: IntakeData['role']; icon: any; desc: string }[] = [
+    { id: 'Client', icon: Briefcase, desc: 'Brand Partner' },
+    { id: 'Director', icon: Film, desc: 'Creative Lead' },
+    { id: 'Producer', icon: Play, desc: 'Production' },
+    { id: 'Cinematographer', icon: Camera, desc: 'Visual' },
   ];
 
-  const goalOptions = [
-    'Accelerate Strategy', 
-    'Scale Content', 
-    'Enhance Pitches', 
-    'Automate Data'
+  const projectTypes = [
+    'Brand Film',
+    'Campaign',
+    'Documentary',
+    'Social Content'
   ];
 
   const toggleGoal = (goal: string) => {
@@ -93,31 +93,31 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
     e.stopPropagation();
 
     if (isFormValid) {
-      console.log('Submitting Intake Data:', formData);
+      console.log('Submitting Project Intake:', formData);
       onSubmit(formData);
     } else {
       setTouched({ name: true, email: true, password: true, agencyCoreCompetency: true });
-      setError('Please fill in all required fields (marked with *). Email must be valid and password at least 4 characters.');
+      setError('Please complete all required fields. Email must be valid and password at least 4 characters.');
     }
   };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
       <div className="absolute inset-0 bg-brand-dark/95 backdrop-blur-xl animate-fadeIn" onClick={onClose} />
-      
-      <div className="relative w-full max-w-4xl max-h-[90vh] glass border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-scaleIn">
+
+      <div className="relative w-full max-w-4xl max-h-[90vh] glass border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-scaleIn">
         {/* Header */}
-        <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/5">
+        <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center">
-              <FlaskConical className="w-6 h-6 text-brand-gold" />
+              <Aperture className="w-6 h-6 text-brand-gold" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white font-orbitron uppercase tracking-widest">Lab Initialization</h2>
-              <p className="text-xs text-gray-500 font-medium">Configure your agency intelligence profile</p>
+              <h2 className="text-2xl font-display font-bold text-white tracking-tight">Project Onboarding</h2>
+              <p className="text-xs text-gray-500 mt-1">Let's bring your vision to life</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-500 hover:text-white transition-colors">
+          <button onClick={onClose} className="p-2 text-gray-500 hover:text-white transition-colors rounded-lg hover:bg-white/5">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -125,21 +125,21 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
         {/* Scrollable Form Body */}
         <div className="flex-1 overflow-y-auto p-8 space-y-10 scrollbar-hide">
           {error && (
-            <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm animate-shake">
-              <AlertCircle className="w-5 h-5" />
+            <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* Section 1: Identity */}
+          {/* Section 1: Contact */}
           <section className="space-y-6">
             <div className="flex items-center gap-2 mb-2">
               <User className="w-4 h-4 text-brand-gold" />
-              <h3 className="text-[10px] font-bold text-brand-gold uppercase tracking-[0.3em]">Core Identity</h3>
+              <h3 className="text-[10px] font-semibold text-brand-gold uppercase tracking-[0.2em]">Contact Details</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex justify-between">
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider flex justify-between">
                   Full Name <span className="text-brand-gold">*</span>
                 </label>
                 <input
@@ -148,14 +148,14 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
                   value={formData.name}
                   onChange={handleChange}
                   onBlur={() => handleBlur('name')}
-                  placeholder="e.g. Alexander Vance"
-                  className={`w-full bg-white/5 border rounded-xl p-3 text-sm text-white focus:outline-none transition-all ${
-                    touched.name && !formData.name.trim() ? 'border-red-500/50 ring-1 ring-red-500/20' : 'border-white/10 focus:border-brand-gold/50'
+                  placeholder="Your name"
+                  className={`w-full bg-white/5 border rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none transition-all ${
+                    touched.name && !formData.name.trim() ? 'border-red-500/50 ring-1 ring-red-500/20' : 'border-white/10 focus:border-brand-gold/40'
                   }`}
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex justify-between items-center">
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider flex justify-between items-center">
                   <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> Email</span>
                   <span className="text-brand-gold">*</span>
                 </label>
@@ -166,15 +166,15 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
                   onChange={handleChange}
                   onBlur={() => handleBlur('email')}
                   placeholder="you@company.com"
-                  className={`w-full bg-white/5 border rounded-xl p-3 text-sm text-white focus:outline-none transition-all ${
-                    touched.email && !isValidEmail(formData.email) ? 'border-red-500/50 ring-1 ring-red-500/20' : 'border-white/10 focus:border-brand-gold/50'
+                  className={`w-full bg-white/5 border rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none transition-all ${
+                    touched.email && !isValidEmail(formData.email) ? 'border-red-500/50 ring-1 ring-red-500/20' : 'border-white/10 focus:border-brand-gold/40'
                   }`}
                 />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex justify-between items-center">
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider flex justify-between items-center">
                   <span className="flex items-center gap-1"><Lock className="w-3 h-3" /> Password</span>
                   <span className="text-brand-gold">*</span>
                 </label>
@@ -185,128 +185,133 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
                     value={formData.password}
                     onChange={handleChange}
                     onBlur={() => handleBlur('password')}
-                    placeholder="Min 4 characters"
-                    className={`w-full bg-white/5 border rounded-xl p-3 pr-10 text-sm text-white focus:outline-none transition-all ${
-                      touched.password && formData.password.length < 4 ? 'border-red-500/50 ring-1 ring-red-500/20' : 'border-white/10 focus:border-brand-gold/50'
+                    placeholder="Create a password"
+                    className={`w-full bg-white/5 border rounded-xl p-4 pr-12 text-sm text-white placeholder-gray-600 focus:outline-none transition-all ${
+                      touched.password && formData.password.length < 4 ? 'border-red-500/50 ring-1 ring-red-500/20' : 'border-white/10 focus:border-brand-gold/40'
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex justify-between">
-                  Agency Specialty <span className="text-brand-gold">*</span>
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider flex justify-between">
+                  Company / Brand <span className="text-brand-gold">*</span>
                 </label>
                 <input
                   name="agencyCoreCompetency"
                   value={formData.agencyCoreCompetency}
                   onChange={handleChange}
                   onBlur={() => handleBlur('agencyCoreCompetency')}
-                  placeholder="e.g. B2B Performance Marketing"
-                  className={`w-full bg-white/5 border rounded-xl p-3 text-sm text-white focus:outline-none transition-all ${
-                    touched.agencyCoreCompetency && !formData.agencyCoreCompetency.trim() ? 'border-red-500/50 ring-1 ring-red-500/20' : 'border-white/10 focus:border-brand-gold/50'
+                  placeholder="Your brand or company name"
+                  className={`w-full bg-white/5 border rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none transition-all ${
+                    touched.agencyCoreCompetency && !formData.agencyCoreCompetency.trim() ? 'border-red-500/50 ring-1 ring-red-500/20' : 'border-white/10 focus:border-brand-gold/40'
                   }`}
                 />
               </div>
             </div>
-            
+
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Your Primary Lab Role</label>
+              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Your Role</label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {roles.map(r => (
                   <button
                     key={r.id}
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, role: r.id }))}
-                    className={`flex flex-col items-center gap-3 p-4 rounded-2xl border transition-all ${
-                      formData.role === r.id 
-                        ? 'bg-brand-gold/10 border-brand-gold/30 text-brand-gold shadow-[0_0_15px_rgba(255,215,0,0.1)]' 
-                        : 'bg-white/5 border-white/5 text-gray-500 hover:text-white hover:bg-white/10'
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
+                      formData.role === r.id
+                        ? 'bg-brand-gold/10 border-brand-gold/30 text-brand-gold shadow-[0_0_20px_rgba(201,169,98,0.1)]'
+                        : 'bg-white/[0.02] border-white/5 text-gray-500 hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    <r.icon className="w-6 h-6" />
-                    <span className="text-[10px] font-bold uppercase truncate w-full text-center tracking-widest">{r.id}</span>
+                    <r.icon className="w-5 h-5" />
+                    <span className="text-[10px] font-semibold uppercase tracking-wider">{r.id}</span>
+                    <span className="text-[9px] text-gray-600">{r.desc}</span>
                   </button>
                 ))}
               </div>
             </div>
           </section>
 
-          {/* Section 2: Market Intelligence */}
+          {/* Section 2: Project Details */}
           <section className="space-y-6">
             <div className="flex items-center gap-2 mb-2">
               <Globe className="w-4 h-4 text-brand-gold" />
-              <h3 className="text-[10px] font-bold text-brand-gold uppercase tracking-[0.3em]">Market Intelligence</h3>
+              <h3 className="text-[10px] font-semibold text-brand-gold uppercase tracking-[0.2em]">Project Details</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Client Industry</label>
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Industry</label>
                 <input
                   name="primaryClientIndustry"
                   value={formData.primaryClientIndustry}
                   onChange={handleChange}
-                  placeholder="e.g. E-commerce"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-brand-gold/30 transition-all"
+                  placeholder="e.g. Fashion, Travel, Tech"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/30 transition-all"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Target Location</label>
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                  <MapPin className="w-3 h-3" /> Location
+                </label>
                 <input
                   name="targetLocation"
                   value={formData.targetLocation}
                   onChange={handleChange}
-                  placeholder="e.g. North America"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-brand-gold/30 transition-all"
+                  placeholder="e.g. Morocco, Tokyo, Global"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/30 transition-all"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Success Metric</label>
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                  <Target className="w-3 h-3" /> Primary Goal
+                </label>
                 <input
                   name="successMetric"
                   value={formData.successMetric}
                   onChange={handleChange}
-                  placeholder="e.g. CPA Reduction"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-brand-gold/30 transition-all"
+                  placeholder="e.g. Brand Launch, Awareness"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/30 transition-all"
                 />
               </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Agency Brand Voice Descriptor</label>
+            <div className="space-y-2">
+              <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Brand Voice / Style</label>
               <input
                 name="agencyBrandVoice"
                 value={formData.agencyBrandVoice}
                 onChange={handleChange}
-                placeholder="e.g. Sharp, data-driven, and slightly provocative"
-                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-brand-gold/30 transition-all"
+                placeholder="e.g. Cinematic, raw, editorial, adventure-focused"
+                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/30 transition-all"
               />
             </div>
           </section>
 
-          {/* Section 3: Configuration */}
+          {/* Section 3: Project Type */}
           <section className="space-y-6 pb-4">
             <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-4 h-4 text-brand-gold" />
-              <h3 className="text-[10px] font-bold text-brand-gold uppercase tracking-[0.3em]">Operational Goals</h3>
+              <Film className="w-4 h-4 text-brand-gold" />
+              <h3 className="text-[10px] font-semibold text-brand-gold uppercase tracking-[0.2em]">What are you looking to create?</h3>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {goalOptions.map(goal => (
+              {projectTypes.map(type => (
                 <button
-                  key={goal}
+                  key={type}
                   type="button"
-                  onClick={() => toggleGoal(goal)}
-                  className={`p-3 rounded-xl border text-[10px] font-bold uppercase transition-all ${
-                    formData.primaryGoals.includes(goal)
-                      ? 'bg-brand-gold text-black border-brand-gold shadow-lg shadow-brand-gold/30'
-                      : 'bg-white/5 border-white/5 text-gray-500 hover:text-white'
+                  onClick={() => toggleGoal(type)}
+                  className={`p-4 rounded-xl border text-sm font-medium transition-all ${
+                    formData.primaryGoals.includes(type)
+                      ? 'bg-brand-gold text-brand-dark border-brand-gold shadow-lg shadow-brand-gold/20'
+                      : 'bg-white/[0.02] border-white/5 text-gray-500 hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  {goal}
+                  {type}
                 </button>
               ))}
             </div>
@@ -314,20 +319,25 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
         </div>
 
         {/* Footer */}
-        <div className="p-8 border-t border-white/5 bg-white/5 flex items-center justify-between">
+        <div className="p-8 border-t border-white/5 bg-white/[0.02] flex items-center justify-between">
           <div className="flex items-center gap-4">
-             <div className={`w-2 h-2 rounded-full animate-pulse ${isFormValid ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-brand-gold shadow-[0_0_8px_#FFD700]'}`}></div>
-             <p className="text-[10px] font-mono text-gray-500">
-               {isFormValid ? 'SYNTHESIS ENGINE READY' : 'WAITING FOR INPUT'}
-             </p>
+            <div className={`w-2 h-2 rounded-full ${isFormValid ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-brand-gold/60 shadow-[0_0_8px_rgba(201,169,98,0.4)]'}`}></div>
+            <p className="text-[10px] font-mono text-gray-500">
+              {isFormValid ? 'READY TO BEGIN' : 'COMPLETE REQUIRED FIELDS'}
+            </p>
           </div>
           <button
             type="button"
             onClick={handleFinalSubmit}
-            className={`flex items-center gap-3 px-10 py-5 bg-brand-gold text-black font-bold text-sm rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-brand-gold/20 ${!isFormValid ? 'opacity-50 cursor-not-allowed grayscale' : 'cursor-pointer'}`}
+            disabled={!isFormValid}
+            className={`flex items-center gap-3 px-10 py-4 bg-brand-gold text-brand-dark font-semibold rounded-xl transition-all shadow-xl shadow-brand-gold/10 ${
+              isFormValid
+                ? 'hover:bg-brand-gold/90 hover:scale-[1.02] active:scale-[0.98] cursor-pointer'
+                : 'opacity-40 cursor-not-allowed'
+            }`}
           >
             <Rocket className="w-5 h-5" />
-            <span className="font-orbitron tracking-widest">FINISH SETUP</span>
+            <span className="font-display tracking-wide">Begin Project</span>
           </button>
         </div>
       </div>
