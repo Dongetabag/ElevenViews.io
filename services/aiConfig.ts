@@ -5,6 +5,7 @@ export const AI_MODELS = {
   // Text generation models (Gemini)
   text: {
     default: 'gemini-2.0-flash',           // Fast, good for most tasks
+    primary: 'gemini-2.0-flash',           // Alias for default (used by Executive Agent)
     advanced: 'gemini-2.5-flash-preview',   // Latest preview with better reasoning
     experimental: 'gemini-2.0-flash-exp',   // Experimental features
   },
