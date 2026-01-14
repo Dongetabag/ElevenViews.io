@@ -801,8 +801,8 @@ const ProductionModule: React.FC = () => {
 
   // Enhance Panel
   const renderEnhancePanel = () => (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
+      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl lg:rounded-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp lg:animate-fadeIn lg:mx-4" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Wand2 className="w-5 h-5 text-brand-gold" />
@@ -902,8 +902,8 @@ const ProductionModule: React.FC = () => {
 
   // Captions Panel
   const renderCaptionsPanel = () => (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
+      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl lg:rounded-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp lg:animate-fadeIn lg:mx-4 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Type className="w-5 h-5 text-brand-gold" />
@@ -1008,8 +1008,8 @@ const ProductionModule: React.FC = () => {
 
   // Audio Panel
   const renderAudioPanel = () => (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
+      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl lg:rounded-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp lg:animate-fadeIn lg:mx-4" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Music className="w-5 h-5 text-brand-gold" />
@@ -1100,8 +1100,8 @@ const ProductionModule: React.FC = () => {
 
   // Trim Panel
   const renderTrimPanel = () => (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
+      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl lg:rounded-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp lg:animate-fadeIn lg:mx-4" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Scissors className="w-5 h-5 text-brand-gold" />
@@ -1176,8 +1176,8 @@ const ProductionModule: React.FC = () => {
 
   // Speed Panel
   const renderSpeedPanel = () => (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
+      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl lg:rounded-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp lg:animate-fadeIn lg:mx-4" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Gauge className="w-5 h-5 text-brand-gold" />
@@ -1237,8 +1237,8 @@ const ProductionModule: React.FC = () => {
 
   // Filters Panel
   const renderFiltersPanel = () => (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
+      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl lg:rounded-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp lg:animate-fadeIn lg:mx-4 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Palette className="w-5 h-5 text-brand-gold" />
@@ -1308,8 +1308,8 @@ const ProductionModule: React.FC = () => {
 
   // Text Panel
   const renderTextPanel = () => (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
+      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl lg:rounded-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp lg:animate-fadeIn lg:mx-4 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Type className="w-5 h-5 text-brand-gold" />
@@ -1393,8 +1393,8 @@ const ProductionModule: React.FC = () => {
     const agents = videoAgents.getAgentList();
 
     return (
-      <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-        <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
+        <div className="w-full max-w-lg bg-[#111] rounded-t-3xl lg:rounded-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp lg:animate-fadeIn lg:mx-4 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Bot className="w-5 h-5 text-brand-gold" />
@@ -2036,156 +2036,199 @@ const ProductionModule: React.FC = () => {
   const renderEditor = () => {
     if (!selectedVideo) return null;
 
-    return (
-      <div className="flex flex-col h-full bg-black">
-        {/* Header */}
-        <div className="sticky top-0 z-20 bg-black/90 backdrop-blur-xl border-b border-white/5">
-          <div className="flex items-center justify-between px-4 py-3">
-            <button
-              onClick={() => {
-                setSelectedVideo(null);
-                setView('library');
-              }}
-              className="p-2 -ml-2 text-gray-400 hover:text-white"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-sm font-medium text-white truncate max-w-[200px]">
-              {selectedVideo.name}
-            </h1>
-            <button className="p-2 text-gray-400 hover:text-white">
-              <MoreVertical className="w-5 h-5" />
-            </button>
-          </div>
+    // Editing Tools Component (reusable for both layouts)
+    const EditingToolsPanel = ({ inSidebar = false }: { inSidebar?: boolean }) => (
+      <div className={`bg-[#0a0a0a] ${inSidebar ? 'p-4' : 'border-t border-white/5 p-4'}`}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className={`${inSidebar ? 'text-base' : 'text-sm'} font-bold text-white`}>Editing Tools</h3>
+          <Sparkles className="w-4 h-4 text-brand-gold" />
         </div>
-
-        {/* Video Player */}
-        <div className="flex-1 flex items-center justify-center bg-black relative">
-          {selectedVideo.videoUrl ? (
-            <video
-              ref={videoRef}
-              src={selectedVideo.videoUrl}
-              className="max-w-full max-h-full object-contain"
-              playsInline
-              onClick={togglePlay}
-              onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-              onEnded={() => setIsPlaying(false)}
-              muted={isMuted}
-            />
-          ) : (
-            <img
-              src={selectedVideo.thumbnailUrl}
-              alt={selectedVideo.name}
-              className="max-w-full max-h-full object-contain"
-            />
-          )}
-
-          {/* Play overlay */}
-          {!isPlaying && selectedVideo.videoUrl && (
+        <div className={`grid ${inSidebar ? 'grid-cols-2' : 'grid-cols-4'} gap-2 mb-3`}>
+          {[
+            { icon: Wand2, label: 'Enhance', tool: 'enhance' as ActiveTool, color: 'text-brand-gold', desc: 'AI Enhancement' },
+            { icon: Type, label: 'Captions', tool: 'captions' as ActiveTool, color: 'text-brand-gold', desc: 'Auto Subtitles' },
+            { icon: Volume2, label: 'Audio', tool: 'audio' as ActiveTool, color: 'text-brand-gold', desc: 'Audio Mixer' },
+            { icon: Scissors, label: 'Trim', tool: 'trim' as ActiveTool, color: 'text-brand-gold', desc: 'Cut & Trim' },
+          ].map((item) => (
             <button
-              onClick={togglePlay}
-              className="absolute inset-0 flex items-center justify-center bg-black/20"
+              key={item.label}
+              onClick={() => setActiveTool(item.tool)}
+              className={`flex ${inSidebar ? 'flex-row items-center gap-3 p-4' : 'flex-col items-center gap-1.5 p-3'} bg-white/5 rounded-xl hover:bg-brand-gold/20 hover:border-brand-gold/30 border border-transparent transition-all active:scale-95 min-h-[60px]`}
             >
-              <div className="p-4 bg-white/20 rounded-full backdrop-blur-sm">
-                <Play className="w-8 h-8 text-white" fill="white" />
+              <div className={`${inSidebar ? 'w-10 h-10' : ''} flex items-center justify-center ${inSidebar ? 'bg-brand-gold/10 rounded-lg' : ''}`}>
+                <item.icon className={`${inSidebar ? 'w-5 h-5' : 'w-5 h-5'} ${item.color}`} />
+              </div>
+              <div className={inSidebar ? 'text-left' : 'text-center'}>
+                <span className={`${inSidebar ? 'text-sm font-medium text-white block' : 'text-[10px] text-gray-400'}`}>{item.label}</span>
+                {inSidebar && <span className="text-[10px] text-gray-500">{item.desc}</span>}
               </div>
             </button>
-          )}
+          ))}
         </div>
-
-        {/* Timeline */}
-        <div className="bg-[#111] border-t border-white/10 p-4 space-y-3">
-          {/* Progress bar */}
-          <div className="relative h-1 bg-white/10 rounded-full">
-            <div
-              className="absolute left-0 top-0 h-full bg-brand-gold rounded-full"
-              style={{ width: `${(currentTime / (selectedVideo.duration || 1)) * 100}%` }}
-            />
-          </div>
-
-          {/* Controls */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={togglePlay}
-                className="p-2 bg-white/10 rounded-lg hover:bg-white/20"
-              >
-                {isPlaying ? <Pause className="w-5 h-5 text-white" /> : <Play className="w-5 h-5 text-white" />}
-              </button>
-              <button
-                onClick={() => setIsMuted(!isMuted)}
-                className="p-2 text-gray-400 hover:text-white"
-              >
-                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-              </button>
-              <span className="text-xs text-gray-500">
-                {formatTime(currentTime)} / {formatTime(selectedVideo.duration)}
-              </span>
-            </div>
-            <button className="p-2 text-gray-400 hover:text-white">
-              <Maximize2 className="w-5 h-5" />
+        <div className={`grid ${inSidebar ? 'grid-cols-2' : 'grid-cols-4'} gap-2`}>
+          {[
+            { icon: Gauge, label: 'Speed', tool: 'speed' as ActiveTool, color: 'text-purple-400', desc: 'Playback Speed' },
+            { icon: Palette, label: 'Filters', tool: 'filters' as ActiveTool, color: 'text-pink-400', desc: 'Color Grading' },
+            { icon: Type, label: 'Text', tool: 'text' as ActiveTool, color: 'text-cyan-400', desc: 'Text Overlays' },
+            { icon: Bot, label: 'AI Agents', tool: 'agents' as ActiveTool, color: 'text-green-400', desc: 'Smart Editing' },
+          ].map((item) => (
+            <button
+              key={item.label}
+              onClick={() => setActiveTool(item.tool)}
+              className={`flex ${inSidebar ? 'flex-row items-center gap-3 p-4' : 'flex-col items-center gap-1.5 p-3'} bg-white/5 rounded-xl hover:bg-white/10 border border-transparent hover:border-white/10 transition-all active:scale-95 min-h-[60px]`}
+            >
+              <div className={`${inSidebar ? 'w-10 h-10' : ''} flex items-center justify-center ${inSidebar ? 'bg-white/5 rounded-lg' : ''}`}>
+                <item.icon className={`${inSidebar ? 'w-5 h-5' : 'w-5 h-5'} ${item.color}`} />
+              </div>
+              <div className={inSidebar ? 'text-left' : 'text-center'}>
+                <span className={`${inSidebar ? 'text-sm font-medium text-white block' : 'text-[10px] text-gray-400'}`}>{item.label}</span>
+                {inSidebar && <span className="text-[10px] text-gray-500">{item.desc}</span>}
+              </div>
             </button>
-          </div>
+          ))}
         </div>
 
-        {/* AI Tools Panel */}
-        <div className="bg-[#0a0a0a] border-t border-white/5 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-white">Editing Tools</h3>
-            <Sparkles className="w-4 h-4 text-brand-gold" />
-          </div>
-          <div className="grid grid-cols-4 gap-2 mb-2">
-            {[
-              { icon: Wand2, label: 'Enhance', tool: 'enhance' as ActiveTool, color: 'text-brand-gold' },
-              { icon: Type, label: 'Captions', tool: 'captions' as ActiveTool, color: 'text-brand-gold' },
-              { icon: Volume2, label: 'Audio', tool: 'audio' as ActiveTool, color: 'text-brand-gold' },
-              { icon: Scissors, label: 'Trim', tool: 'trim' as ActiveTool, color: 'text-brand-gold' },
-            ].map((item) => (
-              <button
-                key={item.label}
-                onClick={() => setActiveTool(item.tool)}
-                className="flex flex-col items-center gap-1.5 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors active:scale-95"
-              >
-                <item.icon className={`w-5 h-5 ${item.color}`} />
-                <span className="text-[10px] text-gray-400">{item.label}</span>
-              </button>
-            ))}
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-            {[
-              { icon: Gauge, label: 'Speed', tool: 'speed' as ActiveTool, color: 'text-purple-400' },
-              { icon: Palette, label: 'Filters', tool: 'filters' as ActiveTool, color: 'text-pink-400' },
-              { icon: Type, label: 'Text', tool: 'text' as ActiveTool, color: 'text-cyan-400' },
-              { icon: Bot, label: 'AI Agents', tool: 'agents' as ActiveTool, color: 'text-green-400' },
-            ].map((item) => (
-              <button
-                key={item.label}
-                onClick={() => setActiveTool(item.tool)}
-                className="flex flex-col items-center gap-1.5 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors active:scale-95"
-              >
-                <item.icon className={`w-5 h-5 ${item.color}`} />
-                <span className="text-[10px] text-gray-400">{item.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Bottom Actions */}
-        <div className="bg-[#0a0a0a] border-t border-white/5 p-4 flex gap-3">
+        {/* Actions */}
+        <div className={`${inSidebar ? 'mt-6 space-y-3' : 'hidden'}`}>
           <button
             onClick={handleShare}
-            className="flex-1 py-3 bg-white/10 rounded-xl text-white font-medium flex items-center justify-center gap-2 hover:bg-white/20 active:scale-95 transition-all"
+            className="w-full py-3.5 bg-white/10 rounded-xl text-white font-medium flex items-center justify-center gap-2 hover:bg-white/20 active:scale-95 transition-all"
           >
             <Share2 className="w-4 h-4" />
-            Share
+            Share Video
           </button>
           <button
             onClick={() => setShowExportModal(true)}
-            className="flex-1 py-3 bg-brand-gold rounded-xl text-black font-bold flex items-center justify-center gap-2 hover:bg-yellow-400 active:scale-95 transition-all"
+            className="w-full py-3.5 bg-brand-gold rounded-xl text-black font-bold flex items-center justify-center gap-2 hover:bg-yellow-400 active:scale-95 transition-all"
           >
             <Download className="w-4 h-4" />
-            Export
+            Export Video
           </button>
+        </div>
+      </div>
+    );
+
+    return (
+      <div className="flex flex-col lg:flex-row h-full bg-black">
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Header */}
+          <div className="sticky top-0 z-20 bg-black/90 backdrop-blur-xl border-b border-white/5">
+            <div className="flex items-center justify-between px-4 py-3">
+              <button
+                onClick={() => {
+                  setSelectedVideo(null);
+                  setView('library');
+                }}
+                className="p-2 -ml-2 text-gray-400 hover:text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-sm font-medium text-white truncate max-w-[200px] lg:max-w-[400px]">
+                {selectedVideo.name}
+              </h1>
+              <button className="p-2 text-gray-400 hover:text-white min-w-[44px] min-h-[44px] flex items-center justify-center">
+                <MoreVertical className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Video Player */}
+          <div className="flex-1 flex items-center justify-center bg-black relative min-h-[200px] lg:min-h-[400px]">
+            {selectedVideo.videoUrl ? (
+              <video
+                ref={videoRef}
+                src={selectedVideo.videoUrl}
+                className="max-w-full max-h-full object-contain"
+                playsInline
+                onClick={togglePlay}
+                onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+                onEnded={() => setIsPlaying(false)}
+                muted={isMuted}
+              />
+            ) : (
+              <img
+                src={selectedVideo.thumbnailUrl}
+                alt={selectedVideo.name}
+                className="max-w-full max-h-full object-contain"
+              />
+            )}
+
+            {/* Play overlay */}
+            {!isPlaying && selectedVideo.videoUrl && (
+              <button
+                onClick={togglePlay}
+                className="absolute inset-0 flex items-center justify-center bg-black/20"
+              >
+                <div className="p-4 bg-white/20 rounded-full backdrop-blur-sm">
+                  <Play className="w-8 h-8 text-white" fill="white" />
+                </div>
+              </button>
+            )}
+          </div>
+
+          {/* Timeline */}
+          <div className="bg-[#111] border-t border-white/10 p-4 space-y-3">
+            {/* Progress bar */}
+            <div className="relative h-2 bg-white/10 rounded-full cursor-pointer">
+              <div
+                className="absolute left-0 top-0 h-full bg-brand-gold rounded-full"
+                style={{ width: `${(currentTime / (selectedVideo.duration || 1)) * 100}%` }}
+              />
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={togglePlay}
+                  className="p-3 bg-white/10 rounded-lg hover:bg-white/20 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                >
+                  {isPlaying ? <Pause className="w-5 h-5 text-white" /> : <Play className="w-5 h-5 text-white" />}
+                </button>
+                <button
+                  onClick={() => setIsMuted(!isMuted)}
+                  className="p-3 text-gray-400 hover:text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
+                >
+                  {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                </button>
+                <span className="text-sm text-gray-400 font-mono">
+                  {formatTime(currentTime)} / {formatTime(selectedVideo.duration)}
+                </span>
+              </div>
+              <button className="p-3 text-gray-400 hover:text-white min-w-[44px] min-h-[44px] flex items-center justify-center">
+                <Maximize2 className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile/Tablet Tools Panel (shown below video on smaller screens) */}
+          <div className="lg:hidden">
+            <EditingToolsPanel inSidebar={false} />
+
+            {/* Mobile Bottom Actions */}
+            <div className="bg-[#0a0a0a] border-t border-white/5 p-4 flex gap-3">
+              <button
+                onClick={handleShare}
+                className="flex-1 py-3.5 bg-white/10 rounded-xl text-white font-medium flex items-center justify-center gap-2 hover:bg-white/20 active:scale-95 transition-all min-h-[50px]"
+              >
+                <Share2 className="w-4 h-4" />
+                Share
+              </button>
+              <button
+                onClick={() => setShowExportModal(true)}
+                className="flex-1 py-3.5 bg-brand-gold rounded-xl text-black font-bold flex items-center justify-center gap-2 hover:bg-yellow-400 active:scale-95 transition-all min-h-[50px]"
+              >
+                <Download className="w-4 h-4" />
+                Export
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop/iPad Sidebar (shown on larger screens) */}
+        <div className="hidden lg:flex lg:flex-col w-[320px] xl:w-[360px] border-l border-white/5 bg-[#0a0a0a] overflow-y-auto">
+          <EditingToolsPanel inSidebar={true} />
         </div>
       </div>
     );
