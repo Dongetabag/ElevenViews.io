@@ -3,6 +3,7 @@ import { UserProfile, DashboardStats } from '../types.ts';
 import { Aperture, TrendingUp, Film, DollarSign, Camera, ArrowUpRight, Globe, Zap, Activity, MessageSquare, Play, MapPin } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
 import { leadsApiService, PipelineStats, HealthStatus } from '../services/leadsApiService.ts';
+import { AI_MODELS } from '../services/aiConfig';
 
 interface DashboardHomeProps {
   user: UserProfile;
@@ -53,7 +54,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ user, stats, onNavigate }
         const projectInfo = apiStats ? `Current pipeline: ${apiStats.total_leads} active projects.` : '';
         const { greeting, period } = getTimeOfDayGreeting();
         const response = await ai.models.generateContent({
-          model: 'gemini-2.0-flash',
+          model: AI_MODELS.text.default,
           contents: `Generate a short, cinematic "${period} Briefing" for ${user.name}, a ${user.role || 'creative'} at Eleven Views production company. Start with "${greeting}, ${user.name}." ${projectInfo} Reference their work in visual storytelling and global production. Company focus: ${user.agencyCoreCompetency || 'cinematic narratives'}. Use an inspiring, sophisticated tone. Keep it to 3 brief lines.`,
         });
         setBriefing(response.text || 'Welcome back to the studio.');

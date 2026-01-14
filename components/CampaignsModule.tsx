@@ -116,7 +116,7 @@ const CampaignsModule: React.FC<CampaignsModuleProps> = ({ campaigns, addCampaig
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Status</label>
                 <select
@@ -145,7 +145,7 @@ const CampaignsModule: React.FC<CampaignsModuleProps> = ({ campaigns, addCampaig
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Open Rate (%)</label>
                 <input
@@ -172,7 +172,7 @@ const CampaignsModule: React.FC<CampaignsModuleProps> = ({ campaigns, addCampaig
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Sent</label>
                 <input
@@ -218,9 +218,9 @@ const CampaignsModule: React.FC<CampaignsModuleProps> = ({ campaigns, addCampaig
 
   if (campaigns.length === 0 && !showAddModal) {
     return (
-      <div className="p-8 h-full flex flex-col">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white font-orbitron">Campaign Sequences</h2>
+      <div className="p-4 sm:p-6 lg:p-8 h-full flex flex-col">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-white font-orbitron">Campaign Sequences</h2>
           <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-brand-gold text-black font-bold text-sm rounded-lg hover:scale-105 transition-all"
@@ -235,9 +235,9 @@ const CampaignsModule: React.FC<CampaignsModuleProps> = ({ campaigns, addCampaig
   }
 
   return (
-    <div className="p-8 space-y-6 animate-fadeIn">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white font-orbitron">Campaign Sequences</h2>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 animate-fadeIn">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+        <h2 className="text-xl sm:text-2xl font-bold text-white font-orbitron">Campaign Sequences</h2>
         <button
           onClick={() => setShowAddModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-brand-gold text-black font-bold text-sm rounded-lg hover:scale-105 transition-all"
@@ -248,8 +248,8 @@ const CampaignsModule: React.FC<CampaignsModuleProps> = ({ campaigns, addCampaig
 
       <div className="space-y-4">
         {campaigns.map((campaign) => (
-          <div key={campaign.id} className="glass p-5 rounded-2xl border-white/5 flex items-center justify-between group hover:border-brand-gold/30 transition-all">
-            <div className="flex items-center gap-6 flex-1">
+          <div key={campaign.id} className="glass p-4 sm:p-5 rounded-2xl border-white/5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sm:gap-0 group hover:border-brand-gold/30 transition-all">
+            <div className="flex items-center gap-3 sm:gap-6 flex-1">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${campaign.status === 'active' ? 'bg-green-500/10 text-green-500' : 'bg-white/5 text-gray-500'}`}>
                 <Mail className="w-6 h-6" />
               </div>
@@ -270,7 +270,8 @@ const CampaignsModule: React.FC<CampaignsModuleProps> = ({ campaigns, addCampaig
               </div>
             </div>
 
-            <div className="flex items-center gap-12 px-12">
+            {/* Desktop stats */}
+            <div className="hidden md:flex items-center gap-6 lg:gap-12 px-4 lg:px-12">
               <div className="text-center">
                 <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Open Rate</p>
                 <p className="text-xl font-bold text-white">{campaign.openRate}%</p>
@@ -281,10 +282,16 @@ const CampaignsModule: React.FC<CampaignsModuleProps> = ({ campaigns, addCampaig
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Mobile stats */}
+            <div className="flex md:hidden items-center gap-4 px-2 border-t border-white/5 pt-3 sm:border-0 sm:pt-0">
+              <span className="text-sm text-white"><span className="text-gray-500 text-xs">Open:</span> {campaign.openRate}%</span>
+              <span className="text-sm text-brand-gold"><span className="text-gray-500 text-xs">Click:</span> {campaign.clickRate}%</span>
+            </div>
+
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               <button
                 onClick={() => handleEdit(campaign)}
-                className="p-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 rounded-lg transition-all"
                 title="Edit"
               >
                 <BarChart2 className="w-5 h-5" />
@@ -292,7 +299,7 @@ const CampaignsModule: React.FC<CampaignsModuleProps> = ({ campaigns, addCampaig
               {campaign.status === 'active' ? (
                 <button
                   onClick={() => toggleStatus(campaign)}
-                  className="p-2 text-gray-500 hover:text-yellow-500 hover:bg-yellow-500/5 rounded-lg transition-all"
+                  className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500 hover:text-yellow-500 hover:bg-yellow-500/5 rounded-lg transition-all"
                   title="Pause"
                 >
                   <Pause className="w-5 h-5" />
@@ -300,7 +307,7 @@ const CampaignsModule: React.FC<CampaignsModuleProps> = ({ campaigns, addCampaig
               ) : (
                 <button
                   onClick={() => toggleStatus(campaign)}
-                  className="p-2 text-brand-gold hover:bg-brand-gold/5 rounded-lg transition-all"
+                  className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-brand-gold hover:bg-brand-gold/5 rounded-lg transition-all"
                   title="Play"
                 >
                   <Play className="w-5 h-5" />
@@ -308,7 +315,7 @@ const CampaignsModule: React.FC<CampaignsModuleProps> = ({ campaigns, addCampaig
               )}
               <button
                 onClick={() => handleDelete(campaign.id)}
-                className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/5 rounded-lg transition-all"
+                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500 hover:text-red-500 hover:bg-red-500/5 rounded-lg transition-all"
                 title="Delete"
               >
                 <Trash2 className="w-5 h-5" />

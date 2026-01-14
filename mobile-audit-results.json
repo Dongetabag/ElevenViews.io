@@ -1,0 +1,358 @@
+[
+  {
+    "device": "iPhone 14",
+    "viewport": {
+      "width": 390,
+      "height": 664
+    },
+    "issues": [
+      {
+        "type": "fixed-element",
+        "element": "div",
+        "details": "Fixed element takes 100% of viewport height",
+        "severity": "low"
+      },
+      {
+        "type": "touch-target",
+        "element": "span",
+        "details": "Touch target too small (121x24px). Min recommended: 44x44px. Text: \"Join the Views\"",
+        "severity": "medium"
+      },
+      {
+        "type": "touch-target",
+        "element": "svg",
+        "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+        "severity": "medium"
+      },
+      {
+        "type": "touch-target",
+        "element": "svg",
+        "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+        "severity": "medium"
+      },
+      {
+        "type": "touch-target",
+        "element": "span",
+        "details": "Touch target too small (90x24px). Min recommended: 44x44px. Text: \"Crew Login\"",
+        "severity": "medium"
+      }
+    ],
+    "grouped": {
+      "fixed-element": [
+        {
+          "type": "fixed-element",
+          "element": "div",
+          "details": "Fixed element takes 100% of viewport height",
+          "severity": "low"
+        }
+      ],
+      "touch-target": [
+        {
+          "type": "touch-target",
+          "element": "span",
+          "details": "Touch target too small (121x24px). Min recommended: 44x44px. Text: \"Join the Views\"",
+          "severity": "medium"
+        },
+        {
+          "type": "touch-target",
+          "element": "svg",
+          "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+          "severity": "medium"
+        },
+        {
+          "type": "touch-target",
+          "element": "svg",
+          "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+          "severity": "medium"
+        },
+        {
+          "type": "touch-target",
+          "element": "span",
+          "details": "Touch target too small (90x24px). Min recommended: 44x44px. Text: \"Crew Login\"",
+          "severity": "medium"
+        }
+      ]
+    }
+  },
+  {
+    "device": "iPhone SE",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "issues": [
+      {
+        "type": "fixed-element",
+        "element": "div",
+        "details": "Fixed element takes 100% of viewport height",
+        "severity": "low"
+      },
+      {
+        "type": "touch-target",
+        "element": "span",
+        "details": "Touch target too small (121x24px). Min recommended: 44x44px. Text: \"Join the Views\"",
+        "severity": "medium"
+      },
+      {
+        "type": "touch-target",
+        "element": "svg",
+        "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+        "severity": "medium"
+      },
+      {
+        "type": "touch-target",
+        "element": "svg",
+        "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+        "severity": "medium"
+      },
+      {
+        "type": "touch-target",
+        "element": "span",
+        "details": "Touch target too small (90x24px). Min recommended: 44x44px. Text: \"Crew Login\"",
+        "severity": "medium"
+      },
+      {
+        "type": "position",
+        "element": "div",
+        "details": "Element positioned 3px off left edge. Class: inline-flex items-center gap-4 sm:gap-8 ",
+        "severity": "medium"
+      },
+      {
+        "type": "layout",
+        "element": "grid/flex container",
+        "details": "Grid items may be too narrow (78px) for mobile. Consider stacking. Class: inline-flex items-center gap-4 sm:gap-8 ",
+        "severity": "low"
+      }
+    ],
+    "grouped": {
+      "fixed-element": [
+        {
+          "type": "fixed-element",
+          "element": "div",
+          "details": "Fixed element takes 100% of viewport height",
+          "severity": "low"
+        }
+      ],
+      "touch-target": [
+        {
+          "type": "touch-target",
+          "element": "span",
+          "details": "Touch target too small (121x24px). Min recommended: 44x44px. Text: \"Join the Views\"",
+          "severity": "medium"
+        },
+        {
+          "type": "touch-target",
+          "element": "svg",
+          "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+          "severity": "medium"
+        },
+        {
+          "type": "touch-target",
+          "element": "svg",
+          "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+          "severity": "medium"
+        },
+        {
+          "type": "touch-target",
+          "element": "span",
+          "details": "Touch target too small (90x24px). Min recommended: 44x44px. Text: \"Crew Login\"",
+          "severity": "medium"
+        }
+      ],
+      "position": [
+        {
+          "type": "position",
+          "element": "div",
+          "details": "Element positioned 3px off left edge. Class: inline-flex items-center gap-4 sm:gap-8 ",
+          "severity": "medium"
+        }
+      ],
+      "layout": [
+        {
+          "type": "layout",
+          "element": "grid/flex container",
+          "details": "Grid items may be too narrow (78px) for mobile. Consider stacking. Class: inline-flex items-center gap-4 sm:gap-8 ",
+          "severity": "low"
+        }
+      ]
+    }
+  },
+  {
+    "device": "Pixel 7",
+    "viewport": {
+      "width": 412,
+      "height": 839
+    },
+    "issues": [
+      {
+        "type": "fixed-element",
+        "element": "div",
+        "details": "Fixed element takes 100% of viewport height",
+        "severity": "low"
+      },
+      {
+        "type": "touch-target",
+        "element": "span",
+        "details": "Touch target too small (121x24px). Min recommended: 44x44px. Text: \"Join the Views\"",
+        "severity": "medium"
+      },
+      {
+        "type": "touch-target",
+        "element": "svg",
+        "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+        "severity": "medium"
+      },
+      {
+        "type": "touch-target",
+        "element": "svg",
+        "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+        "severity": "medium"
+      },
+      {
+        "type": "touch-target",
+        "element": "span",
+        "details": "Touch target too small (90x24px). Min recommended: 44x44px. Text: \"Crew Login\"",
+        "severity": "medium"
+      }
+    ],
+    "grouped": {
+      "fixed-element": [
+        {
+          "type": "fixed-element",
+          "element": "div",
+          "details": "Fixed element takes 100% of viewport height",
+          "severity": "low"
+        }
+      ],
+      "touch-target": [
+        {
+          "type": "touch-target",
+          "element": "span",
+          "details": "Touch target too small (121x24px). Min recommended: 44x44px. Text: \"Join the Views\"",
+          "severity": "medium"
+        },
+        {
+          "type": "touch-target",
+          "element": "svg",
+          "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+          "severity": "medium"
+        },
+        {
+          "type": "touch-target",
+          "element": "svg",
+          "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+          "severity": "medium"
+        },
+        {
+          "type": "touch-target",
+          "element": "span",
+          "details": "Touch target too small (90x24px). Min recommended: 44x44px. Text: \"Crew Login\"",
+          "severity": "medium"
+        }
+      ]
+    }
+  },
+  {
+    "device": "Galaxy S9+",
+    "viewport": {
+      "width": 320,
+      "height": 658
+    },
+    "issues": [
+      {
+        "type": "fixed-element",
+        "element": "div",
+        "details": "Fixed element takes 100% of viewport height",
+        "severity": "low"
+      },
+      {
+        "type": "touch-target",
+        "element": "span",
+        "details": "Touch target too small (121x24px). Min recommended: 44x44px. Text: \"Join the Views\"",
+        "severity": "medium"
+      },
+      {
+        "type": "touch-target",
+        "element": "svg",
+        "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+        "severity": "medium"
+      },
+      {
+        "type": "touch-target",
+        "element": "svg",
+        "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+        "severity": "medium"
+      },
+      {
+        "type": "touch-target",
+        "element": "span",
+        "details": "Touch target too small (90x24px). Min recommended: 44x44px. Text: \"Crew Login\"",
+        "severity": "medium"
+      },
+      {
+        "type": "position",
+        "element": "div",
+        "details": "Element positioned 3px off left edge. Class: inline-flex items-center gap-4 sm:gap-8 ",
+        "severity": "medium"
+      },
+      {
+        "type": "layout",
+        "element": "grid/flex container",
+        "details": "Grid items may be too narrow (78px) for mobile. Consider stacking. Class: inline-flex items-center gap-4 sm:gap-8 ",
+        "severity": "low"
+      }
+    ],
+    "grouped": {
+      "fixed-element": [
+        {
+          "type": "fixed-element",
+          "element": "div",
+          "details": "Fixed element takes 100% of viewport height",
+          "severity": "low"
+        }
+      ],
+      "touch-target": [
+        {
+          "type": "touch-target",
+          "element": "span",
+          "details": "Touch target too small (121x24px). Min recommended: 44x44px. Text: \"Join the Views\"",
+          "severity": "medium"
+        },
+        {
+          "type": "touch-target",
+          "element": "svg",
+          "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+          "severity": "medium"
+        },
+        {
+          "type": "touch-target",
+          "element": "svg",
+          "details": "Touch target too small (20x20px). Min recommended: 44x44px. Text: \"icon\"",
+          "severity": "medium"
+        },
+        {
+          "type": "touch-target",
+          "element": "span",
+          "details": "Touch target too small (90x24px). Min recommended: 44x44px. Text: \"Crew Login\"",
+          "severity": "medium"
+        }
+      ],
+      "position": [
+        {
+          "type": "position",
+          "element": "div",
+          "details": "Element positioned 3px off left edge. Class: inline-flex items-center gap-4 sm:gap-8 ",
+          "severity": "medium"
+        }
+      ],
+      "layout": [
+        {
+          "type": "layout",
+          "element": "grid/flex container",
+          "details": "Grid items may be too narrow (78px) for mobile. Consider stacking. Class: inline-flex items-center gap-4 sm:gap-8 ",
+          "severity": "low"
+        }
+      ]
+    }
+  }
+]

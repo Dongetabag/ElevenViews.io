@@ -320,3 +320,348 @@ export interface MediaRevision {
   operations: EditOperation[];
   createdAt: string;
 }
+
+// ============================================
+// Production Module Types - Video Editing Suite
+// ============================================
+
+export type ProjectStatus =
+  | 'draft'
+  | 'in_progress'
+  | 'review'
+  | 'approved'
+  | 'rendering'
+  | 'completed'
+  | 'archived';
+
+export interface Resolution {
+  width: number;
+  height: number;
+  label: '720p' | '1080p' | '4K' | 'custom';
+}
+
+export interface ProjectSettings {
+  resolution: Resolution;
+  frameRate: 24 | 30 | 60;
+  aspectRatio: '16:9' | '9:16' | '1:1' | '4:3' | '21:9';
+  backgroundColor: string;
+  defaultTransition: TransitionType;
+}
+
+export interface ProjectMetadata {
+  clientId?: string;
+  campaignId?: string;
+  dueDate?: string;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  tags?: string[];
+}
+
+export interface VideoProject {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  status: ProjectStatus;
+  timeline: Timeline;
+  assets: ProjectAsset[];
+  settings: ProjectSettings;
+  metadata: ProjectMetadata;
+  collaborators?: string[];
+  version: number;
+  thumbnailUrl?: string;
+}
+
+export interface Timeline {
+  id: string;
+  duration: number;
+  tracks: Track[];
+  markers: TimelineMarker[];
+  playheadPosition: number;
+}
+
+export interface TimelineMarker {
+  id: string;
+  time: number;
+  label: string;
+  color: string;
+}
+
+export type TrackType = 'video' | 'audio' | 'text' | 'overlay' | 'effect';
+
+export interface Track {
+  id: string;
+  type: TrackType;
+  name: string;
+  clips: Clip[];
+  muted: boolean;
+  locked: boolean;
+  visible: boolean;
+  volume?: number;
+  height?: number;
+}
+
+export interface Clip {
+  id: string;
+  trackId: string;
+  assetId?: string;
+  type: 'video' | 'audio' | 'text' | 'image' | 'effect';
+  startTime: number;
+  duration: number;
+  trimStart: number;
+  trimEnd: number;
+  sourceUrl?: string;
+  content?: TextContent | EffectContent;
+  transitions: {
+    in?: Transition;
+    out?: Transition;
+  };
+  effects: ClipEffect[];
+  keyframes?: Keyframe[];
+  volume?: number;
+  opacity?: number;
+}
+
+export interface TextContent {
+  text: string;
+  fontFamily: string;
+  fontSize: number;
+  fontWeight: number;
+  color: string;
+  backgroundColor?: string;
+  position: { x: number; y: number };
+  alignment: 'left' | 'center' | 'right';
+  animation?: TextAnimation;
+}
+
+export interface TextAnimation {
+  type: 'none' | 'fade-in' | 'fade-out' | 'slide-in' | 'slide-out' | 'typewriter' | 'bounce';
+  duration: number;
+  delay?: number;
+}
+
+export interface EffectContent {
+  type: string;
+  params: Record<string, number | string | boolean>;
+}
+
+export interface ClipEffect {
+  id: string;
+  type: EffectType;
+  params: Record<string, number | string | boolean>;
+  enabled: boolean;
+}
+
+export type EffectType =
+  | 'brightness'
+  | 'contrast'
+  | 'saturation'
+  | 'blur'
+  | 'sharpen'
+  | 'grayscale'
+  | 'sepia'
+  | 'vignette'
+  | 'chromaKey'
+  | 'colorCorrection'
+  | 'speed'
+  | 'reverse'
+  | 'mirror';
+
+export interface Transition {
+  type: TransitionType;
+  duration: number;
+  easing: 'linear' | 'ease-in' | 'ease-out' | 'ease-in-out';
+}
+
+export type TransitionType =
+  | 'fade'
+  | 'crossDissolve'
+  | 'slideLeft'
+  | 'slideRight'
+  | 'slideUp'
+  | 'slideDown'
+  | 'zoom'
+  | 'wipe'
+  | 'iris'
+  | 'none';
+
+export interface Keyframe {
+  id: string;
+  time: number;
+  property: string;
+  value: number | string;
+  easing: 'linear' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'bezier';
+}
+
+export interface ProjectAsset {
+  id: string;
+  projectId: string;
+  type: 'video' | 'audio' | 'image' | 'font';
+  name: string;
+  originalFilename: string;
+  url: string;
+  thumbnailUrl?: string;
+  duration?: number;
+  fileSize: number;
+  mimeType: string;
+  metadata: AssetMetadata;
+  uploadedAt: string;
+}
+
+export interface AssetMetadata {
+  width?: number;
+  height?: number;
+  codec?: string;
+  bitrate?: number;
+  sampleRate?: number;
+  channels?: number;
+  frameRate?: number;
+}
+
+// AI Features for Production
+export interface AISceneDetection {
+  scenes: DetectedScene[];
+  confidence: number;
+  processingTime: number;
+}
+
+export interface DetectedScene {
+  startTime: number;
+  endTime: number;
+  type: 'action' | 'dialogue' | 'transition' | 'static';
+  confidence: number;
+  suggestedCuts: number[];
+  description?: string;
+}
+
+export interface AIVoiceOver {
+  id: string;
+  text: string;
+  voice: VoiceOption;
+  audioUrl?: string;
+  duration?: number;
+  status: 'pending' | 'generating' | 'completed' | 'failed';
+}
+
+export interface VoiceOption {
+  id: string;
+  name: string;
+  language: string;
+  gender: 'male' | 'female' | 'neutral';
+  style?: 'natural' | 'professional' | 'casual' | 'narrator';
+}
+
+export interface SmartCutSuggestion {
+  startTime: number;
+  endTime: number;
+  reason: string;
+  confidence: number;
+  action: 'keep' | 'remove' | 'trim';
+}
+
+// Vortex Media API Types
+export interface VortexMediaRequest {
+  type: 'generate' | 'enhance' | 'transcribe' | 'analyze' | 'voiceover' | 'music';
+  content: string;
+  options: Record<string, unknown>;
+}
+
+export interface VortexMediaResponse {
+  success: boolean;
+  jobId?: string;
+  data?: unknown;
+  error?: string;
+  creditsUsed?: number;
+  status?: 'pending' | 'processing' | 'completed' | 'failed';
+}
+
+export interface VortexVideoGenerationOptions {
+  prompt: string;
+  duration?: number;
+  style?: 'cinematic' | 'documentary' | 'commercial' | 'social';
+  aspectRatio?: '16:9' | '9:16' | '1:1';
+  quality?: 'draft' | 'standard' | 'high';
+}
+
+export interface VortexEnhanceOptions {
+  upscale?: boolean;
+  denoise?: boolean;
+  stabilize?: boolean;
+  colorCorrect?: boolean;
+  faceEnhance?: boolean;
+}
+
+export interface VortexVoiceOverOptions {
+  text: string;
+  voice: string;
+  speed?: number;
+  pitch?: number;
+  language?: string;
+}
+
+// Export & Sharing Types
+export interface ExportSettings {
+  format: 'mp4' | 'webm' | 'mov' | 'gif';
+  quality: 'low' | 'medium' | 'high' | 'ultra';
+  resolution: Resolution;
+  frameRate: number;
+  codec: string;
+  includeAudio: boolean;
+  watermark?: WatermarkSettings;
+}
+
+export interface WatermarkSettings {
+  enabled: boolean;
+  imageUrl?: string;
+  text?: string;
+  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center';
+  opacity: number;
+  size?: number;
+}
+
+export interface ShareableLink {
+  id: string;
+  projectId: string;
+  url: string;
+  shareToken: string;
+  expiresAt?: string;
+  password?: string;
+  accessCount: number;
+  permissions: 'view' | 'comment' | 'download';
+  createdAt: string;
+}
+
+export interface ExportJob {
+  id: string;
+  projectId: string;
+  status: 'pending' | 'processing' | 'rendering' | 'completed' | 'failed';
+  progress: number;
+  settings: ExportSettings;
+  outputUrl?: string;
+  errorMessage?: string;
+  startedAt?: string;
+  completedAt?: string;
+  createdAt: string;
+}
+
+// Production Store Types
+export interface ProductionState {
+  currentProject: VideoProject | null;
+  isLoading: boolean;
+  isSaving: boolean;
+  hasUnsavedChanges: boolean;
+  playheadPosition: number;
+  isPlaying: boolean;
+  zoom: number;
+  scrollPosition: number;
+  selectedClipIds: string[];
+  selectedTrackId: string | null;
+  editingClipId: string | null;
+  copiedClips: Clip[];
+  activePanel: 'timeline' | 'assets' | 'effects' | 'text' | 'audio' | 'ai';
+  previewQuality: 'low' | 'medium' | 'high';
+  showGrid: boolean;
+  snapEnabled: boolean;
+  undoStack: Timeline[];
+  redoStack: Timeline[];
+}

@@ -310,7 +310,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
   if (minimized) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 h-20 bg-black/95 backdrop-blur-xl border-t border-white/5 z-50">
+      <div className="fixed bottom-0 left-0 right-0 h-16 sm:h-20 bg-black/95 backdrop-blur-xl border-t border-white/5 z-50">
         <audio
           ref={audioRef}
           src={currentTrack?.audioUrl || ''}
@@ -333,34 +333,63 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
           />
         </div>
 
-        <div className="flex items-center justify-between h-full px-4">
+        <div className="flex items-center justify-between h-full px-2 sm:px-4">
           {/* Track Info */}
-          <div className="flex items-center gap-4 w-1/4">
-            <div className="w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-br from-brand-gold/20 to-purple-500/20 flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-gradient-to-br from-brand-gold/20 to-purple-500/20 flex-shrink-0">
               {currentTrack?.coverUrl && currentTrack.coverUrl !== AUDIO_PLACEHOLDER ? (
                 <img src={currentTrack.coverUrl} alt={currentTrack.title} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = AUDIO_PLACEHOLDER; }} />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <Music className="w-6 h-6 text-brand-gold" />
+                  <Music className="w-5 h-5 sm:w-6 sm:h-6 text-brand-gold" />
                 </div>
               )}
             </div>
-            <div className="min-w-0">
-              <p className="font-medium text-white truncate">{currentTrack?.title || 'No Track Selected'}</p>
-              <p className="text-sm text-gray-400 truncate">{currentTrack?.artist || 'Select a track to play'}</p>
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-white truncate text-sm sm:text-base">{currentTrack?.title || 'No Track Selected'}</p>
+              <p className="text-xs sm:text-sm text-gray-400 truncate">{currentTrack?.artist || 'Select a track to play'}</p>
               {audioError && <p className="text-xs text-red-400 truncate">{audioError}</p>}
               {isLoading && <p className="text-xs text-brand-gold truncate">Loading...</p>}
             </div>
             <button
               onClick={() => setIsLiked(!isLiked)}
-              className={`p-2 transition-colors ${isLiked ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
+              className={`hidden sm:block p-2 transition-colors ${isLiked ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
             >
               <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
             </button>
           </div>
 
-          {/* Controls */}
-          <div className="flex flex-col items-center gap-1 w-2/4">
+          {/* Mobile Controls */}
+          <div className="flex sm:hidden items-center gap-1">
+            <button onClick={playPrevious} className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400">
+              <SkipBack className="w-5 h-5" />
+            </button>
+            <button
+              onClick={togglePlay}
+              disabled={isLoading}
+              className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center min-h-[44px] min-w-[44px]"
+            >
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+              ) : isPlaying ? (
+                <Pause className="w-5 h-5" />
+              ) : (
+                <Play className="w-5 h-5 ml-0.5" />
+              )}
+            </button>
+            <button onClick={playNext} className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400">
+              <SkipForward className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setMinimized(false)}
+              className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400"
+            >
+              <ChevronUp className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Desktop Controls */}
+          <div className="hidden sm:flex flex-col items-center gap-1 flex-1">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setIsShuffled(!isShuffled)}
@@ -406,15 +435,15 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
             </div>
           </div>
 
-          {/* Volume & Actions */}
-          <div className="flex items-center justify-end gap-4 w-1/4">
+          {/* Volume & Actions - Desktop only */}
+          <div className="hidden sm:flex items-center justify-end gap-2 sm:gap-4">
             <button
               onClick={() => setShowPlaylist(!showPlaylist)}
               className={`p-2 transition-colors ${showPlaylist ? 'text-brand-gold' : 'text-gray-400 hover:text-white'}`}
             >
               <ListMusic className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               <button onClick={() => setIsMuted(!isMuted)} className="p-2 text-gray-400 hover:text-white">
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </button>
@@ -539,10 +568,10 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="text-center max-w-md">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 overflow-y-auto">
+        <div className="text-center max-w-md w-full">
           {/* Album Art */}
-          <div className="w-80 h-80 mx-auto rounded-2xl overflow-hidden shadow-2xl mb-8 bg-gradient-to-br from-brand-gold/20 to-purple-500/20">
+          <div className="w-64 h-64 sm:w-80 sm:h-80 mx-auto rounded-2xl overflow-hidden shadow-2xl mb-6 sm:mb-8 bg-gradient-to-br from-brand-gold/20 to-purple-500/20">
             {currentTrack?.coverUrl && currentTrack.coverUrl !== AUDIO_PLACEHOLDER ? (
               <img src={currentTrack.coverUrl} alt={currentTrack.title} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
             ) : (
@@ -578,37 +607,37 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
           </div>
 
           {/* Controls */}
-          <div className="flex items-center justify-center gap-8">
+          <div className="flex items-center justify-center gap-4 sm:gap-8">
             <button
               onClick={() => setIsShuffled(!isShuffled)}
-              className={`p-3 transition-colors ${isShuffled ? 'text-brand-gold' : 'text-gray-400 hover:text-white'}`}
+              className={`p-3 min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors ${isShuffled ? 'text-brand-gold' : 'text-gray-400 hover:text-white'}`}
             >
-              <Shuffle className="w-6 h-6" />
+              <Shuffle className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <button onClick={playPrevious} className="p-3 text-gray-400 hover:text-white transition-colors">
-              <SkipBack className="w-8 h-8" />
+            <button onClick={playPrevious} className="p-3 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+              <SkipBack className="w-6 h-6 sm:w-8 sm:h-8" />
             </button>
             <button
               onClick={togglePlay}
               disabled={isLoading}
-              className="w-16 h-16 rounded-full bg-brand-gold text-black flex items-center justify-center hover:scale-105 transition-transform disabled:opacity-50"
+              className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-brand-gold text-black flex items-center justify-center hover:scale-105 transition-transform disabled:opacity-50 min-h-[44px] min-w-[44px]"
             >
               {isLoading ? (
-                <div className="w-8 h-8 border-3 border-black/20 border-t-black rounded-full animate-spin" />
+                <div className="w-6 h-6 sm:w-8 sm:h-8 border-3 border-black/20 border-t-black rounded-full animate-spin" />
               ) : isPlaying ? (
-                <Pause className="w-8 h-8" />
+                <Pause className="w-6 h-6 sm:w-8 sm:h-8" />
               ) : (
-                <Play className="w-8 h-8 ml-1" />
+                <Play className="w-6 h-6 sm:w-8 sm:h-8 ml-1" />
               )}
             </button>
-            <button onClick={playNext} className="p-3 text-gray-400 hover:text-white transition-colors">
-              <SkipForward className="w-8 h-8" />
+            <button onClick={playNext} className="p-3 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+              <SkipForward className="w-6 h-6 sm:w-8 sm:h-8" />
             </button>
             <button
               onClick={cycleRepeat}
-              className={`p-3 transition-colors relative ${repeatMode !== 'none' ? 'text-brand-gold' : 'text-gray-400 hover:text-white'}`}
+              className={`p-3 min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors relative ${repeatMode !== 'none' ? 'text-brand-gold' : 'text-gray-400 hover:text-white'}`}
             >
-              <Repeat className="w-6 h-6" />
+              <Repeat className="w-5 h-5 sm:w-6 sm:h-6" />
               {repeatMode === 'one' && (
                 <span className="absolute -top-1 -right-1 text-xs font-bold">1</span>
               )}
@@ -616,7 +645,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
           </div>
 
           {/* Volume */}
-          <div className="flex items-center justify-center gap-4 mt-8">
+          <div className="flex items-center justify-center gap-4 mt-6 sm:mt-8">
             <button onClick={() => setIsMuted(!isMuted)} className="p-2 text-gray-400 hover:text-white">
               {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
             </button>
@@ -644,7 +673,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
       {/* Playlist Sidebar */}
       {showPlaylist && (
-        <div className="absolute top-16 right-0 bottom-0 w-80 bg-black/90 border-l border-white/5 overflow-y-auto">
+        <div className="absolute top-16 right-0 bottom-0 w-full sm:w-80 bg-black/95 sm:bg-black/90 border-l border-white/5 overflow-y-auto [-webkit-overflow-scrolling:touch] overscroll-contain z-10">
           <div className="p-4 border-b border-white/5 sticky top-0 bg-black/90">
             <h3 className="font-semibold text-white">Queue ({activePlaylist.length} tracks)</h3>
           </div>

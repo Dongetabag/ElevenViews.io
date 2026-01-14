@@ -57,28 +57,71 @@
         button, a, [role="button"], input, select, textarea {
           min-height: 44px;
         }
-        
+
         /* Better tap highlight */
         button:active, a:active, [role="button"]:active {
           opacity: 0.9;
         }
-        
+
         /* Prevent text selection on UI */
         button, nav, header, aside {
           user-select: none;
           -webkit-user-select: none;
         }
-        
+
         /* Form inputs - prevent zoom on iOS */
         input, select, textarea {
           font-size: 16px !important;
         }
-        
+
         /* Scrollbar thin on mobile */
         ::-webkit-scrollbar {
           width: 3px;
           height: 3px;
         }
+      }
+
+      /* Smooth momentum scrolling for all scrollable areas */
+      .overflow-y-auto, .overflow-x-auto, .overflow-auto {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+      }
+
+      /* Snap scroll for horizontal carousels */
+      .snap-x {
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+      }
+      .snap-start {
+        scroll-snap-align: start;
+      }
+      .snap-center {
+        scroll-snap-align: center;
+      }
+
+      /* Touch manipulation for better gestures */
+      .touch-manipulation {
+        touch-action: manipulation;
+      }
+
+      /* Pull-to-refresh prevention on content areas */
+      .overscroll-contain {
+        overscroll-behavior: contain;
+      }
+
+      /* Active state feedback for cards */
+      .active\:scale-\[0\.98\]:active {
+        transform: scale(0.98);
+      }
+
+      /* Media card tap animation */
+      @keyframes cardTap {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.97); }
+        100% { transform: scale(1); }
+      }
+      .animate-tap {
+        animation: cardTap 0.15s ease-out;
       }
 
       /* Hide scrollbar utility */
@@ -133,7 +176,6 @@
       }
     }
     </script>
-  <link rel="stylesheet" href="/index.css">
 </head>
   <body class="bg-brand-dark text-gray-300">
     <div id="root"></div>

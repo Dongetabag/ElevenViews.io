@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mail, Send, Eye, Sparkles, FileText, Users, BarChart3, Plus, Trash2, Copy, Check, RefreshCw, Zap, Globe, Download, BookOpen, Loader2, ExternalLink, Image, Edit3, Wand2, Camera, Search, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { AI_MODELS, AI_ENDPOINTS, getGoogleAIKey } from '../services/aiConfig';
 
 interface EmailTemplate {
   id: string;
@@ -64,7 +65,7 @@ interface EmailBuilderModuleProps {
 const N8N_WEBHOOK_URL = 'https://n8n.srv1167160.hstgr.cloud/webhook/send-email';
 const N8N_CLAUDE_WEBHOOK = 'https://n8n.srv1167160.hstgr.cloud/webhook/claude-playbook';
 const SCRAPER_API_URL = 'https://scraper.elevenviews.io/api';
-const GEMINI_API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY || '';
+const GEMINI_API_KEY = getGoogleAIKey();
 
 const DEFAULT_TEMPLATES: EmailTemplate[] = [
   {
@@ -446,7 +447,7 @@ Generate a detailed JSON analysis with:
 Only respond with valid JSON, no markdown or explanation.`;
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+        `${AI_ENDPOINTS.gemini}/${AI_MODELS.text.default}:generateContent?key=${GEMINI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1295,7 +1296,7 @@ Only respond with valid JSON, no markdown or explanation.`;
         : `You are an expert copywriter revising a business email. Apply the user's requested changes while maintaining persuasive, professional language.`;
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+        `${AI_ENDPOINTS.gemini}/${AI_MODELS.text.default}:generateContent?key=${GEMINI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1389,7 +1390,7 @@ Subject: [subject line]
 [email body]`;
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+        `${AI_ENDPOINTS.gemini}/${AI_MODELS.text.default}:generateContent?key=${GEMINI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

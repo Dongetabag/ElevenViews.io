@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { arService, DemoSubmission, ARRatings } from '../services/arService';
 import { useCurrentUser } from '../hooks/useAppStore';
+import { AI_MODELS, AI_ENDPOINTS, GENERATION_CONFIG, getGoogleAIKey } from '../services/aiConfig';
 
 const STATUS_CONFIG = {
   pending: { label: 'Pending Review', color: 'text-yellow-400', bg: 'bg-yellow-400/10', icon: AlertCircle },
@@ -23,7 +24,7 @@ const PRIORITY_CONFIG = {
   urgent: { label: 'Urgent', color: 'text-red-400' }
 };
 
-const GOOGLE_AI_API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY || '';
+const GOOGLE_AI_API_KEY = getGoogleAIKey();
 
 const ARHubModule: React.FC = () => {
   const { user: currentUser } = useCurrentUser();
@@ -70,73 +71,76 @@ const ARHubModule: React.FC = () => {
     }
   }, [volume, isMuted]);
 
-  // Handle audio source change when demo changes
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !selectedDemo) return;
-
-    // Reset state for new track
-    setIsPlaying(false);
-    setCurrentTime(0);
-    setAudioError(null);
-    setIsLoading(true);
-
-    // Set source and load
-    audio.src = selectedDemo.audioUrl;
-    audio.load();
-  }, [selectedDemo?.id]);
-
+  // Handle audio source change and event listeners when demo changes
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
+    // Event handlers
     const updateTime = () => setCurrentTime(audio.currentTime);
     const handleEnded = () => {
       setIsPlaying(false);
       setCurrentTime(0);
     };
     const handleLoadedMetadata = () => {
+      console.log('[A&R] Audio metadata loaded, duration:', audio.duration);
       setDuration(audio.duration);
       setIsLoading(false);
       setAudioError(null);
     };
     const handleCanPlay = () => {
+      console.log('[A&R] Audio can play');
+      setIsLoading(false);
+      setAudioError(null);
+    };
+    const handleCanPlayThrough = () => {
+      console.log('[A&R] Audio can play through');
       setIsLoading(false);
       setAudioError(null);
     };
     const handleError = (e: Event) => {
-      console.error('Audio error:', e);
+      const audioEl = e.target as HTMLAudioElement;
+      console.error('[A&R] Audio error:', audioEl.error?.message || 'Unknown error');
       setAudioError('Unable to load audio file');
       setIsLoading(false);
       setIsPlaying(false);
     };
-    const handleLoadStart = () => {
-      setIsLoading(true);
-      setAudioError(null);
-    };
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
 
+    // Add all event listeners
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('canplaythrough', handleCanPlayThrough);
     audio.addEventListener('error', handleError);
-    audio.addEventListener('loadstart', handleLoadStart);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
+
+    // Load new source if demo is selected
+    if (selectedDemo) {
+      console.log('[A&R] Loading audio:', selectedDemo.audioUrl);
+      setIsPlaying(false);
+      setCurrentTime(0);
+      setAudioError(null);
+      setIsLoading(true);
+
+      audio.src = selectedDemo.audioUrl;
+      audio.load();
+    }
 
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('canplaythrough', handleCanPlayThrough);
       audio.removeEventListener('error', handleError);
-      audio.removeEventListener('loadstart', handleLoadStart);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
     };
-  }, []);
+  }, [selectedDemo?.id]);
 
   const togglePlay = async () => {
     if (!audioRef.current || !selectedDemo) return;
@@ -256,7 +260,7 @@ Provide brief, professional A&R feedback (2-3 sentences) focusing on:
 Keep the tone supportive but honest. Be specific, not generic.`;
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_AI_API_KEY}`,
+        `${AI_ENDPOINTS.gemini}/${AI_MODELS.text.default}:generateContent?key=${GOOGLE_AI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -307,14 +311,14 @@ Keep the tone supportive but honest. Be specific, not generic.`;
   const stats = arService.getStats(demos);
 
   return (
-    <div className="p-6 space-y-6 h-full flex flex-col bg-[#050505]">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 h-full flex flex-col bg-[#050505]">
       {/* Header */}
-      <div className="flex items-center justify-between flex-shrink-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 flex-shrink-0">
         <div>
-          <h1 className="text-3xl font-bold font-orbitron text-white">A&R Hub</h1>
-          <p className="text-gray-400 mt-1">Review and manage all audio submissions</p>
+          <h1 className="text-2xl sm:text-3xl font-bold font-orbitron text-white">A&R Hub</h1>
+          <p className="text-sm sm:text-base text-gray-400 mt-1">Review and manage all audio submissions</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <button
             onClick={fetchDemos}
             disabled={isFetching}
@@ -334,7 +338,7 @@ Keep the tone supportive but honest. Be specific, not generic.`;
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-5 gap-4 flex-shrink-0">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 flex-shrink-0">
         {[
           { label: 'Total Demos', value: stats.total, icon: Music, color: 'text-brand-gold' },
           { label: 'Pending', value: stats.pending, icon: Clock, color: 'text-yellow-400' },
@@ -357,23 +361,23 @@ Keep the tone supportive but honest. Be specific, not generic.`;
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4 flex-shrink-0">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 flex-shrink-0">
+        <div className="relative flex-1 sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
           <input
             type="text"
-            placeholder="Search demos by title, artist, genre..."
+            placeholder="Search demos..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-3 bg-white/[0.03] border border-white/[0.06] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-brand-gold/50"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 -mx-3 px-3 sm:mx-0 sm:px-0 snap-x snap-mandatory sm:snap-none">
           {['all', 'pending', 'under_review', 'approved', 'rejected'].map(status => (
             <button
               key={status}
               onClick={() => setFilterStatus(status)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap snap-start min-h-[44px] ${
                 filterStatus === status
                   ? 'bg-brand-gold text-black'
                   : 'bg-white/5 text-gray-400 hover:text-white'
@@ -386,9 +390,9 @@ Keep the tone supportive but honest. Be specific, not generic.`;
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 flex-1 min-h-0">
         {/* Demo List */}
-        <div className="col-span-5 overflow-y-auto space-y-3 pr-2">
+        <div className="lg:col-span-5 overflow-y-auto space-y-3 pr-0 lg:pr-2 max-h-[40vh] lg:max-h-none [-webkit-overflow-scrolling:touch] overscroll-contain">
           {isFetching && demos.length === 0 ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
@@ -459,18 +463,18 @@ Keep the tone supportive but honest. Be specific, not generic.`;
         </div>
 
         {/* Demo Detail & Player */}
-        <div className="col-span-7 overflow-y-auto">
+        <div className="lg:col-span-7 overflow-y-auto">
           {selectedDemo ? (
             <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
               {/* Audio Element */}
               <audio ref={audioRef} preload="auto" />
 
               {/* Player Header */}
-              <div className="p-6 border-b border-white/[0.06]">
-                <div className="flex items-start justify-between">
+              <div className="p-4 sm:p-6 border-b border-white/[0.06]">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-0">
                   <div>
-                    <h2 className="text-2xl font-bold text-white">{selectedDemo.title}</h2>
-                    <p className="text-gray-400 mt-1">{selectedDemo.artistName} • {selectedDemo.genre}</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-white">{selectedDemo.title}</h2>
+                    <p className="text-sm sm:text-base text-gray-400 mt-1">{selectedDemo.artistName} • {selectedDemo.genre}</p>
                     {selectedDemo.projectName && (
                       <div className="flex items-center gap-1 mt-2">
                         <FolderOpen className="w-4 h-4 text-purple-400" />
@@ -478,11 +482,11 @@ Keep the tone supportive but honest. Be specific, not generic.`;
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
                     <select
                       value={selectedDemo.priority}
                       onChange={(e) => updatePriority(e.target.value as DemoSubmission['priority'])}
-                      className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-brand-gold/50"
+                      className="flex-1 sm:flex-none px-3 py-2 min-h-[44px] bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-brand-gold/50"
                     >
                       <option value="low">Low Priority</option>
                       <option value="normal">Normal</option>
@@ -492,7 +496,7 @@ Keep the tone supportive but honest. Be specific, not generic.`;
                     <select
                       value={selectedDemo.status}
                       onChange={(e) => updateStatus(e.target.value as DemoSubmission['status'])}
-                      className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-brand-gold/50"
+                      className="flex-1 sm:flex-none px-3 py-2 min-h-[44px] bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-brand-gold/50"
                     >
                       <option value="pending">Pending Review</option>
                       <option value="under_review">Under Review</option>
@@ -536,11 +540,11 @@ Keep the tone supportive but honest. Be specific, not generic.`;
                 </div>
 
                 {/* Controls */}
-                <div className="mt-4 flex items-center gap-4">
+                <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                   <button
                     onClick={togglePlay}
                     disabled={isLoading || !!audioError}
-                    className="w-14 h-14 rounded-full bg-brand-gold text-black flex items-center justify-center hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                    className="w-14 h-14 rounded-full bg-brand-gold text-black flex items-center justify-center hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 mx-auto sm:mx-0"
                   >
                     {isLoading ? (
                       <Loader2 className="w-6 h-6 animate-spin" />
@@ -552,7 +556,7 @@ Keep the tone supportive but honest. Be specific, not generic.`;
                   </button>
                   <div className="flex-1">
                     {/* Progress slider */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       <span className="text-xs text-gray-500 w-10 text-right font-mono">
                         {formatTime(currentTime)}
                       </span>
@@ -585,8 +589,8 @@ Keep the tone supportive but honest. Be specific, not generic.`;
                       <p className="text-xs text-red-400 mt-2">{audioError}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <button onClick={() => setIsMuted(!isMuted)} className="p-2 text-gray-400 hover:text-white">
+                  <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+                    <button onClick={() => setIsMuted(!isMuted)} className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400 hover:text-white">
                       {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                     </button>
                     <input
@@ -612,9 +616,9 @@ Keep the tone supportive but honest. Be specific, not generic.`;
               </div>
 
               {/* Ratings */}
-              <div className="p-6 border-b border-white/[0.06]">
+              <div className="p-4 sm:p-6 border-b border-white/[0.06]">
                 <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Ratings</h3>
-                <div className="grid grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                   {(['overall', 'production', 'vocals', 'lyrics', 'commercial'] as const).map(category => (
                     <div key={category} className="text-center">
                       <p className="text-xs text-gray-500 mb-2 capitalize">{category}</p>
@@ -638,7 +642,7 @@ Keep the tone supportive but honest. Be specific, not generic.`;
               </div>
 
               {/* Comments */}
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
                     Team Comments ({selectedDemo.comments.length})

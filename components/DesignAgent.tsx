@@ -8,6 +8,7 @@ import {
 import { GoogleGenAI } from "@google/genai";
 import { wasabiService, ElevenViewsAsset } from "../services/wasabiService";
 import { useCurrentUser, useAIAssets } from "../hooks/useAppStore";
+import { AI_MODELS, getGoogleAIKey } from "../services/aiConfig";
 
 interface GeneratedDesign {
   id: string;
@@ -117,9 +118,9 @@ const DesignAgent: React.FC = () => {
     setIsGenerating(true);
 
     try {
-      const apiKey = import.meta.env.VITE_GOOGLE_AI_API_KEY || '';
+      const apiKey = getGoogleAIKey();
       if (!apiKey) {
-        throw new Error('API key not configured');
+        throw new Error('Google AI API key not configured. Check .env file.');
       }
 
       const ai = new GoogleGenAI({ apiKey });
@@ -143,7 +144,7 @@ Design requirements:
 Generate a stunning, photorealistic image.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash-exp',
+        model: AI_MODELS.text.experimental,
         contents: { parts: [{ text: stylePrompt }] },
         config: { responseModalities: ['IMAGE', 'TEXT'] }
       });

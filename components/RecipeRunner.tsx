@@ -4,8 +4,9 @@ import { UserProfile, Recipe, Tool } from '../types.ts';
 import { ArrowLeft, Play, AILoader, Check, AlertTriangle, Layers, X, Copy, Save, Loader } from './icons.tsx';
 import HexGridBackground from './HexGridBackground.tsx';
 import { ALL_TOOLS } from '../constants.tsx';
+import { AI_MODELS, getGoogleAIKey } from '../services/aiConfig';
 
-const GOOGLE_AI_API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY || '';
+const GOOGLE_AI_API_KEY = getGoogleAIKey();
 
 const FormattedResponse: React.FC<{ text: string }> = ({ text }) => {
   const codeBlockRegex = /```([\s\S]*?)```/g;
@@ -132,7 +133,7 @@ Their #1 success metric is: "${user.successMetric}".
         `;
         
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: AI_MODELS.text.advanced,
             contents: promptForThisStep,
             ...(currentTool.systemInstruction && { config: { systemInstruction: currentTool.systemInstruction }})
         });
@@ -168,7 +169,7 @@ Their #1 success metric is: "${user.successMetric}".
     try {
         const ai = new GoogleGenAI({ apiKey: GOOGLE_AI_API_KEY });
         const finalResponse = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: AI_MODELS.text.advanced,
             contents: consolidationPrompt,
             config: { systemInstruction: "You are an expert editor and report writer." }
         });

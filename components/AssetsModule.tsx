@@ -486,69 +486,75 @@ const AssetsModule: React.FC = () => {
   const projects = [...new Set(assets.filter(a => a.projectName).map(a => a.projectName!))];
 
   return (
-    <div className="p-8 space-y-6 animate-fadeIn h-full flex flex-col bg-[#050505]">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-green-500/10">
-            <HardDrive className="w-6 h-6 text-green-400" />
+    <div className="animate-fadeIn h-full flex flex-col bg-[#050505] overflow-hidden">
+      {/* Mobile Header - Compact */}
+      <div className="flex-shrink-0 p-3 sm:p-6 lg:p-8 pb-2 sm:pb-4">
+        <div className="flex items-center justify-between gap-2">
+          {/* Title - minimal on mobile */}
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <div className="hidden sm:flex p-3 rounded-xl bg-green-500/10">
+              <HardDrive className="w-6 h-6 text-green-400" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-2xl font-bold text-white truncate">Media</h2>
+              <p className="text-xs text-gray-500 hidden sm:block">Cloud storage for all your production files</p>
+            </div>
+            {/* Mobile file count badge */}
+            <span className="sm:hidden text-xs text-gray-500 bg-white/5 px-2 py-1 rounded-lg">
+              {storageStats.totalFiles} files
+            </span>
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white">Media Library</h2>
-            <p className="text-sm text-gray-500">Powered by Wasabi • 1TB for $6.99/mo • No egress fees</p>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Connection indicator */}
+            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${wasabiStatus.configured ? 'bg-green-500' : 'bg-red-500'}`} />
+            {/* Desktop status */}
+            <div className={`hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium ${
+              wasabiStatus.configured
+                ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                : 'bg-red-500/10 text-red-400 border border-red-500/20'
+            }`}>
+              {wasabiStatus.configured ? 'Wasabi Connected' : 'Not Configured'}
+            </div>
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="flex items-center justify-center gap-2 px-3 sm:px-5 py-2 min-h-[44px] bg-brand-gold text-black font-semibold text-sm rounded-xl active:scale-95 transition-all"
+            >
+              <Upload className="w-4 h-4" /> <span className="hidden sm:inline">Upload</span>
+            </button>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Wasabi Connection Status */}
-          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium ${
-            wasabiStatus.configured
-              ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-              : 'bg-red-500/10 text-red-400 border border-red-500/20'
-          }`}>
-            <div className={`w-2 h-2 rounded-full ${wasabiStatus.configured ? 'bg-green-500' : 'bg-red-500'}`} />
-            {wasabiStatus.configured ? (
-              <span>Wasabi Connected</span>
-            ) : (
-              <span>Not Configured</span>
-            )}
-          </div>
-          <button
-            onClick={() => setShowUploadModal(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-brand-gold text-black font-semibold text-sm rounded-xl hover:scale-105 transition-all"
-          >
-            <Upload className="w-4 h-4" /> Smart Upload
-          </button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-6 gap-3">
-        <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-brand-gold/10">
-              <HardDrive className="w-4 h-4 text-brand-gold" />
+      {/* Stats Cards - Hidden on mobile, shown on tablet+ */}
+      <div className="hidden sm:grid grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 px-6 lg:px-8 pb-4">
+        <div className="p-3 sm:p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 rounded-lg bg-brand-gold/10">
+              <HardDrive className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-gold" />
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-gray-500 uppercase">Total</p>
-              <p className="text-lg font-bold text-white">{storageStats.totalFiles}</p>
+              <p className="text-[9px] sm:text-[10px] font-semibold text-gray-500 uppercase">Total</p>
+              <p className="text-base sm:text-lg font-bold text-white">{storageStats.totalFiles}</p>
             </div>
           </div>
         </div>
-        <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-500/10">
-              <Cloud className="w-4 h-4 text-blue-400" />
+        <div className="p-3 sm:p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 rounded-lg bg-blue-500/10">
+              <Cloud className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-gray-500 uppercase">Storage</p>
-              <p className="text-lg font-bold text-white">{formatFileSize(storageStats.totalSize)}</p>
+              <p className="text-[9px] sm:text-[10px] font-semibold text-gray-500 uppercase">Storage</p>
+              <p className="text-base sm:text-lg font-bold text-white">{formatFileSize(storageStats.totalSize)}</p>
             </div>
           </div>
         </div>
         {['video', 'image', 'audio', 'project'].map((cat) => (
-          <div key={cat} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${
+          <div key={cat} className="p-3 sm:p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className={`p-1.5 sm:p-2 rounded-lg ${
                 cat === 'video' ? 'bg-purple-500/10' :
                 cat === 'image' ? 'bg-pink-500/10' :
                 cat === 'audio' ? 'bg-green-500/10' : 'bg-orange-500/10'
@@ -556,21 +562,21 @@ const AssetsModule: React.FC = () => {
                 {getCategoryIcon(cat as any)}
               </div>
               <div>
-                <p className="text-[10px] font-semibold text-gray-500 uppercase capitalize">{cat}s</p>
-                <p className="text-lg font-bold text-white">{storageStats.byCategory[cat]?.count || 0}</p>
+                <p className="text-[9px] sm:text-[10px] font-semibold text-gray-500 uppercase capitalize">{cat}s</p>
+                <p className="text-base sm:text-lg font-bold text-white">{storageStats.byCategory[cat]?.count || 0}</p>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Projects Bar */}
+      {/* Projects Bar - Desktop only */}
       {projects.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-2">
-          <span className="text-xs text-gray-500 font-medium mr-2">Projects:</span>
+        <div className="hidden sm:flex items-center gap-2 overflow-x-auto pb-2 px-6 lg:px-8 snap-x snap-mandatory sm:snap-none">
+          <span className="text-xs text-gray-500 font-medium mr-2 flex-shrink-0">Projects:</span>
           <button
             onClick={() => setActiveProject(null)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+            className={`px-3 py-2 min-h-[40px] rounded-lg text-xs font-medium whitespace-nowrap transition-all snap-start ${
               !activeProject ? 'bg-brand-gold text-black' : 'bg-white/5 text-gray-400 hover:text-white'
             }`}
           >
@@ -580,7 +586,7 @@ const AssetsModule: React.FC = () => {
             <button
               key={project}
               onClick={() => setActiveProject(project)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-lg text-xs font-medium whitespace-nowrap transition-all snap-start ${
                 activeProject === project ? 'bg-purple-500 text-white' : 'bg-white/5 text-gray-400 hover:text-white'
               }`}
             >
@@ -592,37 +598,69 @@ const AssetsModule: React.FC = () => {
         </div>
       )}
 
-      {/* Filters Row */}
-      <div className="flex items-center gap-4">
-        {/* Category Tabs */}
-        <div className="flex items-center gap-1 p-1 bg-white/[0.03] rounded-xl">
-          {ASSET_CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeCategory === cat.id
-                  ? 'bg-brand-gold text-black'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <span className={activeCategory === cat.id ? '' : cat.color}>{cat.icon}</span>
-              <span className="hidden lg:inline">{cat.label}</span>
-            </button>
-          ))}
+      {/* Mobile Filters - Compact single row */}
+      <div className="flex-shrink-0 px-3 sm:px-6 lg:px-8 pb-2 sm:pb-4 space-y-2 sm:space-y-3">
+        {/* Mobile: Category icons + Search in one row */}
+        <div className="flex items-center gap-2">
+          {/* Category Tabs - icons only on mobile */}
+          <div className="flex items-center gap-0.5 p-0.5 bg-white/[0.03] rounded-lg sm:rounded-xl overflow-x-auto flex-shrink-0 sm:gap-1 sm:p-1">
+            {ASSET_CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex items-center justify-center gap-1.5 p-2.5 sm:px-3 sm:py-2 min-w-[40px] sm:min-w-0 min-h-[40px] sm:min-h-[44px] rounded-md sm:rounded-lg text-sm font-medium transition-all ${
+                  activeCategory === cat.id
+                    ? 'bg-brand-gold text-black'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <span className={activeCategory === cat.id ? '' : cat.color}>{cat.icon}</span>
+                <span className="hidden sm:inline">{cat.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Search */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search..."
+              className="w-full bg-white/[0.03] border border-white/[0.06] rounded-lg sm:rounded-xl py-2 sm:py-2.5 min-h-[40px] sm:min-h-[44px] pl-9 sm:pl-10 pr-3 sm:pr-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/30"
+            />
+          </div>
+
+          {/* Quick filters - compact on mobile */}
+          <button
+            onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
+            className={`p-2.5 min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] rounded-lg sm:rounded-xl flex items-center justify-center transition-all ${
+              showOnlyFavorites ? 'bg-yellow-500/20 text-yellow-500' : 'bg-white/[0.03] text-gray-400'
+            }`}
+          >
+            <Star className={`w-4 h-4 ${showOnlyFavorites ? 'fill-current' : ''}`} />
+          </button>
+
+          <button
+            onClick={fetchAssets}
+            className="p-2.5 min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] flex items-center justify-center bg-white/[0.03] rounded-lg sm:rounded-xl text-gray-400 active:bg-white/10"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
         </div>
 
-        {/* Subcategory Filter */}
+        {/* Subcategory Filter - only show when applicable */}
         {SUBCATEGORIES[activeCategory] && (
-          <div className="flex items-center gap-1 p-1 bg-white/[0.02] rounded-xl border border-white/[0.06]">
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-hide [-webkit-overflow-scrolling:touch]">
             {SUBCATEGORIES[activeCategory].map((sub) => (
               <button
                 key={sub.id}
                 onClick={() => setActiveSubcategory(sub.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex-shrink-0 whitespace-nowrap ${
                   activeSubcategory === sub.id
-                    ? 'bg-white/10 text-white'
-                    : 'text-gray-500 hover:text-white hover:bg-white/5'
+                    ? 'bg-white/15 text-white'
+                    : 'bg-white/5 text-gray-500 active:bg-white/10'
                 }`}
               >
                 {sub.label}
@@ -631,62 +669,35 @@ const AssetsModule: React.FC = () => {
           </div>
         )}
 
-        {/* Search */}
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search files, tags, projects..."
-            className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/30"
-          />
-        </div>
-
-        {/* Filter Buttons */}
-        <button
-          onClick={() => setShowOnlyMine(!showOnlyMine)}
-          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
-            showOnlyMine ? 'bg-brand-gold/10 text-brand-gold border border-brand-gold/20' : 'bg-white/[0.03] text-gray-400 border border-white/[0.06]'
-          }`}
-        >
-          <User className="w-3.5 h-3.5" /> Mine
-        </button>
-        <button
-          onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
-          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
-            showOnlyFavorites ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 'bg-white/[0.03] text-gray-400 border border-white/[0.06]'
-          }`}
-        >
-          <Star className="w-3.5 h-3.5" /> Favorites
-        </button>
-
-        {/* View Toggle */}
-        <div className="flex items-center gap-1 p-1 bg-white/[0.03] rounded-xl">
+        {/* Desktop-only extra controls */}
+        <div className="hidden sm:flex items-center gap-3">
           <button
-            onClick={() => setViewMode('grid')}
-            className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-gray-500'}`}
+            onClick={() => setShowOnlyMine(!showOnlyMine)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+              showOnlyMine ? 'bg-brand-gold/10 text-brand-gold border border-brand-gold/20' : 'bg-white/[0.03] text-gray-400 border border-white/[0.06]'
+            }`}
           >
-            <Grid className="w-4 h-4" />
+            <User className="w-4 h-4" /> My Files
           </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-gray-500'}`}
-          >
-            <List className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1 p-1 bg-white/[0.03] rounded-xl">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-gray-500'}`}
+            >
+              <Grid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg transition-colors ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-gray-500'}`}
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-
-        <button
-          onClick={fetchAssets}
-          className="p-2.5 bg-white/[0.03] border border-white/[0.06] rounded-xl text-gray-400 hover:text-white"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-        </button>
       </div>
 
-      {/* Assets Display */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Assets Display - Full height scroll on mobile */}
+      <div className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] px-3 sm:px-6 lg:px-8 pb-3 sm:pb-6">
         {loading && assets.length === 0 ? (
           <div className="h-full flex items-center justify-center">
             <div className="text-center">
@@ -695,13 +706,13 @@ const AssetsModule: React.FC = () => {
             </div>
           </div>
         ) : filteredAssets.length === 0 ? (
-          <div className="h-full flex items-center justify-center">
+          <div className="h-full flex items-center justify-center px-4">
             <div className="text-center">
-              <Cloud className="w-16 h-16 text-green-400/30 mx-auto mb-4" />
-              <h3 className="text-lg font-bold text-white mb-2">
+              <Cloud className="w-12 sm:w-16 h-12 sm:h-16 text-green-400/30 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-bold text-white mb-2">
                 {assets.length === 0 ? 'Start Your Media Library' : 'No matching files'}
               </h3>
-              <p className="text-sm text-gray-500 mb-6 max-w-md">
+              <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6 max-w-md">
                 {assets.length === 0
                   ? 'Upload your production files to Wasabi cloud storage with AI-powered organization'
                   : 'Try adjusting your filters or search query'}
@@ -709,7 +720,7 @@ const AssetsModule: React.FC = () => {
               {assets.length === 0 && (
                 <button
                   onClick={() => setShowUploadModal(true)}
-                  className="px-6 py-3 bg-brand-gold text-black font-semibold rounded-xl"
+                  className="px-5 sm:px-6 py-3 min-h-[44px] bg-brand-gold text-black font-semibold rounded-xl"
                 >
                   Upload First Files
                 </button>
@@ -717,7 +728,7 @@ const AssetsModule: React.FC = () => {
             </div>
           </div>
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-4">
             {filteredAssets.map((asset) => (
               <AssetCard
                 key={asset.id}
@@ -728,6 +739,7 @@ const AssetsModule: React.FC = () => {
                 onEdit={() => handleEditAsset(asset)}
                 onDelete={() => handleDelete(asset)}
                 onAiEdit={() => handleAiEdit(asset)}
+                onMetadataEdit={() => handleMetadataEdit(asset)}
               />
             ))}
           </div>
@@ -743,6 +755,7 @@ const AssetsModule: React.FC = () => {
                 onPlay={() => handlePlayMedia(asset)}
                 onEdit={() => handleEditAsset(asset)}
                 onAiEdit={() => handleAiEdit(asset)}
+                onMetadataEdit={() => handleMetadataEdit(asset)}
               />
             ))}
           </div>
@@ -829,24 +842,24 @@ const AssetsModule: React.FC = () => {
 
       {/* Delete Confirmation Modal */}
       {deleteAsset && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setDeleteAsset(null)}>
-          <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                <Trash2 className="w-6 h-6 text-red-500" />
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4" onClick={() => setDeleteAsset(null)}>
+          <div className="bg-[#0a0a0a] border border-white/10 rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 sm:gap-4 mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">Delete Asset</h3>
-                <p className="text-sm text-gray-500">This will remove it from Wasabi storage</p>
+                <h3 className="text-base sm:text-lg font-semibold text-white">Delete Asset</h3>
+                <p className="text-xs sm:text-sm text-gray-500">This will remove it from Wasabi storage</p>
               </div>
             </div>
 
-            <div className="bg-white/[0.03] rounded-xl p-4 mb-6">
+            <div className="bg-white/[0.03] rounded-xl p-3 sm:p-4 mb-5 sm:mb-6">
               <div className="flex items-center gap-3">
                 {deleteAsset.category === 'image' && (deleteAsset.thumbnailUrl || deleteAsset.url) ? (
-                  <img src={deleteAsset.thumbnailUrl || deleteAsset.url} alt={deleteAsset.name} className="w-12 h-12 rounded-lg object-cover" />
+                  <img src={deleteAsset.thumbnailUrl || deleteAsset.url} alt={deleteAsset.name} className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover flex-shrink-0" />
                 ) : (
-                  <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
                     {getCategoryIcon(deleteAsset.category)}
                   </div>
                 )}
@@ -860,14 +873,14 @@ const AssetsModule: React.FC = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setDeleteAsset(null)}
-                className="flex-1 px-4 py-3 bg-white/5 text-white font-medium text-sm rounded-xl hover:bg-white/10 transition-colors"
+                className="flex-1 px-4 py-3 min-h-[48px] bg-white/5 text-white font-medium text-sm rounded-xl hover:bg-white/10 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-3 bg-red-500 text-white font-medium text-sm rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 min-h-[48px] bg-red-500 text-white font-medium text-sm rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isDeleting ? (
                   <>
@@ -888,31 +901,31 @@ const AssetsModule: React.FC = () => {
 
       {/* AI Edit Modal */}
       {aiEditAsset && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => { setAiEditAsset(null); setAiEditResult(null); }}>
-          <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl max-w-2xl w-full mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4" onClick={() => { setAiEditAsset(null); setAiEditResult(null); }}>
+          <div className="bg-[#0a0a0a] border border-white/10 rounded-t-2xl sm:rounded-2xl max-h-[90vh] sm:max-w-2xl w-full overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             {/* Header */}
-            <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center">
-                  <Wand2 className="w-5 h-5 text-brand-gold" />
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center flex-shrink-0">
+                  <Wand2 className="w-4 h-4 sm:w-5 sm:h-5 text-brand-gold" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white">AI Image Editor</h3>
-                  <p className="text-xs text-gray-500">Transform your images with AI</p>
+                  <h3 className="text-base sm:text-lg font-semibold text-white">AI Image Editor</h3>
+                  <p className="text-[10px] sm:text-xs text-gray-500">Transform your images with AI</p>
                 </div>
               </div>
               <button
                 onClick={() => { setAiEditAsset(null); setAiEditResult(null); }}
-                className="p-2 text-gray-500 hover:text-white transition-colors"
+                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500 hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Content */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1">
               {/* Image Preview */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6">
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Original</p>
                   <div className="aspect-square bg-white/[0.03] rounded-xl overflow-hidden border border-white/10">
@@ -960,12 +973,12 @@ const AssetsModule: React.FC = () => {
               </div>
 
               {/* Quick Actions */}
-              <div className="flex flex-wrap gap-2 mb-6">
+              <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
                 {["Remove background", "Enhance colors", "Add vintage filter", "Sharpen image", "Convert to B&W"].map(action => (
                   <button
                     key={action}
                     onClick={() => setAiEditPrompt(action)}
-                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400 hover:text-white hover:border-brand-gold/30 transition-colors"
+                    className="px-3 py-2 min-h-[40px] bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400 hover:text-white hover:border-brand-gold/30 transition-colors"
                   >
                     {action}
                   </button>
@@ -973,17 +986,17 @@ const AssetsModule: React.FC = () => {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                 <button
                   onClick={() => { setAiEditAsset(null); setAiEditResult(null); }}
-                  className="px-4 py-3 bg-white/5 text-white font-medium text-sm rounded-xl hover:bg-white/10 transition-colors"
+                  className="px-4 py-3 min-h-[48px] bg-white/5 text-white font-medium text-sm rounded-xl hover:bg-white/10 transition-colors order-3 sm:order-1"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={performAiEdit}
                   disabled={!aiEditPrompt.trim() || isAiEditing}
-                  className="flex-1 px-4 py-3 bg-brand-gold text-black font-medium text-sm rounded-xl hover:bg-brand-gold/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-3 min-h-[48px] bg-brand-gold text-black font-medium text-sm rounded-xl hover:bg-brand-gold/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 order-1 sm:order-2"
                 >
                   {isAiEditing ? (
                     <>
@@ -1000,7 +1013,7 @@ const AssetsModule: React.FC = () => {
                 {aiEditResult && (aiEditResult.startsWith('http') || aiEditResult.startsWith('data:')) && (
                   <button
                     onClick={saveAiEditedImage}
-                    className="px-4 py-3 bg-green-500 text-white font-medium text-sm rounded-xl hover:bg-green-600 transition-colors flex items-center gap-2"
+                    className="px-4 py-3 min-h-[48px] bg-green-500 text-white font-medium text-sm rounded-xl hover:bg-green-600 transition-colors flex items-center justify-center gap-2 order-2 sm:order-3"
                   >
                     <Check className="w-4 h-4" />
                     Save
@@ -1015,7 +1028,7 @@ const AssetsModule: React.FC = () => {
   );
 };
 
-// Asset Card Component
+// Asset Card Component - Mobile-optimized with large touch targets
 const AssetCard: React.FC<{
   asset: ElevenViewsAsset;
   onClick: () => void;
@@ -1037,7 +1050,7 @@ const AssetCard: React.FC<{
 
   return (
     <div
-      className="group bg-white/[0.02] rounded-2xl border border-white/[0.06] overflow-hidden hover:border-brand-gold/20 transition-all cursor-pointer"
+      className="group bg-white/[0.02] rounded-xl sm:rounded-2xl border border-white/[0.06] overflow-hidden hover:border-brand-gold/20 transition-all cursor-pointer active:scale-[0.98] touch-manipulation"
       onClick={onClick}
     >
       <div className="aspect-square relative bg-black/20 overflow-hidden">
@@ -1049,25 +1062,27 @@ const AssetCard: React.FC<{
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
+            {/* Play button - always visible on mobile for video/audio */}
             {asset.category === 'video' && (
               <button
                 onClick={(e) => { e.stopPropagation(); onPlay?.(); }}
-                className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute inset-0 flex items-center justify-center bg-black/20 sm:bg-black/30 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
               >
-                <div className="w-14 h-14 rounded-full bg-brand-gold/90 flex items-center justify-center hover:scale-110 transition-transform">
-                  <Play className="w-6 h-6 text-black ml-1" />
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-brand-gold/90 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform shadow-lg">
+                  <Play className="w-5 h-5 sm:w-6 sm:h-6 text-black ml-0.5" />
                 </div>
               </button>
             )}
           </>
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+            {/* Audio play button - large touch target */}
             {asset.category === 'audio' && (
               <button
                 onClick={(e) => { e.stopPropagation(); onPlay?.(); }}
-                className="group/play"
+                className="w-16 h-16 sm:w-14 sm:h-14 rounded-full bg-green-500/20 flex items-center justify-center active:scale-95 transition-transform"
               >
-                <Music className="w-10 h-10 text-green-400/50 group-hover/play:text-green-400 transition-colors" />
+                <Music className="w-8 h-8 sm:w-10 sm:h-10 text-green-400" />
               </button>
             )}
             {asset.category === 'document' && <FileText className="w-10 h-10 text-blue-400/50" />}
@@ -1079,76 +1094,57 @@ const AssetCard: React.FC<{
         )}
 
         {/* Badges */}
-        <div className="absolute top-2 left-2 flex gap-1">
+        <div className="absolute top-1.5 sm:top-2 left-1.5 sm:left-2 flex gap-1">
           {asset.projectName && (
-            <div className="px-2 py-0.5 bg-purple-500/80 backdrop-blur rounded text-[9px] font-semibold text-white">
+            <div className="px-1.5 sm:px-2 py-0.5 bg-purple-500/80 backdrop-blur rounded text-[8px] sm:text-[9px] font-semibold text-white">
               {asset.projectName}
             </div>
           )}
         </div>
 
-        {/* Top Right Actions */}
-        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          {/* AI Edit Button - for images */}
-          {canAiEdit && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onAiEdit?.(); }}
-              className="p-1.5 rounded-lg bg-brand-gold/90 text-black hover:bg-brand-gold transition-all"
-              title="AI Edit"
-            >
-              <Wand2 className="w-4 h-4" />
-            </button>
-          )}
-          {/* Media Editor Button */}
-          {canEdit && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-              className="p-1.5 rounded-lg bg-black/40 text-white/80 hover:bg-purple-500/80 hover:text-white transition-all"
-              title="Edit Media"
-            >
-              <Edit3 className="w-4 h-4" />
-            </button>
-          )}
-          {/* Delete Button */}
+        {/* Top Right Actions - Always visible on mobile, hover on desktop */}
+        <div className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+          {/* Info/More button on mobile - opens detail modal */}
           <button
-            onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
-            className="p-1.5 rounded-lg bg-black/40 text-white/60 hover:bg-red-500/80 hover:text-white transition-all"
-            title="Delete"
+            onClick={(e) => { e.stopPropagation(); onMetadataEdit?.(); }}
+            className="p-2 sm:p-1.5 min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 rounded-lg bg-black/60 sm:bg-black/40 text-white/90 sm:text-white/80 hover:bg-blue-500/80 hover:text-white transition-all flex items-center justify-center"
+            title="Edit Info"
           >
-            <Trash2 className="w-4 h-4" />
+            <Info className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Bottom Left - Favorite */}
+        {/* Bottom Right - Favorite (always visible) */}
         <button
           onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
-          className={`absolute bottom-2 right-2 p-1.5 rounded-lg transition-all ${
+          className={`absolute bottom-1.5 sm:bottom-2 right-1.5 sm:right-2 p-2 sm:p-1.5 min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 rounded-lg transition-all flex items-center justify-center ${
             asset.isFavorite
-              ? 'bg-yellow-500/20 text-yellow-500'
-              : 'bg-black/40 text-white/60 opacity-0 group-hover:opacity-100'
+              ? 'bg-yellow-500/30 text-yellow-500'
+              : 'bg-black/60 sm:bg-black/40 text-white/70 sm:text-white/60 sm:opacity-0 sm:group-hover:opacity-100'
           }`}
         >
           <Star className={`w-4 h-4 ${asset.isFavorite ? 'fill-current' : ''}`} />
         </button>
 
         {/* Type Badge */}
-        <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 backdrop-blur rounded text-[9px] font-semibold text-white uppercase">
+        <div className="absolute bottom-1.5 sm:bottom-2 left-1.5 sm:left-2 px-1.5 sm:px-2 py-0.5 bg-black/70 sm:bg-black/60 backdrop-blur rounded text-[8px] sm:text-[9px] font-semibold text-white uppercase">
           {asset.subcategory || asset.category}
         </div>
       </div>
 
-      <div className="p-3">
-        <p className="text-sm font-medium text-white truncate">{asset.name}</p>
-        <div className="flex items-center justify-between mt-1">
-          <span className="text-xs text-gray-500">{formatFileSize(asset.fileSize)}</span>
+      {/* Card Info */}
+      <div className="p-2 sm:p-3">
+        <p className="text-xs sm:text-sm font-medium text-white truncate">{asset.name}</p>
+        <div className="flex items-center justify-between mt-0.5 sm:mt-1">
+          <span className="text-[10px] sm:text-xs text-gray-500">{formatFileSize(asset.fileSize)}</span>
           <div className="flex items-center gap-1">
             {/* A&R Status for audio files */}
             {arMetadata && (
               <>
                 {arMetadata.ratings.overall > 0 && (
-                  <span className="text-[10px] text-brand-gold font-medium">{arMetadata.ratings.overall}</span>
+                  <span className="text-[9px] sm:text-[10px] text-brand-gold font-medium">{arMetadata.ratings.overall}</span>
                 )}
-                <span className={`text-[10px] px-1 rounded ${AR_STATUS_CONFIG[arMetadata.status].bg} ${AR_STATUS_CONFIG[arMetadata.status].color}`}>
+                <span className={`text-[9px] sm:text-[10px] px-1 rounded ${AR_STATUS_CONFIG[arMetadata.status].bg} ${AR_STATUS_CONFIG[arMetadata.status].color}`}>
                   {AR_STATUS_CONFIG[arMetadata.status].label}
                 </span>
               </>
@@ -1174,7 +1170,8 @@ const AssetRow: React.FC<{
   onPlay?: () => void;
   onEdit?: () => void;
   onAiEdit?: () => void;
-}> = ({ asset, onClick, onToggleFavorite, onDelete, onPlay, onEdit, onAiEdit }) => {
+  onMetadataEdit?: () => void;
+}> = ({ asset, onClick, onToggleFavorite, onDelete, onPlay, onEdit, onAiEdit, onMetadataEdit }) => {
   const canEdit = asset.category === 'image' || asset.category === 'video';
   const canPlay = asset.category === 'video' || asset.category === 'audio';
   const canAiEdit = asset.category === 'image';
@@ -1282,6 +1279,14 @@ const AssetRow: React.FC<{
             <Edit3 className="w-4 h-4" />
           </button>
         )}
+        {/* Metadata/Info Button */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onMetadataEdit?.(); }}
+          className="p-2 text-gray-500 hover:text-blue-400 rounded-lg transition-colors"
+          title="Edit Info"
+        >
+          <Info className="w-4 h-4" />
+        </button>
         <button
           onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
           className={`p-2 rounded-lg transition-colors ${
@@ -1394,38 +1399,38 @@ const AssetDetailModal: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="w-full max-w-4xl max-h-[90vh] bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="w-full sm:max-w-4xl max-h-[95vh] sm:max-h-[90vh] bg-[#0a0a0a] border border-white/10 rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-white/10">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2.5 rounded-xl bg-blue-500/10 flex-shrink-0">
-              <ExternalLink className="w-5 h-5 text-blue-400" />
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-white/10">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 flex-shrink-0">
+              <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
             </div>
-            <div className="min-w-0">
-              <h3 className="text-lg font-bold text-white truncate">{asset.name}</h3>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base sm:text-lg font-bold text-white truncate">{asset.name}</h3>
+              <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-gray-500">
                 <span>{formatFileSize(asset.fileSize)}</span>
                 <span>•</span>
                 <span className="capitalize">{asset.category}</span>
                 {asset.projectName && (
                   <>
-                    <span>•</span>
-                    <span className="text-purple-400">{asset.projectName}</span>
+                    <span className="hidden sm:inline">•</span>
+                    <span className="hidden sm:inline text-purple-400">{asset.projectName}</span>
                   </>
                 )}
               </div>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-500 hover:text-white rounded-lg hover:bg-white/5">
+          <button onClick={onClose} className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500 hover:text-white rounded-lg hover:bg-white/5 flex-shrink-0">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {/* Preview */}
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             {/* Image Preview - Show actual image */}
             {asset.category === 'image' && (
               <div className="rounded-xl overflow-hidden border border-white/10 bg-black/50">
@@ -1729,95 +1734,100 @@ const AssetDetailModal: React.FC<{
           )}
 
           {/* Metadata */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-white/[0.02] rounded-xl">
-              <p className="text-xs text-gray-500 mb-1">File Name</p>
-              <p className="text-sm text-white truncate">{asset.fileName}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="p-3 sm:p-4 bg-white/[0.02] rounded-xl">
+              <p className="text-[10px] sm:text-xs text-gray-500 mb-1">File Name</p>
+              <p className="text-xs sm:text-sm text-white truncate">{asset.fileName}</p>
             </div>
-            <div className="p-4 bg-white/[0.02] rounded-xl">
-              <p className="text-xs text-gray-500 mb-1">Location</p>
-              <p className="text-sm text-white truncate">{asset.metadata?.folderPath || 'Eleven Views'}</p>
+            <div className="p-3 sm:p-4 bg-white/[0.02] rounded-xl">
+              <p className="text-[10px] sm:text-xs text-gray-500 mb-1">Location</p>
+              <p className="text-xs sm:text-sm text-white truncate">{asset.metadata?.folderPath || 'Eleven Views'}</p>
             </div>
-            <div className="p-4 bg-white/[0.02] rounded-xl">
-              <p className="text-xs text-gray-500 mb-1">Uploaded By</p>
-              <p className="text-sm text-white">{asset.uploadedByName}</p>
+            <div className="p-3 sm:p-4 bg-white/[0.02] rounded-xl">
+              <p className="text-[10px] sm:text-xs text-gray-500 mb-1">Uploaded By</p>
+              <p className="text-xs sm:text-sm text-white">{asset.uploadedByName}</p>
             </div>
-            <div className="p-4 bg-white/[0.02] rounded-xl">
-              <p className="text-xs text-gray-500 mb-1">Upload Date</p>
-              <p className="text-sm text-white">{new Date(asset.createdAt).toLocaleString()}</p>
+            <div className="p-3 sm:p-4 bg-white/[0.02] rounded-xl">
+              <p className="text-[10px] sm:text-xs text-gray-500 mb-1">Upload Date</p>
+              <p className="text-xs sm:text-sm text-white">{new Date(asset.createdAt).toLocaleString()}</p>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-white/10 flex items-center justify-between bg-white/[0.02]">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onToggleFavorite}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
-                asset.isFavorite
-                  ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
-                  : 'bg-white/5 text-gray-400 hover:text-yellow-500'
-              }`}
-            >
-              <Star className={`w-4 h-4 ${asset.isFavorite ? 'fill-current' : ''}`} />
-            </button>
-            <button
-              onClick={onToggleShare}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
-                asset.isShared
-                  ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                  : 'bg-white/5 text-gray-400 hover:text-green-500'
-              }`}
-              title="Team sharing"
-            >
-              <Share2 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={onToggleClientVisible}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
-                asset.isClientVisible
-                  ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                  : 'bg-white/5 text-gray-400 hover:text-blue-500'
-              }`}
-              title="Client visibility"
-            >
-              <Users className="w-4 h-4" />
-              <span className="text-xs">{asset.isClientVisible ? 'Client Visible' : 'Internal'}</span>
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* AI Edit Button */}
-            {canAiEdit && (
+        <div className="p-3 sm:p-5 border-t border-white/10 bg-white/[0.02] flex-shrink-0">
+          {/* Mobile: Stack vertically, Desktop: horizontal */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            {/* Toggle buttons row */}
+            <div className="flex items-center gap-2 justify-center sm:justify-start">
               <button
-                onClick={onAiEdit}
-                className="flex items-center gap-2 px-4 py-2 bg-brand-gold text-black rounded-xl hover:bg-brand-gold/90"
+                onClick={onToggleFavorite}
+                className={`flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 min-h-[44px] min-w-[44px] rounded-xl transition-colors ${
+                  asset.isFavorite
+                    ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
+                    : 'bg-white/5 text-gray-400 hover:text-yellow-500'
+                }`}
               >
-                <Wand2 className="w-4 h-4" /> AI Edit
+                <Star className={`w-4 h-4 ${asset.isFavorite ? 'fill-current' : ''}`} />
               </button>
-            )}
-            <a
-              href={asset.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600"
-            >
-              <ExternalLink className="w-4 h-4" /> View File
-            </a>
-            {asset.downloadUrl && (
-              <a
-                href={asset.downloadUrl}
-                className="flex items-center gap-2 px-4 py-2 bg-white/5 text-white rounded-xl hover:bg-white/10"
+              <button
+                onClick={onToggleShare}
+                className={`flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 min-h-[44px] min-w-[44px] rounded-xl transition-colors ${
+                  asset.isShared
+                    ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                    : 'bg-white/5 text-gray-400 hover:text-green-500'
+                }`}
+                title="Team sharing"
               >
-                <Download className="w-4 h-4" /> Download
+                <Share2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={onToggleClientVisible}
+                className={`flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 min-h-[44px] rounded-xl transition-colors ${
+                  asset.isClientVisible
+                    ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                    : 'bg-white/5 text-gray-400 hover:text-blue-500'
+                }`}
+                title="Client visibility"
+              >
+                <Users className="w-4 h-4" />
+                <span className="hidden sm:inline text-xs">{asset.isClientVisible ? 'Client Visible' : 'Internal'}</span>
+              </button>
+            </div>
+            {/* Action buttons row */}
+            <div className="flex items-center gap-2 justify-center sm:justify-end">
+              {/* AI Edit Button */}
+              {canAiEdit && (
+                <button
+                  onClick={onAiEdit}
+                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] bg-brand-gold text-black rounded-xl hover:bg-brand-gold/90 text-sm"
+                >
+                  <Wand2 className="w-4 h-4" /> <span className="hidden sm:inline">AI Edit</span>
+                </button>
+              )}
+              <a
+                href={asset.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] bg-blue-500 text-white rounded-xl hover:bg-blue-600 text-sm"
+              >
+                <ExternalLink className="w-4 h-4" /> <span className="hidden sm:inline">View</span>
               </a>
-            )}
-            <button
-              onClick={onDelete}
-              className="p-2 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+              {asset.downloadUrl && (
+                <a
+                  href={asset.downloadUrl}
+                  className="hidden sm:flex items-center gap-2 px-4 py-2 min-h-[44px] bg-white/5 text-white rounded-xl hover:bg-white/10 text-sm"
+                >
+                  <Download className="w-4 h-4" /> Download
+                </a>
+              )}
+              <button
+                onClick={onDelete}
+                className="p-3 min-h-[44px] min-w-[44px] flex items-center justify-center bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

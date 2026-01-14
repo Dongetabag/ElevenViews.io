@@ -1,8 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = 'http://72.61.72.94:3003';
-
-test('Complete login flow - register, logout, login', async ({ page }) => {
+test('Complete login flow - register, logout, login', async ({ page, baseURL }) => {
   const timestamp = Date.now();
   const testPassword = 'testpass123';
   const testName = `Test User ${timestamp}`;
@@ -10,11 +8,11 @@ test('Complete login flow - register, logout, login', async ({ page }) => {
 
   console.log('=== STEP 1: Create new account ===');
 
-  await page.goto(BASE_URL);
+  await page.goto(`${baseURL}/portal/`);
   await page.waitForLoadState('networkidle');
 
-  // Click CREATE ACCOUNT
-  const createBtn = page.locator('button:has-text("CREATE ACCOUNT")');
+  // Click Join the Views (signup button)
+  const createBtn = page.locator('button:has-text("Join the Views")');
   await expect(createBtn).toBeVisible({ timeout: 10000 });
   await createBtn.click();
   await page.waitForTimeout(1000);
@@ -35,7 +33,7 @@ test('Complete login flow - register, logout, login', async ({ page }) => {
   console.log('Filled agency specialty');
 
   // Submit
-  const finishBtn = page.locator('button:has-text("FINISH SETUP")');
+  const finishBtn = page.locator('button:has-text("Join Eleven Views")');
   await expect(finishBtn).toBeVisible();
   await finishBtn.click();
   await page.waitForTimeout(3000);
@@ -76,7 +74,7 @@ test('Complete login flow - register, logout, login', async ({ page }) => {
   }
 
   // Verify we're back on landing page
-  const signInBtn = page.locator('button:has-text("SIGN IN")');
+  const signInBtn = page.locator('button:has-text("Crew Login")');
   await expect(signInBtn).toBeVisible({ timeout: 10000 });
   console.log('Back on landing page - logout successful!');
 

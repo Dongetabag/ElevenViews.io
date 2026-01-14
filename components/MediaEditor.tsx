@@ -7,6 +7,7 @@ import {
   MousePointer2, Move, PaintBucket, Eye, EyeOff, Check, AlertCircle
 } from 'lucide-react';
 import { Asset, EditOperation, MediaRevision } from '../types';
+import { AI_MODELS, AI_ENDPOINTS, getGoogleAIKey } from '../services/aiConfig';
 
 interface MediaEditorProps {
   asset: Asset;
@@ -36,7 +37,7 @@ interface EditTool {
   forImage?: boolean;
 }
 
-const GOOGLE_AI_API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY;
+const GOOGLE_AI_API_KEY = getGoogleAIKey();
 const MCP_URL = import.meta.env.VITE_MCP_URL || 'https://mcp.elevenviews.io';
 
 const MediaEditor: React.FC<MediaEditorProps> = ({ asset, onClose, onSave }) => {
@@ -272,7 +273,7 @@ const MediaEditor: React.FC<MediaEditorProps> = ({ asset, onClose, onSave }) => 
 
       // Call Google Gemini API
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GOOGLE_AI_API_KEY}`,
+        `${AI_ENDPOINTS.gemini}/${AI_MODELS.text.experimental}:generateContent?key=${GOOGLE_AI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

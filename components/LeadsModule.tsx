@@ -81,9 +81,9 @@ const LeadsModule: React.FC<LeadsModuleProps> = ({ leads, addLead, updateLead, d
 
   if (leads.length === 0 && !showAddModal) {
     return (
-      <div className="p-8 h-full flex flex-col">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white font-orbitron">Lead Pipeline</h2>
+      <div className="p-4 sm:p-6 lg:p-8 h-full flex flex-col">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-white font-orbitron">Lead Pipeline</h2>
           <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-brand-gold text-black font-bold text-sm rounded-lg hover:scale-105 transition-all"
@@ -111,7 +111,7 @@ const LeadsModule: React.FC<LeadsModuleProps> = ({ leads, addLead, updateLead, d
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Contact Name *</label>
                 <input
@@ -136,7 +136,7 @@ const LeadsModule: React.FC<LeadsModuleProps> = ({ leads, addLead, updateLead, d
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Email *</label>
                 <input
@@ -171,7 +171,7 @@ const LeadsModule: React.FC<LeadsModuleProps> = ({ leads, addLead, updateLead, d
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Status</label>
                 <select
@@ -254,21 +254,21 @@ const LeadsModule: React.FC<LeadsModuleProps> = ({ leads, addLead, updateLead, d
   }
 
   return (
-    <div className="p-8 h-full flex flex-col space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white font-orbitron">Lead Pipeline</h2>
-        <div className="flex items-center gap-3">
-          <div className="relative">
+    <div className="p-4 sm:p-6 lg:p-8 h-full flex flex-col space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+        <h2 className="text-xl sm:text-2xl font-bold text-white font-orbitron">Lead Pipeline</h2>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-none">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
             <input
               type="text"
               placeholder="Search leads..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:border-brand-gold focus:outline-none w-48"
+              className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:border-brand-gold focus:outline-none w-full sm:w-48"
             />
           </div>
-          <div className="flex p-1 bg-white/5 rounded-lg border border-white/10">
+          <div className="hidden sm:flex p-1 bg-white/5 rounded-lg border border-white/10">
             <button
               onClick={() => setView('kanban')}
               className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${view === 'kanban' ? 'bg-brand-gold text-black' : 'text-gray-500 hover:text-white'}`}
@@ -284,7 +284,7 @@ const LeadsModule: React.FC<LeadsModuleProps> = ({ leads, addLead, updateLead, d
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-brand-gold text-black font-bold text-sm rounded-lg hover:scale-105 transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-brand-gold text-black font-bold text-sm rounded-lg hover:scale-105 transition-all min-h-[44px]"
           >
             <Plus className="w-4 h-4" /> Add Lead
           </button>
@@ -292,9 +292,9 @@ const LeadsModule: React.FC<LeadsModuleProps> = ({ leads, addLead, updateLead, d
       </div>
 
       {view === 'kanban' ? (
-        <div className="flex gap-6 overflow-x-auto pb-4 h-full scrollbar-hide">
+        <div className="flex gap-3 sm:gap-6 overflow-x-auto pb-4 h-full scrollbar-hide snap-x snap-mandatory [-webkit-overflow-scrolling:touch] overscroll-x-contain touch-pan-x">
           {LEAD_STATUS_COLUMNS.map((col) => (
-            <div key={col.id} className="flex-shrink-0 w-80 flex flex-col gap-4">
+            <div key={col.id} className="flex-shrink-0 w-[85vw] sm:w-80 flex flex-col gap-3 sm:gap-4 snap-center">
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-brand-gold"></div>
@@ -313,10 +313,10 @@ const LeadsModule: React.FC<LeadsModuleProps> = ({ leads, addLead, updateLead, d
                         {lead.company[0]}
                       </div>
                       <div className="flex gap-1">
-                        <button onClick={() => handleEdit(lead)} className="p-1 text-gray-600 hover:text-brand-gold">
+                        <button onClick={() => handleEdit(lead)} className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:text-brand-gold">
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
-                        <button onClick={() => handleDelete(lead.id)} className="p-1 text-gray-600 hover:text-red-500">
+                        <button onClick={() => handleDelete(lead.id)} className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:text-red-500">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -359,8 +359,8 @@ const LeadsModule: React.FC<LeadsModuleProps> = ({ leads, addLead, updateLead, d
           ))}
         </div>
       ) : (
-        <div className="glass rounded-2xl overflow-hidden border-white/10">
-          <table className="w-full text-left">
+        <div className="glass rounded-2xl overflow-hidden border-white/10 overflow-x-auto">
+          <table className="w-full text-left min-w-[600px]">
             <thead className="bg-white/5 border-b border-white/5 text-[10px] uppercase font-bold tracking-[0.2em] text-gray-500">
               <tr>
                 <th className="px-6 py-4">Lead Info</th>
@@ -398,11 +398,11 @@ const LeadsModule: React.FC<LeadsModuleProps> = ({ leads, addLead, updateLead, d
                     ${lead.value.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="flex gap-2 justify-end">
-                      <button onClick={() => handleEdit(lead)} className="p-2 text-gray-600 hover:text-brand-gold transition-colors">
+                    <div className="flex gap-1 justify-end">
+                      <button onClick={() => handleEdit(lead)} className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:text-brand-gold transition-colors">
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
-                      <button onClick={() => handleDelete(lead.id)} className="p-2 text-gray-600 hover:text-red-500 transition-colors">
+                      <button onClick={() => handleDelete(lead.id)} className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:text-red-500 transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>

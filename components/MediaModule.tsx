@@ -3,6 +3,7 @@ import { GoogleGenAI } from '@google/genai';
 import { UserProfile } from '../types.ts';
 import { useAIAssets, useCurrentUser } from '../hooks/useAppStore';
 import { wasabiService, ElevenViewsAsset } from '../services/wasabiService';
+import { AI_MODELS, getGoogleAIKey } from '../services/aiConfig';
 import {
   Sparkles, Image as ImageIcon, Download, Wand2,
   Loader2, Maximize2, Layers, Palette, RefreshCcw,
@@ -189,6 +190,7 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
   const [saveName, setSaveName] = useState('');
   const [saveTags, setSaveTags] = useState('');
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get current session's assets
@@ -450,9 +452,9 @@ const MediaModule: React.FC<MediaModuleProps> = ({ user }) => {
 
     try {
       // Use Google AI for image generation
-      const apiKey = import.meta.env.VITE_GOOGLE_AI_API_KEY || '';
+      const apiKey = getGoogleAIKey();
       if (!apiKey) {
-        throw new Error('API key not configured');
+        throw new Error('Google AI API key not configured. Check .env file.');
       }
 
       const ai = new GoogleGenAI({ apiKey });
@@ -545,9 +547,9 @@ Create a stunning, award-winning visual that:
 
 Generate this as a photorealistic, high-quality image with impeccable attention to detail.`;
 
-      // Try Gemini 2.0 Flash with image generation
+      // Try Gemini with image generation
       const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash-exp',
+        model: AI_MODELS.text.experimental,
         contents: { parts: [{ text: stylePrompt }] },
         config: { responseModalities: ['IMAGE', 'TEXT'] }
       });
@@ -615,9 +617,29 @@ Generate this as a photorealistic, high-quality image with impeccable attention 
   };
 
   return (
-    <div className="flex h-full animate-fadeIn overflow-hidden bg-[#050505]">
+    <div className="flex min-h-full animate-fadeIn bg-[#050505] relative">
+      {/* Mobile Sidebar Overlay */}
+      {showMobileSidebar && (
+        <div
+          className="fixed inset-0 bg-black/60 z-40 md:hidden"
+          onClick={() => setShowMobileSidebar(false)}
+        />
+      )}
+
       {/* Sidebar - Project Sessions */}
-      <div className="w-72 border-r border-white/5 flex flex-col bg-black/40">
+      <div className={`
+        fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300
+        ${showMobileSidebar ? 'translate-x-0' : '-translate-x-full'}
+        md:relative md:translate-x-0
+        border-r border-white/5 flex flex-col bg-[#0a0a0a] md:bg-black/40
+      `}>
+        {/* Mobile Close Button */}
+        <button
+          onClick={() => setShowMobileSidebar(false)}
+          className="md:hidden absolute top-4 right-4 z-10 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-white/10 text-white"
+        >
+          <X className="w-5 h-5" />
+        </button>
         <div className="p-4 border-b border-white/5">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center">
@@ -765,126 +787,124 @@ Generate this as a photorealistic, high-quality image with impeccable attention 
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="h-14 border-b border-white/5 flex items-center justify-between px-6 bg-black/40">
-          <div className="flex items-center gap-3">
-            <div className={`w-2 h-2 rounded-full ${isGenerating ? 'bg-brand-gold animate-pulse' : 'bg-brand-gold'}`}></div>
-            <div>
-              <span className="text-sm font-medium text-white">
-                {isGenerating ? 'Generating...' : (activeSession?.title || 'New Project')}
-              </span>
-              {activeSession && (
-                <span className="text-[10px] text-gray-500 ml-2">
-                  {generatedImages.length}/{MAX_ASSETS_PER_SESSION} assets
-                </span>
-              )}
-            </div>
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        {/* Mobile Header - Minimal */}
+        <div className="h-12 sm:h-14 border-b border-white/5 flex items-center justify-between px-3 sm:px-6 bg-black/40 flex-shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={() => setShowMobileSidebar(true)}
+              className="md:hidden p-2 min-h-[40px] min-w-[40px] flex items-center justify-center text-gray-400 active:text-white rounded-lg active:bg-white/10"
+            >
+              <Layers className="w-5 h-5" />
+            </button>
+            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isGenerating ? 'bg-brand-gold animate-pulse' : 'bg-brand-gold'}`}></div>
+            <span className="text-sm font-medium text-white truncate">
+              {isGenerating ? 'Creating...' : 'AI Studio'}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <input type="file" ref={fileInputRef} onChange={handleUpload} className="hidden" accept="image/*" />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 text-white text-xs rounded-lg hover:bg-white/10 transition-all"
+              className="p-2 min-h-[40px] min-w-[40px] sm:min-h-[44px] bg-white/5 border border-white/10 text-white rounded-lg active:bg-white/10 flex items-center justify-center"
             >
-              <Upload className="w-3 h-3" /> Import
+              <Upload className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Generation Controls */}
-        <div className="p-4 border-b border-white/5 bg-black/20">
-          <div className="flex gap-4">
-            {/* Reference Preview */}
-            {activeReference && (
-              <div className="w-24 h-24 rounded-xl overflow-hidden border border-brand-gold/30 relative flex-shrink-0">
+        {/* Generation Controls - Compact on mobile */}
+        <div className="flex-shrink-0 p-3 sm:p-4 border-b border-white/5 bg-black/20">
+          {/* Reference Preview - Inline on mobile */}
+          {activeReference && (
+            <div className="flex items-center gap-3 mb-3 p-2 bg-brand-gold/5 rounded-xl border border-brand-gold/20">
+              <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 relative">
                 <img src={activeReference.url} className="w-full h-full object-cover" alt="Reference" />
-                <button
-                  onClick={() => setActiveReference(null)}
-                  className="absolute top-1 right-1 p-1 bg-black/60 rounded-full text-white hover:bg-red-500/60"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-                <div className="absolute bottom-0 left-0 right-0 bg-brand-gold/80 text-black text-[8px] text-center py-0.5 font-bold">
-                  REFERENCE
-                </div>
               </div>
-            )}
-
-            {/* Prompt Input */}
-            <div className="flex-1 space-y-3">
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder={activeReference ? "Describe the changes you want..." : "Describe your Eleven Views branded design..."}
-                className="w-full h-20 bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/30 transition-all resize-none"
-              />
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {/* Aspect Ratio */}
-                  <div className="flex p-0.5 bg-black/40 rounded-lg border border-white/10">
-                    {['1:1', '16:9', '9:16', '4:3'].map(ratio => (
-                      <button
-                        key={ratio}
-                        onClick={() => setAspectRatio(ratio)}
-                        className={`px-3 py-1.5 text-[10px] font-bold rounded-md transition-all ${
-                          aspectRatio === ratio ? 'bg-brand-gold text-black' : 'text-gray-500 hover:text-white'
-                        }`}
-                      >
-                        {ratio}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Active Style Badge */}
-                  <span className="text-[10px] text-gray-500 flex items-center gap-1">
-                    <Palette className="w-3 h-3" />
-                    {activeStyle.name}
-                  </span>
-                </div>
-
-                <button
-                  onClick={handleGenerate}
-                  disabled={isGenerating || !prompt.trim()}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-brand-gold text-black font-bold rounded-xl transition-all hover:bg-brand-gold/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="text-xs">Generating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Wand2 className="w-4 h-4" />
-                      <span className="text-xs">{activeReference ? 'Revise' : 'Generate'}</span>
-                    </>
-                  )}
-                </button>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-brand-gold font-medium">Using reference</p>
+                <p className="text-[10px] text-gray-500 truncate">Describe changes below</p>
               </div>
+              <button
+                onClick={() => setActiveReference(null)}
+                className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center bg-black/40 rounded-lg text-gray-400 active:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
+          )}
+
+          {/* Prompt Input - Larger touch area */}
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder={activeReference ? "What changes do you want?" : "Describe your image..."}
+            className="w-full h-16 sm:h-20 bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-gold/30 transition-all resize-none"
+          />
+
+          {/* Controls Row */}
+          <div className="flex items-center justify-between gap-2 mt-3">
+            {/* Aspect Ratio - Compact pills */}
+            <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+              {['1:1', '16:9', '9:16'].map(ratio => (
+                <button
+                  key={ratio}
+                  onClick={() => setAspectRatio(ratio)}
+                  className={`px-3 py-2 min-h-[40px] text-[11px] font-bold rounded-lg transition-all flex-shrink-0 ${
+                    aspectRatio === ratio ? 'bg-brand-gold text-black' : 'bg-white/5 text-gray-400 active:bg-white/10'
+                  }`}
+                >
+                  {ratio}
+                </button>
+              ))}
+              <button
+                onClick={() => setAspectRatio('4:3')}
+                className={`hidden sm:block px-3 py-2 min-h-[40px] text-[11px] font-bold rounded-lg transition-all ${
+                  aspectRatio === '4:3' ? 'bg-brand-gold text-black' : 'bg-white/5 text-gray-400'
+                }`}
+              >
+                4:3
+              </button>
+            </div>
+
+            {/* Generate Button */}
+            <button
+              onClick={handleGenerate}
+              disabled={isGenerating || !prompt.trim()}
+              className="flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 min-h-[44px] bg-brand-gold text-black font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+            >
+              {isGenerating ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <Wand2 className="w-4 h-4" />
+                  <span className="text-sm">{activeReference ? 'Revise' : 'Create'}</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
-        {/* Assets Grid */}
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* Assets Grid - Full height scroll */}
+        <div className="flex-1 overflow-y-auto [-webkit-overflow-scrolling:touch] overscroll-contain p-3 sm:p-6">
           {generatedImages.length === 0 && !isGenerating ? (
-            <div className="h-full flex flex-col items-center justify-center text-center">
+            <div className="h-full flex flex-col items-center justify-center text-center px-4">
               <div className="relative">
                 <div className="absolute inset-0 bg-brand-gold blur-3xl opacity-5 scale-150"></div>
-                <div className="relative p-12 rounded-3xl bg-white/5 border border-dashed border-white/10">
-                  <ImageIcon className="w-20 h-20 text-gray-700" />
+                <div className="relative p-8 sm:p-12 rounded-2xl sm:rounded-3xl bg-white/5 border border-dashed border-white/10">
+                  <ImageIcon className="w-14 h-14 sm:w-20 sm:h-20 text-gray-600" />
                 </div>
               </div>
-              <div className="mt-6 space-y-2">
-                <h4 className="text-xl font-bold text-white">Create Eleven Views Branded Assets</h4>
-                <p className="text-sm text-gray-500 max-w-md">
-                  Generate premium marketing visuals with our brand styles. Describe your concept above.
+              <div className="mt-4 sm:mt-6 space-y-2">
+                <h4 className="text-lg sm:text-xl font-bold text-white">Create AI Images</h4>
+                <p className="text-xs sm:text-sm text-gray-500 max-w-sm">
+                  Describe what you want to create above and tap Create
                 </p>
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {isGenerating && (
                 <div className="aspect-square rounded-2xl overflow-hidden border border-brand-gold/30 bg-brand-gold/5 flex flex-col items-center justify-center gap-4 animate-pulse">
                   <Loader2 className="w-10 h-10 text-brand-gold animate-spin" />
@@ -923,29 +943,29 @@ Generate this as a photorealistic, high-quality image with impeccable attention 
                         <p className="text-xs text-white/90 leading-relaxed line-clamp-2 mt-1">"{img.prompt}"</p>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 sm:gap-2">
                         <button
                           onClick={() => handleRevise(img)}
-                          className="flex-1 py-2 bg-white/10 backdrop-blur-md text-white text-[10px] font-bold uppercase rounded-lg hover:bg-brand-gold hover:text-black transition-all flex items-center justify-center gap-1"
+                          className="flex-1 py-2 min-h-[44px] bg-white/10 backdrop-blur-md text-white text-[10px] font-bold uppercase rounded-lg hover:bg-brand-gold hover:text-black transition-all flex items-center justify-center gap-1"
                         >
-                          <RefreshCcw className="w-3 h-3" /> Revise
+                          <RefreshCcw className="w-3 h-3" /> <span className="hidden sm:inline">Revise</span>
                         </button>
                         <button
                           onClick={() => handleSaveToLibrary(img)}
-                          className="flex-1 py-2 bg-white/10 backdrop-blur-md text-white text-[10px] font-bold uppercase rounded-lg hover:bg-brand-gold transition-all flex items-center justify-center gap-1"
+                          className="flex-1 py-2 min-h-[44px] bg-white/10 backdrop-blur-md text-white text-[10px] font-bold uppercase rounded-lg hover:bg-brand-gold transition-all flex items-center justify-center gap-1"
                           disabled={img.isSaved}
                         >
-                          <FolderPlus className="w-3 h-3" /> {img.isSaved ? 'Saved' : 'Library'}
+                          <FolderPlus className="w-3 h-3" /> <span className="hidden sm:inline">{img.isSaved ? 'Saved' : 'Library'}</span>
                         </button>
                         <button
                           onClick={() => handleDownload(img)}
-                          className="p-2 bg-white/10 backdrop-blur-md text-white rounded-lg hover:bg-white/20 transition-all"
+                          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center bg-white/10 backdrop-blur-md text-white rounded-lg hover:bg-white/20 transition-all"
                         >
                           <Download className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => deleteAsset(img.id)}
-                          className="p-2 bg-white/10 backdrop-blur-md text-white rounded-lg hover:bg-red-500/50 transition-all"
+                          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center bg-white/10 backdrop-blur-md text-white rounded-lg hover:bg-red-500/50 transition-all"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -966,14 +986,14 @@ Generate this as a photorealistic, high-quality image with impeccable attention 
         </div>
 
         {/* Status Bar */}
-        <div className="p-4 bg-white/5 border-t border-white/5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="p-3 sm:p-4 bg-white/5 border-t border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-brand-gold shadow-[0_0_8px_#22c55e]"></div>
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Eleven Views Media Engine</span>
+              <span className="hidden sm:inline text-[10px] font-bold text-gray-400 uppercase tracking-widest">Eleven Views Media Engine</span>
             </div>
-            <div className="h-3 w-px bg-white/10"></div>
-            <span className="text-[10px] font-mono text-gray-600">SESSION ASSETS: {generatedImages.length}</span>
+            <div className="hidden sm:block h-3 w-px bg-white/10"></div>
+            <span className="text-[10px] font-mono text-gray-600">ASSETS: {generatedImages.length}</span>
           </div>
           <div className="flex items-center gap-2 text-gray-500 text-[10px]">
             <Clock className="w-3 h-3" />

@@ -277,15 +277,25 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       onMouseMove={resetControlsTimeout}
     >
       {/* Main Video Area */}
-      <div className={`flex-1 flex flex-col relative ${showLibrary ? 'mr-80' : ''}`}>
+      <div className={`flex-1 flex flex-col relative ${showLibrary ? 'md:mr-80' : ''}`}>
         {/* Close Button */}
         <button
           onClick={onClose}
-          className={`absolute top-4 left-4 z-20 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all ${
+          className={`absolute top-4 left-4 z-20 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-all ${
             showControls ? 'opacity-100' : 'opacity-0'
           }`}
         >
           <X className="w-6 h-6" />
+        </button>
+
+        {/* Mobile Library Toggle */}
+        <button
+          onClick={() => setShowLibrary(!showLibrary)}
+          className={`md:hidden absolute top-4 right-4 z-20 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-all ${
+            showControls ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <List className="w-6 h-6" />
         </button>
 
         {/* Video Container */}
@@ -327,41 +337,41 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
 
         {/* Controls Bar */}
-        <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 transition-opacity ${
+        <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3 sm:p-4 transition-opacity ${
           showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}>
           {/* Progress Bar */}
           <div
-            className="h-1 bg-white/20 rounded-full cursor-pointer group mb-4"
+            className="h-2 sm:h-1 bg-white/20 rounded-full cursor-pointer group mb-3 sm:mb-4"
             onClick={seekTo}
           >
             <div
               className="h-full bg-brand-gold rounded-full relative"
               style={{ width: `${(currentTime / duration) * 100}%` }}
             >
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-brand-gold rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-3 sm:h-3 bg-brand-gold rounded-full sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" />
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
             {/* Left Controls */}
-            <div className="flex items-center gap-4">
-              <button onClick={playPrevious} className="p-2 text-white hover:text-brand-gold transition-colors">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <button onClick={playPrevious} className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-white hover:text-brand-gold transition-colors">
                 <SkipBack className="w-5 h-5" />
               </button>
               <button
                 onClick={togglePlay}
-                className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-transform"
+                className="w-12 h-12 sm:w-10 sm:h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-transform"
               >
                 {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
               </button>
-              <button onClick={playNext} className="p-2 text-white hover:text-brand-gold transition-colors">
+              <button onClick={playNext} className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-white hover:text-brand-gold transition-colors">
                 <SkipForward className="w-5 h-5" />
               </button>
 
-              {/* Volume */}
-              <div className="flex items-center gap-2 group">
-                <button onClick={() => setIsMuted(!isMuted)} className="p-2 text-white hover:text-brand-gold">
+              {/* Volume - Hidden on mobile */}
+              <div className="hidden sm:flex items-center gap-2 group">
+                <button onClick={() => setIsMuted(!isMuted)} className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-white hover:text-brand-gold">
                   {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                 </button>
                 <input
@@ -379,28 +389,25 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               </div>
 
               {/* Time Display */}
-              <span className="text-white text-sm">
+              <span className="text-white text-xs sm:text-sm whitespace-nowrap">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
             </div>
 
-            {/* Video Title */}
+            {/* Video Title - Hidden on mobile */}
             {currentVideo && (
-              <div className="flex-1 text-center px-4">
-                <p className="text-white font-medium truncate">{currentVideo.name}</p>
-                {currentVideo.subcategory && (
-                  <p className="text-gray-400 text-sm">{currentVideo.subcategory}</p>
-                )}
+              <div className="hidden md:flex flex-1 text-center px-4">
+                <p className="text-white font-medium truncate w-full">{currentVideo.name}</p>
               </div>
             )}
 
             {/* Right Controls */}
-            <div className="flex items-center gap-2">
-              {/* Playback Speed */}
-              <div className="relative">
+            <div className="flex items-center gap-1 sm:gap-2">
+              {/* Playback Speed - Hidden on mobile */}
+              <div className="hidden sm:block relative">
                 <button
                   onClick={() => setShowSettings(!showSettings)}
-                  className="p-2 text-white hover:text-brand-gold transition-colors"
+                  className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-white hover:text-brand-gold transition-colors"
                 >
                   <Settings className="w-5 h-5" />
                 </button>
@@ -414,7 +421,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                           setPlaybackSpeed(speed);
                           setShowSettings(false);
                         }}
-                        className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${
+                        className={`w-full text-left px-3 py-2 min-h-[44px] rounded text-sm transition-colors ${
                           playbackSpeed === speed
                             ? 'bg-brand-gold/20 text-brand-gold'
                             : 'text-white hover:bg-white/10'
@@ -427,18 +434,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 )}
               </div>
 
-              {/* PiP */}
+              {/* PiP - Hidden on mobile */}
               <button
                 onClick={togglePictureInPicture}
-                className="p-2 text-white hover:text-brand-gold transition-colors"
+                className="hidden sm:flex p-2 min-h-[44px] min-w-[44px] items-center justify-center text-white hover:text-brand-gold transition-colors"
               >
                 <PictureInPicture2 className="w-5 h-5" />
               </button>
 
-              {/* Toggle Library */}
+              {/* Toggle Library - Hidden on mobile (use top button) */}
               <button
                 onClick={() => setShowLibrary(!showLibrary)}
-                className={`p-2 transition-colors ${showLibrary ? 'text-brand-gold' : 'text-white hover:text-brand-gold'}`}
+                className={`hidden md:flex p-2 min-h-[44px] min-w-[44px] items-center justify-center transition-colors ${showLibrary ? 'text-brand-gold' : 'text-white hover:text-brand-gold'}`}
               >
                 {showLibrary ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
               </button>
@@ -446,7 +453,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               {/* Fullscreen */}
               <button
                 onClick={toggleFullscreen}
-                className="p-2 text-white hover:text-brand-gold transition-colors"
+                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-white hover:text-brand-gold transition-colors"
               >
                 {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
               </button>
@@ -455,11 +462,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
       </div>
 
-      {/* Video Library Sidebar */}
+      {/* Video Library Sidebar - Mobile drawer / Desktop fixed */}
       {showLibrary && (
-        <div className="w-80 bg-black/95 border-l border-white/10 flex flex-col h-full">
+        <div className="fixed inset-0 md:relative md:inset-auto w-full md:w-80 bg-black/95 md:border-l border-white/10 flex flex-col h-full z-40 md:z-auto">
+          {/* Mobile Close Button */}
+          <button
+            onClick={() => setShowLibrary(false)}
+            className="md:hidden absolute top-4 right-4 z-10 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-white/10 text-white"
+          >
+            <X className="w-6 h-6" />
+          </button>
           {/* Library Header */}
-          <div className="p-4 border-b border-white/10">
+          <div className="p-4 border-b border-white/10 pt-16 md:pt-4">
             <h3 className="font-semibold text-white mb-3">Video Library</h3>
 
             {/* Search */}
@@ -479,7 +493,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="bg-white/5 border border-white/10 rounded text-white text-xs px-2 py-1 focus:outline-none"
+                className="bg-white/5 border border-white/10 rounded text-white text-xs px-2 py-2 min-h-[44px] focus:outline-none"
               >
                 <option value="recent">Recent</option>
                 <option value="name">Name</option>
@@ -489,13 +503,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               <div className="flex gap-1">
                 <button
                   onClick={() => setLibraryView('list')}
-                  className={`p-1.5 rounded ${libraryView === 'list' ? 'bg-brand-gold/20 text-brand-gold' : 'text-gray-400 hover:text-white'}`}
+                  className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded ${libraryView === 'list' ? 'bg-brand-gold/20 text-brand-gold' : 'text-gray-400 hover:text-white'}`}
                 >
                   <List className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setLibraryView('grid')}
-                  className={`p-1.5 rounded ${libraryView === 'grid' ? 'bg-brand-gold/20 text-brand-gold' : 'text-gray-400 hover:text-white'}`}
+                  className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded ${libraryView === 'grid' ? 'bg-brand-gold/20 text-brand-gold' : 'text-gray-400 hover:text-white'}`}
                 >
                   <Grid className="w-4 h-4" />
                 </button>
@@ -503,8 +517,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             </div>
           </div>
 
-          {/* Video List */}
-          <div className="flex-1 overflow-y-auto">
+          {/* Video List - Smooth momentum scroll */}
+          <div className="flex-1 overflow-y-auto [-webkit-overflow-scrolling:touch] overscroll-contain">
             {filteredVideos.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 <Film className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -515,10 +529,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 {filteredVideos.map((video) => (
                   <button
                     key={video.id}
-                    onClick={() => playVideo(video)}
+                    onClick={() => { playVideo(video); if (window.innerWidth < 768) setShowLibrary(false); }}
                     onMouseEnter={() => setHoveredVideo(video.id)}
                     onMouseLeave={() => setHoveredVideo(null)}
-                    className={`w-full flex items-center gap-3 p-3 hover:bg-white/5 transition-colors ${
+                    className={`w-full flex items-center gap-3 p-3 min-h-[64px] hover:bg-white/5 transition-colors ${
                       currentVideo?.id === video.id ? 'bg-brand-gold/10' : ''
                     }`}
                   >
@@ -587,11 +601,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               </div>
             ) : (
               // Grid View
-              <div className="grid grid-cols-2 gap-2 p-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-2 p-2">
                 {filteredVideos.map((video) => (
                   <button
                     key={video.id}
-                    onClick={() => playVideo(video)}
+                    onClick={() => { playVideo(video); if (window.innerWidth < 768) setShowLibrary(false); }}
                     onMouseEnter={() => setHoveredVideo(video.id)}
                     onMouseLeave={() => setHoveredVideo(null)}
                     className={`rounded-lg overflow-hidden relative group ${

@@ -1,9 +1,10 @@
 // AI Router Service - Routes AI requests through N8N webhooks for secure, stable integration
 // This provides centralized AI routing with logging, rate limiting, and fallback handling
 
+import { AI_MODELS, AI_ENDPOINTS, GENERATION_CONFIG, getGoogleAIKey } from './aiConfig';
+
 const N8N_BASE_URL = import.meta.env.VITE_N8N_API_URL || 'https://n8n.srv1167160.hstgr.cloud';
 const MCP_URL = import.meta.env.VITE_MCP_URL || 'https://mcp.elevenviews.io';
-const GOOGLE_AI_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY || '';
 
 // AI Webhook endpoints
 const AI_WEBHOOKS = {
@@ -40,8 +41,11 @@ export interface AIResponse {
 
 // Google AI direct fallback (when N8N unavailable)
 async function directGoogleAI(prompt: string, context?: string): Promise<string> {
+  const apiKey = getGoogleAIKey();
+  const model = AI_MODELS.text.default;
+
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_AI_KEY}`,
+    `${AI_ENDPOINTS.gemini}/${model}:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -51,12 +55,7 @@ async function directGoogleAI(prompt: string, context?: string): Promise<string>
             text: context ? `Context: ${context}\n\nUser: ${prompt}` : prompt
           }]
         }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
-        }
+        generationConfig: GENERATION_CONFIG.text
       })
     }
   );

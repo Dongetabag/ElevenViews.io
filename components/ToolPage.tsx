@@ -5,6 +5,7 @@ import { UserProfile, Tool, ChatMessage } from '../types.ts';
 import { ArrowLeft, Send, AILoader, Sparkles, AlertTriangle, User as UserIcon, Copy, Check, ThumbsUp, ThumbsDown, Paperclip, X, FileText, Save, Loader } from './icons.tsx';
 import HexGridBackground from './HexGridBackground.tsx';
 import { ALL_TOOLS } from '../constants.tsx';
+import { AI_MODELS } from '../services/aiConfig';
 
 interface ToolPageProps {
   user: UserProfile | null;
@@ -234,9 +235,9 @@ Examples of their past work: "${user.clientWorkExamples || 'Not provided'}".
         { role: 'user' as const, parts: userMessageParts }
       ];
 
-      // Fix: Use correct model gemini-3-flash-preview as per guidelines
+      // Use centralized AI model configuration
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: AI_MODELS.text.advanced,
         contents: contents,
         config: { systemInstruction: personalizedSystemInstruction }
       });

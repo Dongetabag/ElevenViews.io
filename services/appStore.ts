@@ -155,7 +155,7 @@ const setStorage = <T>(key: string, value: T): void => {
   }
 };
 
-// Default channels
+// Default channels for Eleven Views members portal
 const DEFAULT_CHANNELS: Channel[] = [
   {
     id: 'general',
@@ -167,18 +167,45 @@ const DEFAULT_CHANNELS: Channel[] = [
     createdAt: now()
   },
   {
-    id: 'creative',
-    name: 'Creative',
-    description: 'Creative team discussions and asset sharing',
+    id: 'music',
+    name: 'Music',
+    description: 'Music production, A&R, and artist discussions',
     type: 'public',
     members: [],
     createdBy: 'system',
     createdAt: now()
   },
   {
-    id: 'strategy',
-    name: 'Strategy',
-    description: 'Strategy and planning discussions',
+    id: 'film',
+    name: 'Film',
+    description: 'Film projects, direction, and cinematography',
+    type: 'public',
+    members: [],
+    createdBy: 'system',
+    createdAt: now()
+  },
+  {
+    id: 'fashion',
+    name: 'Fashion',
+    description: 'Fashion design, styling, and brand collaborations',
+    type: 'public',
+    members: [],
+    createdBy: 'system',
+    createdAt: now()
+  },
+  {
+    id: 'design',
+    name: 'Design',
+    description: 'Visual design, branding, and creative direction',
+    type: 'public',
+    members: [],
+    createdBy: 'system',
+    createdAt: now()
+  },
+  {
+    id: 'projects',
+    name: 'Projects',
+    description: 'Active client projects and collaborations',
     type: 'public',
     members: [],
     createdBy: 'system',
@@ -396,10 +423,22 @@ class AppStore {
         })
       });
 
-      const data = await response.json();
+      // Handle HTTP errors
+      if (!response.ok) {
+        console.error('Registration HTTP error:', response.status, response.statusText);
+        return { success: false, error: `Server error (${response.status}). Please try again.` };
+      }
 
-      if (!data.success) {
-        return { success: false, error: data.error || 'Failed to create account. Please try again.' };
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseErr) {
+        console.error('Failed to parse registration response:', parseErr);
+        return { success: false, error: 'Invalid server response. Please try again.' };
+      }
+
+      if (!data || !data.success) {
+        return { success: false, error: data?.error || 'Failed to create account. Please try again.' };
       }
 
       const newUser = this.mapMCPUserToUser(data.user);

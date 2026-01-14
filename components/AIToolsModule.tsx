@@ -8,11 +8,12 @@ import {
   Plus, Trash2, MessageSquare, MoreVertical, X, Edit3
 } from 'lucide-react';
 import { mcpClient, MCPTool, MCPServerStatus } from '../services/mcpClient.ts';
+import { AI_MODELS, AI_ENDPOINTS, GENERATION_CONFIG, getGoogleAIKey } from '../services/aiConfig';
 
 // No message limit - unlimited chat history
 const CONTEXT_WINDOW_SIZE = 20; // Messages to send to AI for context
 const SUMMARIZE_THRESHOLD = 30; // Auto-summarize when messages exceed this
-const GOOGLE_AI_API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY || '';
+const GOOGLE_AI_API_KEY = getGoogleAIKey();
 const STORAGE_KEY = 'eleven-views-ai-assistant-sessions';
 
 interface AIToolsModuleProps {
@@ -156,6 +157,7 @@ const AIToolsModule: React.FC<AIToolsModuleProps> = ({ user }) => {
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -268,7 +270,7 @@ const AIToolsModule: React.FC<AIToolsModuleProps> = ({ user }) => {
 
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_AI_API_KEY}`,
+        `${AI_ENDPOINTS.gemini}/${AI_MODELS.text.default}:generateContent?key=${GOOGLE_AI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -573,7 +575,7 @@ Use this context to maintain continuity and remember previous discussions, decis
 
       // Call Google Gemini API
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_AI_API_KEY}`,
+        `${AI_ENDPOINTS.gemini}/${AI_MODELS.text.default}:generateContent?key=${GOOGLE_AI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -635,9 +637,29 @@ Use this context to maintain continuity and remember previous discussions, decis
   };
 
   return (
-    <div className="flex h-full animate-fadeIn overflow-hidden bg-[#0a0a0a]">
+    <div className="flex h-full animate-fadeIn overflow-hidden bg-[#0a0a0a] relative">
+      {/* Mobile Sidebar Overlay */}
+      {showMobileSidebar && (
+        <div
+          className="fixed inset-0 bg-black/60 z-40 md:hidden"
+          onClick={() => setShowMobileSidebar(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className="w-80 border-r border-white/5 flex flex-col bg-black/40">
+      <div className={`
+        fixed inset-y-0 left-0 z-50 w-80 transform transition-transform duration-300
+        ${showMobileSidebar ? 'translate-x-0' : '-translate-x-full'}
+        md:relative md:translate-x-0
+        border-r border-white/5 flex flex-col bg-[#0a0a0a] md:bg-black/40
+      `}>
+        {/* Mobile Close Button */}
+        <button
+          onClick={() => setShowMobileSidebar(false)}
+          className="md:hidden absolute top-4 right-4 z-10 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-white/10 text-white"
+        >
+          <X className="w-5 h-5" />
+        </button>
         <div className="p-4 border-b border-white/5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
@@ -930,25 +952,32 @@ Use this context to maintain continuity and remember previous discussions, decis
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <div className="h-14 border-b border-white/5 flex items-center justify-between px-8 bg-black/40">
-          <div className="flex items-center gap-3">
-            <div className={`w-2 h-2 rounded-full ${isTyping ? 'bg-brand-gold animate-pulse' : 'bg-green-500'}`}></div>
-            <div>
-              <span className="text-sm font-medium text-white">
+        <div className="h-14 border-b border-white/5 flex items-center justify-between px-3 sm:px-6 lg:px-8 bg-black/40">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={() => setShowMobileSidebar(true)}
+              className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400 hover:text-white"
+            >
+              <MessageSquare className="w-5 h-5" />
+            </button>
+            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isTyping ? 'bg-brand-gold animate-pulse' : 'bg-green-500'}`}></div>
+            <div className="min-w-0">
+              <span className="text-sm font-medium text-white truncate block">
                 {isTyping ? 'Thinking...' : (activeSession?.title || 'New Chat')}
               </span>
               {activeSession && (
-                <span className="text-[10px] text-gray-500 ml-2">
+                <span className="text-[10px] text-gray-500 hidden sm:inline">
                   {history.length} messages{activeSession.summary ? ' • Context indexed' : ''}
                 </span>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {mcpConnected && (
-              <span className="flex items-center gap-2 text-[10px] text-green-500">
+              <span className="hidden sm:flex items-center gap-2 text-[10px] text-green-500">
                 <CheckCircle className="w-3 h-3" />
                 Systems Online
               </span>
@@ -956,10 +985,10 @@ Use this context to maintain continuity and remember previous discussions, decis
           </div>
         </div>
 
-        {/* Messages */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto">
+        {/* Messages - Smooth momentum scroll */}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto [-webkit-overflow-scrolling:touch] overscroll-contain">
           {history.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center px-8">
+            <div className="h-full flex flex-col items-center justify-center text-center px-4 sm:px-8">
               <div className="max-w-xl space-y-6">
                 <div className="w-16 h-16 mx-auto rounded-2xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center">
                   <Bot className="w-8 h-8 text-brand-gold" />
@@ -976,7 +1005,7 @@ Use this context to maintain continuity and remember previous discussions, decis
                     <button
                       key={suggestion}
                       onClick={() => setInput(`Help me ${suggestion.toLowerCase()}`)}
-                      className="px-4 py-2 text-sm text-gray-400 bg-white/5 hover:bg-white/10 hover:text-white border border-white/10 rounded-full transition-colors"
+                      className="px-3 sm:px-4 py-2 min-h-[44px] text-xs sm:text-sm text-gray-400 bg-white/5 hover:bg-white/10 hover:text-white border border-white/10 rounded-full transition-colors"
                     >
                       {suggestion}
                     </button>
@@ -985,9 +1014,9 @@ Use this context to maintain continuity and remember previous discussions, decis
               </div>
             </div>
           ) : (
-            <div className="p-8 space-y-8">
+            <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
               {history.map((msg, i) => (
-                <div key={i} className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                <div key={i} className={`flex gap-2 sm:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                   <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
                     msg.role === 'user'
                       ? 'bg-white/10 text-white'
@@ -995,8 +1024,8 @@ Use this context to maintain continuity and remember previous discussions, decis
                   }`}>
                     {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                   </div>
-                  <div className={`max-w-2xl ${msg.role === 'user' ? 'text-right' : ''}`}>
-                    <div className={`inline-block p-4 rounded-2xl text-sm leading-relaxed ${
+                  <div className={`max-w-[85vw] sm:max-w-2xl ${msg.role === 'user' ? 'text-right' : ''}`}>
+                    <div className={`inline-block p-3 sm:p-4 rounded-2xl text-sm leading-relaxed ${
                       msg.role === 'user'
                         ? 'bg-white/10 text-white rounded-tr-sm'
                         : 'bg-white/5 text-gray-200 rounded-tl-sm'
@@ -1029,9 +1058,9 @@ Use this context to maintain continuity and remember previous discussions, decis
         </div>
 
         {/* Input Area */}
-        <div className="p-6 border-t border-white/5 bg-black/40">
+        <div className="p-3 sm:p-6 border-t border-white/5 bg-black/40">
           <div className="max-w-3xl mx-auto">
-            <div className="flex items-end gap-3 bg-white/5 border border-white/10 rounded-2xl p-3 focus-within:border-brand-gold/30 transition-colors">
+            <div className="flex items-end gap-2 sm:gap-3 bg-white/5 border border-white/10 rounded-2xl p-2 sm:p-3 focus-within:border-brand-gold/30 transition-colors">
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -1046,10 +1075,10 @@ Use this context to maintain continuity and remember previous discussions, decis
                 className="flex-1 bg-transparent text-sm text-white placeholder-gray-500 resize-none focus:outline-none min-h-[24px] max-h-[200px]"
                 rows={1}
               />
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <button
                   onClick={clearCurrentChat}
-                  className="p-2 text-gray-500 hover:text-white transition-colors"
+                  className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500 hover:text-white transition-colors"
                   title="Clear current chat"
                 >
                   <Eraser className="w-4 h-4" />
@@ -1057,18 +1086,18 @@ Use this context to maintain continuity and remember previous discussions, decis
                 <button
                   onClick={handleSend}
                   disabled={!input.trim() || isTyping}
-                  className="p-2 bg-brand-gold text-black rounded-lg hover:bg-brand-gold/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center bg-brand-gold text-black rounded-lg hover:bg-brand-gold/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <Send className="w-4 h-4" />
                 </button>
               </div>
             </div>
             <div className="flex items-center justify-between mt-2 px-1">
-              <span className="text-[10px] text-gray-600 flex items-center gap-1">
+              <span className="hidden sm:flex text-[10px] text-gray-600 items-center gap-1">
                 <Command className="w-3 h-3" /> Enter to send • Shift+Enter for new line
               </span>
               <span className="text-[10px] text-gray-600">
-                Powered by Eleven Views AI
+                Eleven Views AI
               </span>
             </div>
           </div>

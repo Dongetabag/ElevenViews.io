@@ -1,6 +1,7 @@
 // React hooks for the App Store
 import { useState, useEffect, useCallback } from 'react';
 import { appStore, User, Message, Document, AIAsset, Notification, Channel } from '../services/appStore';
+import { chatService, ChatMessage } from '../services/chatService';
 
 // Hook for current user
 export function useCurrentUser() {
@@ -47,29 +48,37 @@ export function useTeam() {
   return { users, onlineCount };
 }
 
-// Hook for messages
+// Hook for messages - uses chatService with MCP sync and localStorage persistence
 export function useMessages(options?: { channelId?: string; recipientId?: string }) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const { user } = useCurrentUser();
 
   useEffect(() => {
     const update = () => {
       if (options?.channelId) {
-        setMessages(appStore.getMessages({ channelId: options.channelId }));
+        setMessages(chatService.getMessages({ channelId: options.channelId }));
       } else if (options?.recipientId && user) {
-        setMessages(appStore.getMessages({ senderId: user.id, recipientId: options.recipientId }));
+        setMessages(chatService.getMessages({ senderId: user.id, recipientId: options.recipientId }));
       } else {
-        setMessages(appStore.getMessages({ limit: 100 }));
+        setMessages(chatService.getMessages({ limit: 100 }));
       }
     };
+
+    // Initial load
     update();
-    const unsubscribe = appStore.subscribe('messages', update);
-    return unsubscribe;
+
+    // Subscribe to updates from chatService
+    const unsubscribe = chatService.subscribe(update);
+
+    return () => {
+      unsubscribe();
+    };
   }, [options?.channelId, options?.recipientId, user]);
 
-  const sendMessage = useCallback((content: string, attachments?: any[]) => {
+  const sendMessage = useCallback(async (content: string, attachments?: any[]) => {
     if (!user) return null;
-    return appStore.addMessage({
+
+    return chatService.sendMessage({
       senderId: user.id,
       senderName: user.name,
       senderAvatar: user.avatar,
@@ -81,7 +90,11 @@ export function useMessages(options?: { channelId?: string; recipientId?: string
     });
   }, [user, options]);
 
-  return { messages, sendMessage };
+  const markAsRead = useCallback((messageId: string) => {
+    chatService.markAsRead(messageId);
+  }, []);
+
+  return { messages, sendMessage, markAsRead };
 }
 
 // Hook for channels
