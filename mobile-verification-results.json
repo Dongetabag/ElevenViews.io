@@ -1,0 +1,38 @@
+[
+  {
+    "device": "iPhone 14",
+    "viewport": {
+      "width": 390,
+      "height": 664
+    },
+    "issues": [],
+    "grouped": {}
+  },
+  {
+    "device": "iPhone SE",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "issues": [],
+    "grouped": {}
+  },
+  {
+    "device": "Pixel 7",
+    "viewport": {
+      "width": 412,
+      "height": 839
+    },
+    "issues": [],
+    "grouped": {}
+  },
+  {
+    "device": "Galaxy S9+",
+    "viewport": {
+      "width": 320,
+      "height": 658
+    },
+    "issues": [],
+    "grouped": {}
+  }
+]
