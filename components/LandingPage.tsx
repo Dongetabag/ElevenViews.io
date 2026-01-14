@@ -20,7 +20,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister }) => {
         <div className="hidden sm:block absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-brand-amber/5 blur-[120px] rounded-full"></div>
       </div>
 
-      <div className="text-center relative z-10 p-6 sm:p-6 max-w-full sm:max-w-5xl mx-auto">
+      <div className="text-center relative z-10 p-6 max-w-full sm:max-w-5xl mx-auto">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2.5 rounded-full bg-brand-gold/5 border border-brand-gold/15 mb-10 animate-glow">
           <Aperture className="w-4 h-4 text-brand-gold" />
