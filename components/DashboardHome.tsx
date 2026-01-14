@@ -127,10 +127,10 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ user, stats, onNavigate }
   });
 
   return (
-    <div className="p-8 space-y-8 animate-fadeIn">
+    <div className="p-3 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 animate-fadeIn">
       {/* System Status Banner */}
       {healthStatus && (
-        <div className="flex items-center gap-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+        <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
           <div className="p-2 bg-emerald-500/20 rounded-lg">
             <Activity className="w-5 h-5 text-emerald-500" />
           </div>
@@ -148,7 +148,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ user, stats, onNavigate }
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-display font-bold text-white">Production Overview</h2>
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-display font-bold text-white">Production Overview</h2>
               <p className="text-sm text-gray-500 mt-1">{currentDate}</p>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 glass rounded-xl">
@@ -158,9 +158,9 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ user, stats, onNavigate }
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {statCards.map((stat, i) => (
-              <div key={i} className="glass p-5 rounded-2xl hover:border-brand-gold/20 transition-all group relative">
+              <div key={i} className="glass p-3 sm:p-5 rounded-xl sm:rounded-2xl hover:border-brand-gold/20 transition-all group relative">
                 {stat.live && (
                   <div className="absolute top-3 right-3 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
@@ -179,7 +179,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ user, stats, onNavigate }
                 </div>
                 <div className="mt-4">
                   <p className="text-[10px] uppercase tracking-[0.15em] text-gray-500 font-semibold">{stat.label}</p>
-                  <p className="text-2xl font-display font-bold text-white mt-1">{stat.value}</p>
+                  <p className="text-lg sm:text-2xl font-display font-bold text-white mt-1">{stat.value}</p>
                 </div>
               </div>
             ))}
@@ -281,7 +281,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ user, stats, onNavigate }
           </div>
 
           {/* Recent Locations */}
-          <div className="glass p-5 rounded-2xl">
+          <div className="glass p-3 sm:p-5 rounded-xl sm:rounded-2xl">
             <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Recent Locations</h4>
             <div className="space-y-3">
               {['Patagonia, Chile', 'Tokyo, Japan', 'Marrakech, Morocco', 'Cape Town, SA'].map((location, i) => (
@@ -294,7 +294,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ user, stats, onNavigate }
           </div>
 
           {/* Upcoming */}
-          <div className="glass p-5 rounded-2xl">
+          <div className="glass p-3 sm:p-5 rounded-xl sm:rounded-2xl">
             <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Upcoming Shoots</h4>
             <div className="space-y-3">
               <div className="flex items-center justify-between">

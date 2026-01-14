@@ -144,10 +144,10 @@ const BrandEngine: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-brand-dark">
+    <div className="h-full flex flex-col overflow-hidden bg-brand-dark">
       {/* Header */}
       <div className="flex-shrink-0 border-b border-white/[0.06] bg-brand-dark/80 backdrop-blur-xl">
-        <div className="px-8 py-6">
+        <div className="p-4 sm:p-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-views font-bold tracking-wide text-white">
@@ -159,7 +159,7 @@ const BrandEngine: React.FC = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-brand-gold text-black font-semibold text-sm rounded-xl hover:bg-brand-gold/90 transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-brand-gold text-black font-semibold text-sm rounded-xl hover:bg-brand-gold/90 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 New Brand Kit
@@ -178,7 +178,7 @@ const BrandEngine: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-lg text-sm font-medium transition-all ${
                   activeTab === tab.id
                     ? "bg-brand-gold text-black"
                     : "text-gray-400 hover:text-white"
@@ -195,8 +195,8 @@ const BrandEngine: React.FC = () => {
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {activeTab === "kits" && (
-          <div className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="p-4 sm:p-6 lg:p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {brandKits.map(kit => (
                 <div
                   key={kit.id}
@@ -253,7 +253,7 @@ const BrandEngine: React.FC = () => {
         )}
 
         {activeTab === "colors" && (
-          <div className="p-8">
+          <div className="p-4 sm:p-6 lg:p-8">
             <div className="max-w-4xl">
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -334,7 +334,7 @@ const BrandEngine: React.FC = () => {
         )}
 
         {activeTab === "typography" && (
-          <div className="p-8">
+          <div className="p-4 sm:p-6 lg:p-8">
             <div className="max-w-4xl">
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -378,7 +378,7 @@ const BrandEngine: React.FC = () => {
         )}
 
         {activeTab === "guidelines" && (
-          <div className="p-8">
+          <div className="p-4 sm:p-6 lg:p-8">
             <div className="max-w-4xl space-y-8">
               {/* Logo Usage */}
               <div className="bg-brand-card border border-white/[0.06] rounded-2xl p-6">
@@ -386,7 +386,7 @@ const BrandEngine: React.FC = () => {
                   <Image className="w-5 h-5 text-brand-gold" />
                   Logo Usage
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="bg-brand-surface rounded-xl p-8 flex items-center justify-center">
                     <h2 className="text-4xl font-views font-bold tracking-wider">
                       <span className="text-brand-gold">VIEWS</span>
@@ -411,7 +411,7 @@ const BrandEngine: React.FC = () => {
                   <Droplet className="w-5 h-5 text-brand-gold" />
                   Color Guidelines
                 </h3>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <div className="h-24 rounded-xl bg-brand-gold mb-2" />
                     <p className="text-sm text-white font-medium">Primary Gold</p>

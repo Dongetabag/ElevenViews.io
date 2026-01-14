@@ -235,7 +235,7 @@ const CampaignsModule: React.FC<CampaignsModuleProps> = ({ campaigns, addCampaig
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 animate-fadeIn">
+    <div className="h-full flex flex-col overflow-hidden"><div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 animate-fadeIn">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
         <h2 className="text-xl sm:text-2xl font-bold text-white font-orbitron">Campaign Sequences</h2>
         <button
@@ -327,20 +327,20 @@ const CampaignsModule: React.FC<CampaignsModuleProps> = ({ campaigns, addCampaig
 
       {/* Quick Stats Panel - calculated from real data */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        <div className="glass p-6 rounded-2xl">
+        <div className="glass p-4 sm:p-6 rounded-2xl">
           <p className="text-sm font-bold text-gray-500 mb-4 uppercase tracking-widest">Avg Open Rate</p>
           <div className="flex items-end gap-4">
             <span className="text-4xl font-bold text-white font-orbitron">{avgOpenRate.toFixed(1)}%</span>
           </div>
         </div>
-        <div className="glass p-6 rounded-2xl">
+        <div className="glass p-4 sm:p-6 rounded-2xl">
           <p className="text-sm font-bold text-gray-500 mb-4 uppercase tracking-widest">Total Replies</p>
           <div className="flex items-end gap-4">
             <span className="text-4xl font-bold text-white font-orbitron">{totalReplies}</span>
             <span className="text-xs text-brand-gold font-bold mb-1">{totalSent} sent</span>
           </div>
         </div>
-        <div className="glass p-6 rounded-2xl">
+        <div className="glass p-4 sm:p-6 rounded-2xl">
           <p className="text-sm font-bold text-gray-500 mb-4 uppercase tracking-widest">Active Campaigns</p>
           <div className="flex items-end gap-4">
             <span className="text-4xl font-bold text-white font-orbitron">{activeCampaigns}</span>
@@ -350,6 +350,7 @@ const CampaignsModule: React.FC<CampaignsModuleProps> = ({ campaigns, addCampaig
       </div>
 
       {showAddModal && renderModal()}
+    </div>
     </div>
   );
 };

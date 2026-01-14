@@ -13,6 +13,10 @@ import { veoService, VideoGenerationConfig, GenerationResult, VideoAsset, Aspect
 import { getGoogleAIKey } from '../services/aiConfig';
 import { videoAgents, VideoProductionAgentManager } from '../services/videoProductionAgents';
 
+
+// localStorage key for production videos
+const PRODUCTION_STORAGE_KEY = "eleven-views-production-videos";
+
 // Types
 type ViewMode = 'library' | 'generate' | 'editor' | 'preview';
 type GenerateMode = 'text-to-video' | 'image-to-video';
@@ -181,7 +185,18 @@ const ProductionModule: React.FC = () => {
   const [generateMode, setGenerateMode] = useState<GenerateMode>('text-to-video');
 
   // Library state
-  const [videos, setVideos] = useState<VideoItem[]>(SAMPLE_VIDEOS);
+  const [videos, setVideos] = useState<VideoItem[]>(() => {
+    try {
+      const stored = localStorage.getItem(PRODUCTION_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error("Failed to load production videos:", e);
+    }
+    return SAMPLE_VIDEOS;
+  });
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<LibraryFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -263,6 +278,16 @@ const ProductionModule: React.FC = () => {
   const [linkCopied, setLinkCopied] = useState(false);
 
   // Refs
+  
+  // Save videos to localStorage when they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(PRODUCTION_STORAGE_KEY, JSON.stringify(videos));
+    } catch (e) {
+      console.error("Failed to save production videos:", e);
+    }
+  }, [videos]);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -777,13 +802,13 @@ const ProductionModule: React.FC = () => {
   // Enhance Panel
   const renderEnhancePanel = () => (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-6 space-y-4 animate-slideUp" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Wand2 className="w-5 h-5 text-brand-gold" />
             AI Enhance
           </h3>
-          <button onClick={() => setActiveTool(null)} className="p-2 text-gray-400 hover:text-white">
+          <button onClick={() => setActiveTool(null)} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -878,13 +903,13 @@ const ProductionModule: React.FC = () => {
   // Captions Panel
   const renderCaptionsPanel = () => (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-6 space-y-4 animate-slideUp max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Type className="w-5 h-5 text-brand-gold" />
             AI Captions
           </h3>
-          <button onClick={() => setActiveTool(null)} className="p-2 text-gray-400 hover:text-white">
+          <button onClick={() => setActiveTool(null)} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -984,13 +1009,13 @@ const ProductionModule: React.FC = () => {
   // Audio Panel
   const renderAudioPanel = () => (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-6 space-y-4 animate-slideUp" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Music className="w-5 h-5 text-brand-gold" />
             Audio & Music
           </h3>
-          <button onClick={() => setActiveTool(null)} className="p-2 text-gray-400 hover:text-white">
+          <button onClick={() => setActiveTool(null)} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -1076,13 +1101,13 @@ const ProductionModule: React.FC = () => {
   // Trim Panel
   const renderTrimPanel = () => (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-6 space-y-4 animate-slideUp" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Scissors className="w-5 h-5 text-brand-gold" />
             Trim Video
           </h3>
-          <button onClick={() => setActiveTool(null)} className="p-2 text-gray-400 hover:text-white">
+          <button onClick={() => setActiveTool(null)} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -1152,13 +1177,13 @@ const ProductionModule: React.FC = () => {
   // Speed Panel
   const renderSpeedPanel = () => (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-6 space-y-4 animate-slideUp" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Gauge className="w-5 h-5 text-brand-gold" />
             Playback Speed
           </h3>
-          <button onClick={() => setActiveTool(null)} className="p-2 text-gray-400 hover:text-white">
+          <button onClick={() => setActiveTool(null)} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -1172,7 +1197,7 @@ const ProductionModule: React.FC = () => {
         </div>
 
         {/* Speed Presets */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
           {SPEED_PRESETS.map((preset) => (
             <button
               key={preset.value}
@@ -1213,13 +1238,13 @@ const ProductionModule: React.FC = () => {
   // Filters Panel
   const renderFiltersPanel = () => (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-6 space-y-4 animate-slideUp max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Palette className="w-5 h-5 text-brand-gold" />
             Video Filters
           </h3>
-          <button onClick={() => setActiveTool(null)} className="p-2 text-gray-400 hover:text-white">
+          <button onClick={() => setActiveTool(null)} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -1284,13 +1309,13 @@ const ProductionModule: React.FC = () => {
   // Text Panel
   const renderTextPanel = () => (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-6 space-y-4 animate-slideUp max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Type className="w-5 h-5 text-brand-gold" />
             Text Overlay
           </h3>
-          <button onClick={() => setActiveTool(null)} className="p-2 text-gray-400 hover:text-white">
+          <button onClick={() => setActiveTool(null)} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -1369,13 +1394,13 @@ const ProductionModule: React.FC = () => {
 
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setActiveTool(null)}>
-        <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-6 space-y-4 animate-slideUp max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="w-full max-w-lg bg-[#111] rounded-t-3xl p-4 sm:p-6 space-y-3 sm:space-y-4 animate-slideUp max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Bot className="w-5 h-5 text-brand-gold" />
               AI Production Agents
             </h3>
-            <button onClick={() => setActiveTool(null)} className="p-2 text-gray-400 hover:text-white">
+            <button onClick={() => setActiveTool(null)} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-white">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -1668,7 +1693,7 @@ const ProductionModule: React.FC = () => {
               <button
                 key={filter}
                 onClick={() => setLibraryFilter(filter)}
-                className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                className={`px-4 py-2.5 min-h-[44px] rounded-full text-xs font-medium whitespace-nowrap transition-colors flex items-center ${
                   libraryFilter === filter
                     ? 'bg-brand-gold text-black'
                     : 'bg-white/5 text-gray-400 hover:bg-white/10'
@@ -1691,7 +1716,7 @@ const ProductionModule: React.FC = () => {
             <p className="text-sm text-gray-600">Create your first AI video</p>
           </div>
         ) : (
-          <div className={`grid gap-3 ${viewStyle === 'grid' ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1'}`}>
+          <div className={`grid gap-2 sm:gap-3 ${viewStyle === 'grid' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1'}`}>
             {filteredVideos.map((video) => (
               <div
                 key={video.id}
@@ -2126,7 +2151,7 @@ const ProductionModule: React.FC = () => {
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
             {[
               { icon: Gauge, label: 'Speed', tool: 'speed' as ActiveTool, color: 'text-purple-400' },
               { icon: Palette, label: 'Filters', tool: 'filters' as ActiveTool, color: 'text-pink-400' },

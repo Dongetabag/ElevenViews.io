@@ -648,7 +648,7 @@ Use this context to maintain continuity and remember previous discussions, decis
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-80 transform transition-transform duration-300
+        fixed inset-y-0 left-0 z-50 w-[85vw] max-w-80 transform transition-transform duration-300
         ${showMobileSidebar ? 'translate-x-0' : '-translate-x-full'}
         md:relative md:translate-x-0
         border-r border-white/5 flex flex-col bg-[#0a0a0a] md:bg-black/40
@@ -660,7 +660,7 @@ Use this context to maintain continuity and remember previous discussions, decis
         >
           <X className="w-5 h-5" />
         </button>
-        <div className="p-4 border-b border-white/5">
+        <div className="p-3 sm:p-4 border-b border-white/5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center">
@@ -680,7 +680,7 @@ Use this context to maintain continuity and remember previous discussions, decis
           <div className="p-3 border-b border-white/5">
             <button
               onClick={createNewSession}
-              className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-brand-gold/10 hover:bg-brand-gold/20 border border-brand-gold/20 text-brand-gold transition-all"
+              className="w-full flex items-center justify-center gap-2 p-3 min-h-[44px] rounded-xl bg-brand-gold/10 hover:bg-brand-gold/20 border border-brand-gold/20 text-brand-gold transition-all"
             >
               <Plus className="w-4 h-4" />
               <span className="text-sm font-medium">New Chat</span>
@@ -698,7 +698,7 @@ Use this context to maintain continuity and remember previous discussions, decis
                 No chats yet. Start a new conversation!
               </div>
             ) : (
-              <div className="space-y-1 max-h-[300px] overflow-y-auto">
+              <div className="space-y-1 max-h-[40vh] sm:max-h-[300px] overflow-y-auto">
                 {sessions.map((session) => (
                   <div
                     key={session.id}
@@ -796,7 +796,7 @@ Use this context to maintain continuity and remember previous discussions, decis
                 <button
                   key={template.id}
                   onClick={() => applyTemplate(template.prompt)}
-                  className="w-full flex items-center gap-2 p-2 rounded-lg text-left hover:bg-white/5 transition-colors group"
+                  className="w-full flex items-center gap-2 p-2 min-h-[44px] rounded-lg text-left hover:bg-white/5 transition-colors group"
                 >
                   <div className="p-1.5 rounded-lg bg-white/5 text-gray-400 group-hover:text-brand-gold group-hover:bg-brand-gold/10 transition-colors">
                     {template.icon}
@@ -848,25 +848,25 @@ Use this context to maintain continuity and remember previous discussions, decis
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => setInput('Show me our pipeline stats')}
-                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
+                      className="p-2 min-h-[44px] text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
                     >
                       Pipeline Stats
                     </button>
                     <button
                       onClick={() => setInput('Get our latest leads')}
-                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
+                      className="p-2 min-h-[44px] text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
                     >
                       View Leads
                     </button>
                     <button
                       onClick={() => setInput('Check system health')}
-                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
+                      className="p-2 min-h-[44px] text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
                     >
                       System Health
                     </button>
                     <button
                       onClick={() => setInput('Send slack message: ')}
-                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors flex items-center justify-center gap-1"
+                      className="p-2 min-h-[44px] text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors flex items-center justify-center gap-1"
                     >
                       <Slack className="w-3 h-3" /> Slack
                     </button>
@@ -879,37 +879,37 @@ Use this context to maintain continuity and remember previous discussions, decis
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => setInput('Run market analysis for digital marketing industry')}
-                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
+                      className="p-2 min-h-[44px] text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
                     >
                       Market Analysis
                     </button>
                     <button
                       onClick={() => setInput('Get competitor intel for competitors: ')}
-                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
+                      className="p-2 min-h-[44px] text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
                     >
                       Competitor Intel
                     </button>
                     <button
                       onClick={() => setInput('Forecast campaign with budget: $10000 channels: social, email')}
-                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
+                      className="p-2 min-h-[44px] text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
                     >
                       Campaign Forecast
                     </button>
                     <button
                       onClick={() => setInput('Get audience insights for marketing industry')}
-                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
+                      className="p-2 min-h-[44px] text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
                     >
                       Audience Insights
                     </button>
                     <button
                       onClick={() => setInput('Predict trends for digital marketing industry')}
-                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
+                      className="p-2 min-h-[44px] text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
                     >
                       Trend Predictor
                     </button>
                     <button
                       onClick={() => setInput('Optimize content: [paste content] goals: engagement, conversion')}
-                      className="p-2 text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
+                      className="p-2 min-h-[44px] text-[10px] font-medium text-gray-400 hover:text-white bg-brand-gold/5 hover:bg-brand-gold/10 rounded-lg transition-colors"
                     >
                       Content Optimizer
                     </button>
@@ -943,7 +943,7 @@ Use this context to maintain continuity and remember previous discussions, decis
         </div>
 
         {/* Status Footer */}
-        <div className="p-4 border-t border-white/5 bg-black/20">
+        <div className="p-3 sm:p-4 border-t border-white/5 bg-black/20">
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
             <span className="text-[10px] text-gray-500">Ready to assist</span>

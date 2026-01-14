@@ -52,6 +52,18 @@ interface ServiceStatus {
   latency?: number;
 }
 
+// localStorage key for content history
+const EXECUTIVE_AGENT_STORAGE_KEY = "eleven-views-executive-agent-history";
+
+interface ContentHistoryItem {
+  id: string;
+  content: string;
+  type: string;
+  model: string;
+  prompt: string;
+  createdAt: string;
+}
+
 const CONTENT_TYPES = [
   { id: 'marketing', label: 'Marketing Copy', icon: <Sparkles className="w-4 h-4" />, description: 'Promotional content and ads' },
   { id: 'script', label: 'Video Script', icon: <Video className="w-4 h-4" />, description: 'Commercial & music video scripts' },
@@ -111,11 +123,24 @@ const ExecutiveAgentModule: React.FC<ExecutiveAgentModuleProps> = ({ user }) => 
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [contentHistory, setContentHistory] = useState<ContentHistoryItem[]>([]);
   const [services, setServices] = useState<ServiceStatus[]>([
     { name: 'Google AI', status: 'checking' },
     { name: 'MCP Server', status: 'checking' },
     { name: 'Wasabi CDN', status: 'checking' },
   ]);
+
+  // Load content history from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(EXECUTIVE_AGENT_STORAGE_KEY);
+      if (stored) {
+        setContentHistory(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error("Failed to load content history:", e);
+    }
+  }, []);
 
   // Check service status on mount
   useEffect(() => {

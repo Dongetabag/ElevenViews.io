@@ -617,7 +617,7 @@ Generate this as a photorealistic, high-quality image with impeccable attention 
   };
 
   return (
-    <div className="flex min-h-full animate-fadeIn bg-[#050505] relative">
+    <div className="flex h-full overflow-hidden animate-fadeIn bg-[#050505] relative">
       {/* Mobile Sidebar Overlay */}
       {showMobileSidebar && (
         <div
@@ -664,7 +664,7 @@ Generate this as a photorealistic, high-quality image with impeccable attention 
         </div>
 
         {/* Session List */}
-        <div className="flex-1 overflow-y-auto p-2">
+        <div className="flex-1 min-h-0 overflow-y-auto p-2">
           <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-2">
             Projects ({sessions.length})
           </h3>
@@ -772,7 +772,7 @@ Generate this as a photorealistic, high-quality image with impeccable attention 
               <button
                 key={style.id}
                 onClick={() => setActiveStyle(style)}
-                className={`w-full text-left p-2 rounded-lg border transition-all ${
+                className={`w-full text-left p-3 min-h-[44px] rounded-lg border transition-all ${
                   activeStyle.id === style.id
                     ? 'bg-brand-gold/10 border-brand-gold/30 text-brand-gold'
                     : 'bg-white/5 border-transparent text-gray-400 hover:text-white hover:bg-white/10'

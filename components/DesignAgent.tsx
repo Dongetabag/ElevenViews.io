@@ -301,10 +301,10 @@ Generate a stunning, photorealistic image.`;
   };
 
   return (
-    <div className="h-full flex flex-col bg-brand-dark">
+    <div className="h-full flex flex-col bg-brand-dark overflow-hidden">
       {/* Header - Media Studio Style */}
       <div className="flex-shrink-0 border-b border-white/[0.06] bg-brand-dark/80 backdrop-blur-xl">
-        <div className="px-8 py-5">
+        <div className="px-3 sm:px-6 lg:px-8 py-4 sm:py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="p-2.5 rounded-xl bg-brand-gold/10 border border-brand-gold/20">
@@ -363,8 +363,8 @@ Generate a stunning, photorealistic image.`;
       {/* Main Content - Two Column Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar - Controls */}
-        <div className="w-80 border-r border-white/[0.06] bg-brand-card/50 overflow-y-auto">
-          <div className="p-5 space-y-6">
+        <div className="hidden lg:block lg:w-80 border-r border-white/[0.06] bg-brand-card/50 overflow-y-auto">
+          <div className="p-3 sm:p-5 space-y-4 sm:space-y-6">
             {/* Aspect Ratio */}
             <div>
               <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Aspect Ratio</h3>
@@ -437,7 +437,7 @@ Generate a stunning, photorealistic image.`;
         </div>
 
         {/* Right - Generated Designs Gallery */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
           {sessionDesigns.length === 0 ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center max-w-md">
@@ -451,7 +451,7 @@ Generate a stunning, photorealistic image.`;
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {sessionDesigns.map(design => (
                 <div
                   key={design.id}
@@ -538,7 +538,7 @@ Generate a stunning, photorealistic image.`;
 
       {/* Preview Modal */}
       {previewDesign && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-8">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-6 lg:p-8">
           <div className="relative max-w-4xl max-h-full flex flex-col">
             <button
               onClick={() => setPreviewDesign(null)}
@@ -667,7 +667,7 @@ Generate a stunning, photorealistic image.`;
 
       {/* History Panel (Slide-in) */}
       {showHistory && (
-        <div className="fixed inset-y-0 right-0 w-96 bg-brand-dark border-l border-white/10 shadow-2xl z-40 overflow-hidden flex flex-col">
+        <div className="fixed inset-y-0 right-0 w-full sm:w-96 sm:max-w-[80vw] bg-brand-dark border-l border-white/10 shadow-2xl z-40 overflow-hidden flex flex-col">
           <div className="flex items-center justify-between p-5 border-b border-white/10">
             <h3 className="text-lg font-bold text-white">Generation History</h3>
             <button onClick={() => setShowHistory(false)} className="text-gray-500 hover:text-white">

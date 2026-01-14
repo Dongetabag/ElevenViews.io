@@ -48,9 +48,21 @@ import { profileMemory } from './services/profileMemory.ts';
 // Debug Panel - lazy loaded
 const DebugPanel = lazy(() => import('./components/DebugPanel.tsx'));
 
+
+// localStorage key for active module persistence
+const ACTIVE_MODULE_KEY = "eleven-views-active-module";
+
 const App: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [activeModule, setActiveModule] = useState('dashboard');
+  const [activeModule, setActiveModule] = useState(() => {
+    try {
+      const stored = localStorage.getItem(ACTIVE_MODULE_KEY);
+      if (stored) return stored;
+    } catch (e) {
+      console.error("Failed to load active module:", e);
+    }
+    return 'dashboard';
+  });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showIntake, setShowIntake] = useState(false);
@@ -59,6 +71,15 @@ const App: React.FC = () => {
   const [showAICommandCenter, setShowAICommandCenter] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
+
+    // Save active module to localStorage when it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(ACTIVE_MODULE_KEY, activeModule);
+    } catch (e) {
+      console.error("Failed to save active module:", e);
+    }
+  }, [activeModule]);
 
   // Data store for all app data
   const dataStore = useDataStore();

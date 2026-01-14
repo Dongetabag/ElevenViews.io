@@ -4,7 +4,7 @@ import React from 'react';
 export interface UserProfile {
   name: string;
   email: string;
-  role: 'Designer' | 'Copywriter' | 'Strategist' | 'Account Manager';
+  role: 'Designer' | 'Copywriter' | 'Strategist' | 'Account Manager' | 'Director' | 'Producer' | 'Cinematographer' | 'Client';
   isPremium: boolean;
   credits: number;
   totalToolsUsed: number;
@@ -216,7 +216,7 @@ export interface Tool {
   id: string;
   name: string;
   description: string;
-  category: 'Strategy' | 'Creation' | 'Client' | 'Productivity';
+  category: 'Strategy' | 'Creation' | 'Client' | 'Productivity' | 'Production' | 'Creative' | 'Post';
   icon: React.ReactElement;
   gradient: string;
   systemInstruction: string;

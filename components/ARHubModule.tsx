@@ -311,34 +311,46 @@ Keep the tone supportive but honest. Be specific, not generic.`;
   const stats = arService.getStats(demos);
 
   return (
-    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 h-full flex flex-col bg-[#050505]">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 flex-shrink-0">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold font-orbitron text-white">A&R Hub</h1>
-          <p className="text-sm sm:text-base text-gray-400 mt-1">Review and manage all audio submissions</p>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-          <button
-            onClick={fetchDemos}
-            disabled={isFetching}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
-          <button
-            onClick={() => setShowUploadModal(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-brand-gold text-black font-bold rounded-xl hover:scale-105 transition-transform"
-          >
-            <Upload className="w-5 h-5" />
-            Submit Demo
-          </button>
+    <div className="h-full flex flex-col bg-[#050505] overflow-hidden">
+      {/* Mobile Header - Compact */}
+      <div className="flex-shrink-0 p-3 sm:p-6 lg:p-8 pb-2 sm:pb-4">
+        <div className="flex items-center justify-between gap-2">
+          {/* Title - minimal on mobile */}
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <div className="hidden sm:flex p-3 rounded-xl bg-brand-gold/10">
+              <Music className="w-6 h-6 text-brand-gold" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-2xl font-bold text-white truncate">A&R Hub</h2>
+              <p className="text-xs text-gray-500 hidden sm:block">Review and manage audio submissions</p>
+            </div>
+            {/* Mobile demo count badge */}
+            <span className="sm:hidden text-xs text-gray-500 bg-white/5 px-2 py-1 rounded-lg">
+              {stats.total} demos
+            </span>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={fetchDemos}
+              disabled={isFetching}
+              className="flex items-center justify-center p-2 min-h-[44px] min-w-[44px] bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="flex items-center justify-center gap-2 px-3 sm:px-5 py-2 min-h-[44px] bg-brand-gold text-black font-semibold text-sm rounded-xl active:scale-95 transition-all"
+            >
+              <Upload className="w-4 h-4" /> <span className="hidden sm:inline">Submit Demo</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 flex-shrink-0">
+      {/* Stats Cards - Hidden on mobile, shown on tablet+ */}
+      <div className="hidden sm:grid grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 px-6 lg:px-8 pb-4 flex-shrink-0">
         {[
           { label: 'Total Demos', value: stats.total, icon: Music, color: 'text-brand-gold' },
           { label: 'Pending', value: stats.pending, icon: Clock, color: 'text-yellow-400' },
@@ -346,14 +358,14 @@ Keep the tone supportive but honest. Be specific, not generic.`;
           { label: 'Approved', value: stats.approved, icon: CheckCircle, color: 'text-green-400' },
           { label: 'Avg Rating', value: stats.avgRating.toFixed(1), icon: Star, color: 'text-purple-400' }
         ].map((stat, i) => (
-          <div key={i} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg bg-white/5 ${stat.color}`}>
-                <stat.icon className="w-5 h-5" />
+          <div key={i} className="p-3 sm:p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className={`p-1.5 sm:p-2 rounded-lg bg-white/5 ${stat.color}`}>
+                <stat.icon className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stat.value}</p>
-                <p className="text-xs text-gray-500">{stat.label}</p>
+                <p className="text-[9px] sm:text-[10px] font-semibold text-gray-500 uppercase">{stat.label}</p>
+                <p className="text-base sm:text-lg font-bold text-white">{stat.value}</p>
               </div>
             </div>
           </div>
@@ -361,7 +373,7 @@ Keep the tone supportive but honest. Be specific, not generic.`;
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 flex-shrink-0">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 flex-shrink-0 px-3 sm:px-6 lg:px-8 pb-3">
         <div className="relative flex-1 sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
           <input
@@ -389,10 +401,11 @@ Keep the tone supportive but honest. Be specific, not generic.`;
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 flex-1 min-h-0">
+      {/* Main Content - Full screen songs on mobile */}
+      <div className="flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] min-h-0 px-3 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 pb-4">
         {/* Demo List */}
-        <div className="lg:col-span-5 overflow-y-auto space-y-3 pr-0 lg:pr-2 max-h-[40vh] lg:max-h-none [-webkit-overflow-scrolling:touch] overscroll-contain">
+        <div className="lg:col-span-5 space-y-3 pr-0 lg:pr-2">
           {isFetching && demos.length === 0 ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
@@ -463,7 +476,7 @@ Keep the tone supportive but honest. Be specific, not generic.`;
         </div>
 
         {/* Demo Detail & Player */}
-        <div className="lg:col-span-7 overflow-y-auto">
+        <div className="lg:col-span-7">
           {selectedDemo ? (
             <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
               {/* Audio Element */}
@@ -726,6 +739,7 @@ Keep the tone supportive but honest. Be specific, not generic.`;
               </div>
             </div>
           )}
+        </div>
         </div>
       </div>
 

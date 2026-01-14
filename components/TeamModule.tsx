@@ -32,7 +32,7 @@ const TeamModule: React.FC = () => {
           </div>
           <button
             onClick={() => setShowSidebar(!showSidebar)}
-            className="p-2 rounded-lg bg-white/5 text-gray-400"
+            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg bg-white/5 text-gray-400"
           >
             <Hash className="w-4 h-4" />
           </button>
@@ -67,7 +67,7 @@ const TeamModule: React.FC = () => {
           <div className="relative w-72 bg-[#0a0a0a] border-r border-white/10 overflow-y-auto">
             <div className="p-4 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">Channels & DMs</h3>
-              <button onClick={() => setShowSidebar(false)} className="p-1 text-gray-500">
+              <button onClick={() => setShowSidebar(false)} className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>

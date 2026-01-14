@@ -690,7 +690,7 @@ const StudioEngine: React.FC = () => {
     <div className="h-full flex flex-col bg-brand-dark overflow-hidden">
       {/* Header - Compact on mobile */}
       <div className="flex-shrink-0 border-b border-white/[0.06] bg-brand-dark/80 backdrop-blur-xl">
-        <div className="px-3 sm:px-6 py-3 sm:py-4">
+        <div className="px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2">
             <h1 className="text-lg sm:text-2xl font-views font-bold tracking-wide text-white flex-shrink-0">
               <span className="hidden sm:inline">STUDIO </span><span className="text-brand-gold">ENGINE</span>
@@ -705,7 +705,7 @@ const StudioEngine: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm font-medium min-h-[44px] transition-all ${
                     activeTab === tab.id
                       ? "bg-brand-gold text-black"
                       : "text-gray-400 active:bg-white/10"
@@ -787,7 +787,7 @@ const StudioEngine: React.FC = () => {
                       <button
                         key={filter}
                         onClick={() => setSelectedFilter(filter)}
-                        className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
+                        className={`p-2.5 rounded-lg transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] ${
                           selectedFilter === filter ? "bg-brand-gold text-black" : "text-gray-500 bg-white/5"
                         }`}
                       >

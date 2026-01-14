@@ -99,7 +99,7 @@ const LeadsModule: React.FC<LeadsModuleProps> = ({ leads, addLead, updateLead, d
 
   function renderModal() {
     return (
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-hidden">
         <div className="glass w-full max-w-lg rounded-2xl border-white/10 max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between p-6 border-b border-white/10">
             <h3 className="text-lg font-bold text-white font-orbitron">
@@ -292,9 +292,9 @@ const LeadsModule: React.FC<LeadsModuleProps> = ({ leads, addLead, updateLead, d
       </div>
 
       {view === 'kanban' ? (
-        <div className="flex gap-3 sm:gap-6 overflow-x-auto pb-4 h-full scrollbar-hide snap-x snap-mandatory [-webkit-overflow-scrolling:touch] overscroll-x-contain touch-pan-x">
+        <div className="flex-1 flex gap-3 sm:gap-6 overflow-x-auto pb-4 min-h-0 scrollbar-hide snap-x snap-mandatory [-webkit-overflow-scrolling:touch] overscroll-x-contain touch-pan-x">
           {LEAD_STATUS_COLUMNS.map((col) => (
-            <div key={col.id} className="flex-shrink-0 w-[85vw] sm:w-80 flex flex-col gap-3 sm:gap-4 snap-center">
+            <div key={col.id} className="flex-shrink-0 w-[85vw] sm:w-80 h-full flex flex-col gap-3 sm:gap-4 snap-center min-h-0">
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-brand-gold"></div>
@@ -305,7 +305,7 @@ const LeadsModule: React.FC<LeadsModuleProps> = ({ leads, addLead, updateLead, d
                 </span>
               </div>
 
-              <div className="flex flex-col gap-4 overflow-y-auto pr-2">
+              <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-2">
                 {filteredLeads.filter(l => l.status === col.id).map(lead => (
                   <div key={lead.id} className="glass p-5 rounded-2xl border-white/10 hover:border-brand-gold/30 cursor-pointer transition-all group">
                     <div className="flex justify-between items-start mb-4">
