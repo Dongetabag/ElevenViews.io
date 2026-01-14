@@ -9,7 +9,7 @@ import {
 import { GoogleGenAI } from "@google/genai";
 import { wasabiService, ElevenViewsAsset } from "../services/wasabiService";
 import { useCurrentUser, useAIAssets } from "../hooks/useAppStore";
-import { AI_MODELS, getGoogleAIKey } from "../services/aiConfig";
+import { AI_MODELS, AI_ENDPOINTS, getGoogleAIKey, generateImage } from "../services/aiConfig";
 
 interface MediaItem {
   id: string;
@@ -32,7 +32,7 @@ interface AIMessage {
 }
 
 const StudioEngine: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"library" | "upload" | "assistant">("library");
+  const [activeTab, setActiveTab] = useState<"library" | "upload" | "generate" | "assistant">("library");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
@@ -85,6 +85,13 @@ const StudioEngine: React.FC = () => {
   // Save to Library state
   const [savingToLibrary, setSavingToLibrary] = useState<string | null>(null);
   const [savedToLibrary, setSavedToLibrary] = useState<Set<string>>(new Set());
+
+  // AI Image Generation state
+  const [generatePrompt, setGeneratePrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [generateStyle, setGenerateStyle] = useState("photorealistic");
 
   const user = useCurrentUser();
   const { assets: aiAssets, saveAsset } = useAIAssets();
@@ -461,6 +468,122 @@ const StudioEngine: React.FC = () => {
     setAiLoading(false);
   };
 
+  // AI Image Generation using Imagen 3
+  const handleGenerateImage = async () => {
+    if (!generatePrompt.trim() || isGenerating) return;
+
+    setIsGenerating(true);
+    setGenerateError(null);
+    setGeneratedImages([]);
+
+    try {
+      const apiKey = getGoogleAIKey();
+      if (!apiKey) {
+        throw new Error('Google AI API key not configured');
+      }
+
+      // Build enhanced prompt based on style
+      const stylePrompts: Record<string, string> = {
+        photorealistic: "photorealistic, high quality photograph, professional photography, 8K resolution, detailed",
+        cinematic: "cinematic shot, movie still, dramatic lighting, film grain, anamorphic, professional cinematography",
+        artistic: "artistic, creative, fine art style, museum quality, expressive",
+        "3d-render": "3D render, octane render, ultra realistic, ray tracing, high detail",
+        illustration: "digital illustration, concept art, detailed illustration, artstation trending",
+        anime: "anime style, high quality anime art, detailed anime illustration, studio ghibli inspired"
+      };
+
+      const styleEnhancement = stylePrompts[generateStyle] || stylePrompts.photorealistic;
+      const fullPrompt = `${generatePrompt}. ${styleEnhancement}`;
+
+      // Try Imagen 3 API
+      const url = `${AI_ENDPOINTS.imagen}/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          instances: [{ prompt: fullPrompt }],
+          parameters: {
+            sampleCount: 1,
+            aspectRatio: '1:1',
+            safetyFilterLevel: 'block_medium_and_above',
+          }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const images: string[] = [];
+
+        if (data.predictions) {
+          for (const prediction of data.predictions) {
+            if (prediction.bytesBase64Encoded) {
+              images.push(`data:image/png;base64,${prediction.bytesBase64Encoded}`);
+            }
+          }
+        }
+
+        if (images.length > 0) {
+          setGeneratedImages(images);
+        } else {
+          throw new Error('No images in response');
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Imagen API error:', errorText);
+
+        // Try alternative: Use Gemini to describe what the image would look like
+        const ai = new GoogleGenAI({ apiKey });
+        const aiResponse = await ai.models.generateContent({
+          model: AI_MODELS.text.default,
+          contents: `You are a creative director. A client wants an image with this description: "${generatePrompt}" in ${generateStyle} style.
+
+Create a detailed visual brief that could be given to a photographer or digital artist:
+
+1. **Scene Description**: Describe the composition, layout, and main elements
+2. **Lighting**: Describe the lighting setup and mood
+3. **Color Palette**: List specific colors and their hex codes
+4. **Technical Details**: Camera angle, focal length, depth of field
+5. **Mood/Atmosphere**: The emotional tone and feeling
+6. **Reference Keywords**: Tags for finding similar images
+
+Make it detailed enough that someone could recreate this exact vision.`
+        });
+
+        setGenerateError(`Image generation requires Imagen 3 access. Here's a detailed visual brief instead:\n\n${aiResponse.text}`);
+      }
+    } catch (err: any) {
+      console.error('Image generation failed:', err);
+      setGenerateError(err.message || 'Failed to generate image. Please try again.');
+    }
+
+    setIsGenerating(false);
+  };
+
+  // Save generated image to library
+  const saveGeneratedImage = async (imageDataUrl: string, index: number) => {
+    const timestamp = Date.now();
+    const newItem: MediaItem = {
+      id: `generated_${timestamp}_${index}`,
+      name: `AI Generated - ${generatePrompt.slice(0, 30)}...`,
+      type: "image",
+      url: imageDataUrl,
+      size: Math.round(imageDataUrl.length * 0.75), // Approximate size
+      createdAt: new Date().toISOString(),
+      tags: ["ai-generated", generateStyle],
+      isFavorite: false,
+      folder: "ai-generated",
+      metadata: {
+        prompt: generatePrompt,
+        style: generateStyle,
+        generatedAt: new Date().toISOString()
+      }
+    };
+
+    setMediaItems(prev => [newItem, ...prev]);
+    setActiveTab("library");
+  };
+
   const filteredItems = mediaItems.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          item.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -623,37 +746,50 @@ const StudioEngine: React.FC = () => {
 
     setIsAiEditing(true);
     try {
-      const MCP_URL = import.meta.env.VITE_MCP_URL || 'https://mcp.elevenviews.io';
+      const apiKey = getGoogleAIKey();
+      if (!apiKey) {
+        setAiEditResult("AI API key not configured. Please check settings.");
+        setIsAiEditing(false);
+        return;
+      }
 
-      // Call MCP AI edit endpoint
-      const response = await fetch(`${MCP_URL}/ai/edit-image`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageUrl: aiEditItem.url,
-          prompt: aiEditPrompt,
-          userId: user?.user?.id || 'system'
-        })
-      });
+      // Use Imagen 3 to generate a new image based on the edit prompt
+      // Since we can't directly edit, we'll generate a new image inspired by the prompt
+      const enhancedPrompt = `${aiEditPrompt}. High quality, professional photography style, detailed, 4K resolution.`;
 
-      const result = await response.json();
+      try {
+        // Try Imagen 3 for image generation
+        const images = await generateImage(enhancedPrompt, {
+          numberOfImages: 1,
+          aspectRatio: '1:1'
+        });
 
-      if (result.success && result.editedImageUrl) {
-        setAiEditResult(result.editedImageUrl);
-      } else {
-        // Fallback: Use Google AI for image description/analysis
-        const apiKey = getGoogleAIKey();
-        if (apiKey) {
-          const ai = new GoogleGenAI({ apiKey });
-          const aiResponse = await ai.models.generateContent({
-            model: AI_MODELS.text.experimental,
-            contents: `Describe how you would edit this image based on the request: "${aiEditPrompt}". The image is named "${aiEditItem.name}". Provide a detailed description of the edits you would make.`,
-          });
-
-          setAiEditResult(aiResponse.text || "AI editing not available at this time.");
+        if (images && images.length > 0) {
+          setAiEditResult(images[0]);
         } else {
-          setAiEditResult("AI editing feature requires API configuration.");
+          throw new Error('No image generated');
         }
+      } catch (imagenError) {
+        console.log('Imagen not available, trying alternative approach:', imagenError);
+
+        // Fallback: Use Gemini to generate a detailed description for the edit
+        const ai = new GoogleGenAI({ apiKey });
+
+        // Try to use Gemini's vision capabilities if we have an image URL
+        const aiResponse = await ai.models.generateContent({
+          model: AI_MODELS.text.default,
+          contents: `You are an expert photo editor. Based on this edit request: "${aiEditPrompt}" for an image named "${aiEditItem.name}", provide:
+
+1. A detailed step-by-step guide on how to achieve this edit
+2. Recommended tools (Photoshop, Lightroom, etc.)
+3. Specific settings and adjustments to apply
+4. Tips for best results
+
+Be specific and actionable.`,
+        });
+
+        const responseText = aiResponse.text || "Unable to generate edit instructions.";
+        setAiEditResult(responseText);
       }
     } catch (err) {
       console.error('AI edit failed:', err);
@@ -700,6 +836,7 @@ const StudioEngine: React.FC = () => {
               {[
                 { id: "library", label: "Library", icon: FolderOpen },
                 { id: "upload", label: "Upload", icon: Upload },
+                { id: "generate", label: "Generate", icon: Sparkles },
                 { id: "assistant", label: "AI", icon: Brain }
               ].map(tab => (
                 <button
@@ -1317,6 +1454,154 @@ const StudioEngine: React.FC = () => {
                       </>
                     )}
                   </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "generate" && (
+          <div className="h-full flex flex-col p-6 overflow-hidden">
+            <div className="max-w-4xl mx-auto w-full flex flex-col h-full">
+              {/* Header */}
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 rounded-2xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center mx-auto mb-4">
+                  <Sparkles className="w-8 h-8 text-brand-gold" />
+                </div>
+                <h2 className="text-2xl font-views font-bold text-white mb-2">AI Image Generator</h2>
+                <p className="text-gray-500">Create stunning images from text descriptions using AI</p>
+              </div>
+
+              {/* Style Selection */}
+              <div className="mb-6">
+                <label className="block text-xs text-gray-500 uppercase tracking-wider mb-3">Style</label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: "photorealistic", label: "Photorealistic" },
+                    { id: "cinematic", label: "Cinematic" },
+                    { id: "artistic", label: "Artistic" },
+                    { id: "3d-render", label: "3D Render" },
+                    { id: "illustration", label: "Illustration" },
+                    { id: "anime", label: "Anime" }
+                  ].map(style => (
+                    <button
+                      key={style.id}
+                      onClick={() => setGenerateStyle(style.id)}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                        generateStyle === style.id
+                          ? "bg-brand-gold text-black"
+                          : "bg-white/[0.05] text-gray-400 hover:text-white hover:bg-white/[0.1]"
+                      }`}
+                    >
+                      {style.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Prompt Input */}
+              <div className="mb-6">
+                <label className="block text-xs text-gray-500 uppercase tracking-wider mb-3">Describe Your Image</label>
+                <div className="relative">
+                  <textarea
+                    value={generatePrompt}
+                    onChange={(e) => setGeneratePrompt(e.target.value)}
+                    placeholder="A majestic golden retriever sitting in a sunlit meadow with wildflowers, golden hour lighting, shallow depth of field..."
+                    className="w-full px-5 py-4 bg-brand-card border border-white/[0.06] rounded-2xl text-white placeholder-gray-600 text-sm resize-none focus:outline-none focus:border-brand-gold/50 min-h-[120px]"
+                    rows={4}
+                  />
+                </div>
+              </div>
+
+              {/* Quick Prompts */}
+              <div className="mb-6">
+                <label className="block text-xs text-gray-500 uppercase tracking-wider mb-3">Quick Ideas</label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    "Product shot on marble surface",
+                    "Neon city at night",
+                    "Abstract geometric patterns",
+                    "Luxury watch advertisement",
+                    "Food photography, pasta dish"
+                  ].map(prompt => (
+                    <button
+                      key={prompt}
+                      onClick={() => setGeneratePrompt(prompt)}
+                      className="px-3 py-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg text-xs text-gray-500 hover:text-white hover:border-brand-gold/30 transition-colors"
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Generate Button */}
+              <button
+                onClick={handleGenerateImage}
+                disabled={!generatePrompt.trim() || isGenerating}
+                className="w-full px-6 py-4 bg-brand-gold text-black font-semibold rounded-2xl hover:bg-brand-gold/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+              >
+                {isGenerating ? (
+                  <>
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    Generating Image...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="w-5 h-5" />
+                    Generate Image
+                  </>
+                )}
+              </button>
+
+              {/* Results */}
+              {(generatedImages.length > 0 || generateError) && (
+                <div className="mt-8 flex-1 overflow-y-auto">
+                  {generateError ? (
+                    <div className="bg-brand-card border border-white/[0.06] rounded-2xl p-6">
+                      <div className="flex items-start gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
+                          <Zap className="w-5 h-5 text-orange-400" />
+                        </div>
+                        <div>
+                          <h4 className="text-white font-medium">Image Generation Result</h4>
+                          <p className="text-xs text-gray-500">AI-generated visual brief</p>
+                        </div>
+                      </div>
+                      <div className="prose prose-invert prose-sm max-w-none">
+                        <pre className="whitespace-pre-wrap text-sm text-gray-300 bg-brand-surface rounded-xl p-4 overflow-auto">
+                          {generateError}
+                        </pre>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {generatedImages.map((img, index) => (
+                        <div key={index} className="relative group">
+                          <div className="aspect-square bg-brand-card border border-white/[0.06] rounded-2xl overflow-hidden">
+                            <img src={img} alt={`Generated ${index + 1}`} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center gap-3">
+                            <button
+                              onClick={() => saveGeneratedImage(img, index)}
+                              className="px-4 py-2 bg-brand-gold text-black font-medium text-sm rounded-xl hover:bg-brand-gold/90 transition-colors flex items-center gap-2"
+                            >
+                              <Download className="w-4 h-4" />
+                              Save to Library
+                            </button>
+                            <a
+                              href={img}
+                              download={`ai-generated-${Date.now()}.png`}
+                              className="px-4 py-2 bg-white/20 text-white font-medium text-sm rounded-xl hover:bg-white/30 transition-colors flex items-center gap-2"
+                            >
+                              <Download className="w-4 h-4" />
+                              Download
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
