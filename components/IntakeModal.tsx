@@ -102,13 +102,13 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto overscroll-contain">
       <div className="absolute inset-0 bg-brand-dark/95 backdrop-blur-xl animate-fadeIn" onClick={onClose} />
 
-      <div className="relative w-full max-w-4xl max-h-[90vh] glass border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-scaleIn">
+      <div className="relative w-full max-w-4xl max-h-[min(90vh,900px)] my-4 sm:my-0 glass border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-scaleIn">
         {/* Header */}
-        <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-          <div className="flex items-center gap-4">
+        <div className="p-6 sm:p-8 border-b border-white/5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-white/[0.02] min-w-0">
+          <div className="flex items-center gap-4 min-w-0">
             <div className="w-12 h-12 rounded-2xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center">
               <Aperture className="w-6 h-6 text-brand-gold" />
             </div>
@@ -117,7 +117,7 @@ const IntakeModal: React.FC<IntakeModalProps> = ({ show, onClose, onSubmit }) =>
               <p className="text-xs text-gray-500 mt-1">Join the Eleven Views creative collective</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-500 hover:text-white transition-colors rounded-lg hover:bg-white/5">
+          <button type="button" onClick={onClose} aria-label="Close" className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500 hover:text-white transition-colors rounded-lg hover:bg-white/5 shrink-0">
             <X className="w-6 h-6" />
           </button>
         </div>

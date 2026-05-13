@@ -85,10 +85,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onClose, onSuccess, onSwi
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 overflow-y-auto overscroll-contain">
       <div className="absolute inset-0 bg-brand-dark/95 backdrop-blur-xl animate-fadeIn" onClick={onClose} />
 
-      <div className="relative w-full max-w-md glass border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden animate-scaleIn">
+      <div className="relative w-full max-w-md my-4 sm:my-0 glass border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden animate-scaleIn">
         {/* Header */}
         <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/5">
           <div className="flex items-center gap-4">
@@ -100,7 +100,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, onClose, onSuccess, onSwi
               <p className="text-xs text-gray-500 font-medium">Access your Eleven Views account</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-500 hover:text-white transition-colors">
+          <button onClick={onClose} type="button" aria-label="Close" className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500 hover:text-white transition-colors rounded-xl hover:bg-white/5 shrink-0">
             <X className="w-6 h-6" />
           </button>
         </div>

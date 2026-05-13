@@ -82,8 +82,8 @@ const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({ onBackToLogin }) 
   };
 
   return (
-    <div className="min-h-screen bg-brand-dark flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-brand-dark flex items-start sm:items-center justify-center p-4 max-w-full overflow-x-hidden overflow-y-auto">
+      <div className="w-full max-w-md min-w-0 py-6">
         {/* Back to Login */}
         <button
           onClick={onBackToLogin}

@@ -327,7 +327,7 @@ const App: React.FC = () => {
 
   if (!userProfile) {
     return (
-      <div className="bg-brand-dark min-h-screen">
+      <div className="bg-brand-dark min-h-screen max-w-full overflow-x-hidden">
         <LandingPage onLogin={handleShowLogin} onRegister={handleShowRegister} />
         {showIntake && (
           <IntakeModal
@@ -352,7 +352,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-brand-dark selection:bg-brand-gold selection:text-black">
+    <div className="flex h-screen overflow-hidden bg-brand-dark selection:bg-brand-gold selection:text-black max-w-full overflow-x-hidden min-w-0">
       <Sidebar
         activeModule={activeModule}
         setActiveModule={setActiveModule}

@@ -143,22 +143,22 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ user, stats, onNavigate }
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row gap-8">
-        <div className="flex-1 space-y-6">
+      <div className="flex flex-col md:flex-row gap-8 min-w-0">
+        <div className="flex-1 min-w-0 space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between min-w-0">
+            <div className="min-w-0">
               <h2 className="text-xl sm:text-2xl lg:text-3xl font-display font-bold text-white">Production Overview</h2>
               <p className="text-sm text-gray-500 mt-1">{currentDate}</p>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 glass rounded-xl">
-              <Globe className="w-4 h-4 text-brand-gold" />
-              <span className="text-xs text-gray-400 font-medium">Global Operations</span>
+            <div className="flex items-center gap-2 px-4 py-2 glass rounded-xl shrink-0 self-start sm:self-auto">
+              <Globe className="w-4 h-4 text-brand-gold shrink-0" />
+              <span className="text-xs text-gray-400 font-medium whitespace-nowrap">Global Operations</span>
             </div>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 min-w-0">
             {statCards.map((stat, i) => (
               <div key={i} className="glass p-3 sm:p-5 rounded-xl sm:rounded-2xl hover:border-brand-gold/20 transition-all group relative">
                 {stat.live && (
@@ -214,19 +214,19 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ user, stats, onNavigate }
               <MessageSquare className="w-5 h-5 text-brand-gold" />
               <h3 className="text-sm font-semibold text-white uppercase tracking-[0.15em]">Production Assistant</h3>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch min-w-0">
               <input
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleChat()}
                 placeholder="Ask about projects, schedules, or locations..."
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/40 transition-colors"
+                className="min-w-0 w-full sm:flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-brand-gold/40 transition-colors"
               />
               <button
                 onClick={handleChat}
                 disabled={chatLoading}
-                className="px-6 py-3 bg-brand-gold text-brand-dark font-semibold rounded-xl hover:bg-brand-gold/90 transition-colors disabled:opacity-50"
+                className="w-full sm:w-auto shrink-0 min-h-[44px] px-6 py-3 bg-brand-gold text-brand-dark font-semibold rounded-xl hover:bg-brand-gold/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {chatLoading ? <Zap className="w-5 h-5 animate-spin" /> : 'Ask'}
               </button>
@@ -240,7 +240,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ user, stats, onNavigate }
         </div>
 
         {/* Sidebar */}
-        <div className="w-full md:w-80 space-y-6">
+        <div className="w-full md:w-80 md:shrink-0 space-y-6 min-w-0">
           <h3 className="text-lg font-display font-bold text-white">Quick Actions</h3>
           <div className="space-y-3">
             <button
