@@ -10,7 +10,7 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister }) => {
   return (
-    <div className="min-h-screen bg-brand-dark text-white flex items-center justify-center relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-brand-dark text-white flex items-center justify-center relative overflow-x-hidden font-sans">
       <HexGridBackground />
 
       {/* Cinematic Background Gradient */}
@@ -20,7 +20,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister }) => {
         <div className="hidden sm:block absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-brand-amber/5 blur-[120px] rounded-full"></div>
       </div>
 
-      <div className="text-center relative z-10 p-4 sm:p-6 max-w-full sm:max-w-5xl mx-auto">
+      <div className="text-center relative z-10 p-4 sm:p-6 max-w-full w-full min-w-0 sm:max-w-5xl mx-auto">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2.5 rounded-full bg-brand-gold/5 border border-brand-gold/15 mb-10 animate-glow">
           <Aperture className="w-4 h-4 text-brand-gold" />
@@ -29,7 +29,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onRegister }) => {
 
         {/* Main Title */}
         <div className="mb-8">
-          <h1 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold tracking-tight text-white leading-none mb-4">
+          <h1 className="text-[clamp(1.75rem,9vw,3.75rem)] sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold tracking-tight text-white leading-[1.05] mb-4 break-words px-1">
             ELEVEN<span className="text-brand-gold">VIEWS</span>
           </h1>
           <div className="flex items-center justify-center gap-2 sm:gap-4 mt-6">

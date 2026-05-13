@@ -31,7 +31,7 @@ const TopBar: React.FC<TopBarProps> = ({ user, onLogout, onNavigate }) => {
   };
 
   return (
-    <header className="h-14 md:h-16 border-b border-white/[0.06] bg-brand-dark/80 backdrop-blur-xl sticky top-0 z-40 px-4 md:px-8 flex items-center justify-between pl-16 md:pl-8">
+    <header className="h-14 md:h-16 border-b border-white/[0.06] bg-brand-dark/80 backdrop-blur-xl sticky top-0 z-40 px-3 md:px-8 flex items-center justify-between gap-2 pl-14 md:pl-8 min-w-0">
       {/* Search - Hidden on mobile, visible on tablet+ */}
       <div className="hidden md:flex items-center gap-4 w-1/3">
         <div className="relative group w-full max-w-sm">
@@ -49,11 +49,11 @@ const TopBar: React.FC<TopBarProps> = ({ user, onLogout, onNavigate }) => {
       </div>
 
       {/* Mobile: Logo/Title */}
-      <div className="md:hidden flex items-center">
-        <span className="text-brand-gold font-display font-bold text-lg">VIEWS</span>
+      <div className="md:hidden flex items-center min-w-0 flex-1 mr-1">
+        <span className="text-brand-gold font-display font-bold text-lg truncate">VIEWS</span>
       </div>
 
-      <div className="flex items-center gap-3 md:gap-6">
+      <div className="flex items-center gap-2 md:gap-6 shrink-0">
         <button className="relative p-2 text-gray-500 hover:text-white transition-colors rounded-lg hover:bg-white/[0.04] min-w-[44px] min-h-[44px] flex items-center justify-center">
           <Bell className="w-5 h-5" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-gold rounded-full border-2 border-brand-dark"></span>
