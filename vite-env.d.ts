@@ -20,7 +20,6 @@ interface ImportMetaEnv {
   readonly VITE_BOX_CLIENT_ID: string;
   readonly VITE_BOX_REDIRECT_URI: string;
   readonly VITE_VORTEX_API_URL: string;
-  readonly VITE_N8N_WEBHOOK_URL: string;
 }
 
 interface ImportMeta {

@@ -44,6 +44,11 @@ class BaserowService {
   }
 
   private getHeaders(): HeadersInit {
+    if (!this.apiKey) {
+      throw new Error(
+        'Baserow is not configured: its token is server-side only and must be reached through a backend route.',
+      );
+    }
     return {
       'Content-Type': 'application/json',
       'Authorization': `Token ${this.apiKey}`,

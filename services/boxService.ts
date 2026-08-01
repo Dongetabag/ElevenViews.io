@@ -290,6 +290,10 @@ class BoxService {
 
   // Exchange auth code for tokens
   async exchangeCodeForToken(code: string, redirectUri?: string): Promise<BoxTokens> {
+    if (!BOX_CLIENT_SECRET) {
+      throw new Error('Box OAuth requires a server-side credential and is not available from the browser.');
+    }
+
     const redirect = redirectUri || `${window.location.origin}/box-callback`;
 
     const response = await fetch(`${BOX_OAUTH_BASE}/token`, {
@@ -316,6 +320,12 @@ class BoxService {
 
   // Refresh the access token
   async refreshAccessToken(): Promise<void> {
+    // Fail before the request so a 400 from an empty secret is never mistaken
+    // for an expired session, which would clear tokens that are still valid.
+    if (!BOX_CLIENT_SECRET) {
+      throw new Error('Box token refresh requires a server-side credential and is not available from the browser.');
+    }
+
     if (!this.refreshToken) {
       throw new Error('No refresh token available. Please re-authenticate.');
     }

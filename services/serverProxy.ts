@@ -26,6 +26,45 @@ export function serverSideOnly<T = unknown>(feature: string): ProxyResult<T> {
   return { success: false, error, unavailable: true };
 }
 
+/** A backend that accepts a request and never answers must not hang the UI. */
+const DEFAULT_TIMEOUT_MS = 60000;
+
+/**
+ * Abort signal that fires on the caller's signal or after `timeoutMs`,
+ * whichever comes first. Falls back to a manual controller on browsers without
+ * `AbortSignal.any` / `AbortSignal.timeout`.
+ */
+function withTimeout(
+  timeoutMs: number,
+  callerSignal?: AbortSignal,
+): { signal: AbortSignal; cleanup: () => void } {
+  const anyOf = (AbortSignal as any).any as ((signals: AbortSignal[]) => AbortSignal) | undefined;
+  const timeoutOf = (AbortSignal as any).timeout as ((ms: number) => AbortSignal) | undefined;
+
+  if (typeof anyOf === 'function' && typeof timeoutOf === 'function') {
+    const timeoutSignal = timeoutOf(timeoutMs);
+    const signal = callerSignal ? anyOf([callerSignal, timeoutSignal]) : timeoutSignal;
+    return { signal, cleanup: () => {} };
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(new DOMException('TimeoutError', 'TimeoutError')), timeoutMs);
+  const onCallerAbort = () => controller.abort(callerSignal?.reason);
+
+  if (callerSignal) {
+    if (callerSignal.aborted) onCallerAbort();
+    else callerSignal.addEventListener('abort', onCallerAbort, { once: true });
+  }
+
+  return {
+    signal: controller.signal,
+    cleanup: () => {
+      clearTimeout(timer);
+      callerSignal?.removeEventListener('abort', onCallerAbort);
+    },
+  };
+}
+
 /**
  * POST to a backend route that holds the credential for this operation.
  * Never accepts or forwards a secret from the client.
@@ -33,9 +72,10 @@ export function serverSideOnly<T = unknown>(feature: string): ProxyResult<T> {
 export async function proxyPost<T = unknown>(
   route: string,
   body: unknown,
-  init: { signal?: AbortSignal } = {},
+  init: { signal?: AbortSignal; timeoutMs?: number } = {},
 ): Promise<ProxyResult<T>> {
   const url = `${BACKEND_URL}${route.startsWith('/') ? route : `/${route}`}`;
+  const { signal, cleanup } = withTimeout(init.timeoutMs ?? DEFAULT_TIMEOUT_MS, init.signal);
 
   try {
     const response = await fetch(url, {
@@ -43,7 +83,7 @@ export async function proxyPost<T = unknown>(
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body ?? {}),
-      signal: init.signal,
+      signal,
     });
 
     if (response.status === 404 || response.status === 501) {
@@ -69,9 +109,17 @@ export async function proxyPost<T = unknown>(
 
     return { success: true, data: payload as T };
   } catch (err) {
-    const error = err instanceof Error ? err.message : 'Backend request failed';
+    const aborted = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');
+    const timedOut = aborted && !init.signal?.aborted;
+    const error = timedOut
+      ? `Backend route ${route} did not respond in time.`
+      : err instanceof Error
+        ? err.message
+        : 'Backend request failed';
     console.error(`[serverProxy] ${route} failed:`, error);
     return { success: false, error };
+  } finally {
+    cleanup();
   }
 }
 

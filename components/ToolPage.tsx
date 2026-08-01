@@ -244,7 +244,12 @@ Examples of their past work: "${user.clientWorkExamples || 'Not provided'}".
         throw new Error(result.error || 'Generation failed');
       }
 
-      onUseTool(selectedTool.id, prompt || `File: ${file?.name}`, result.data?.text ?? '');
+      const text = result.data?.text;
+      if (typeof text !== 'string' || !text.trim()) {
+        throw new Error('The AI service returned an empty response.');
+      }
+
+      onUseTool(selectedTool.id, prompt || `File: ${file?.name}`, text);
       setPrompt('');
       setFile(null);
     } catch (e: any) {

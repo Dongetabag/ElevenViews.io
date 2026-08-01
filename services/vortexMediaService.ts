@@ -16,7 +16,9 @@ import {
 // hardcoded into every build — see ELE-2620.
 const VORTEX_API_KEY = '';
 const VORTEX_API_URL = import.meta.env.VITE_VORTEX_API_URL || 'https://api.vortexmedia.ai/v1';
-const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n.srv1167160.hstgr.cloud/webhook';
+// The webhook route is server-side only: vite.config.ts blocks any non-empty
+// VITE_*WEBHOOK* value, so it can never be configured from client env.
+const N8N_WEBHOOK_URL = '';
 
 // Voice options available
 export const VOICE_OPTIONS = [
@@ -62,6 +64,12 @@ class VortexMediaService {
     method: 'GET' | 'POST' = 'POST',
     body?: Record<string, unknown>
   ): Promise<T> {
+    if (!this.apiKey) {
+      throw new Error(
+        'Vortex Media is not configured: its API key is server-side only and must be reached through a backend route.',
+      );
+    }
+
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method,
       headers: {
@@ -85,6 +93,12 @@ class VortexMediaService {
     workflow: string,
     payload: Record<string, unknown>
   ): Promise<VortexMediaResponse> {
+    if (!this.n8nUrl) {
+      throw new Error(
+        'Workflow execution is not configured: the n8n webhook is server-side only and must be reached through a backend route.',
+      );
+    }
+
     try {
       const response = await fetch(`${this.n8nUrl}/${workflow}`, {
         method: 'POST',
@@ -93,7 +107,6 @@ class VortexMediaService {
         },
         body: JSON.stringify({
           ...payload,
-          apiKey: this.apiKey,
           timestamp: new Date().toISOString(),
         }),
       });
