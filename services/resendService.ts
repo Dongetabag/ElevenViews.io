@@ -1,9 +1,9 @@
 // Resend Email Service for Eleven Views Platform
 // Handles email confirmations and password reset emails
 
-const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY;
+import { proxyPost, SERVER_ROUTES } from './serverProxy';
+
 const APP_URL = import.meta.env.VITE_APP_URL || 'https://elevenviews.io';
-const MCP_URL = import.meta.env.VITE_MCP_URL || 'https://mcp.elevenviews.io';
 
 interface EmailResponse {
   success: boolean;
@@ -18,40 +18,21 @@ interface SendEmailParams {
   from?: string;
 }
 
-// Send email via Resend API
+// Send email through the backend, which holds the Resend credential.
+// The browser never sees an API key.
 const sendEmail = async ({ to, subject, html, from }: SendEmailParams): Promise<EmailResponse> => {
-  if (!RESEND_API_KEY) {
-    console.error('Resend API key not configured');
-    return { success: false, error: 'Email service not configured' };
+  const result = await proxyPost<{ id?: string; messageId?: string }>(SERVER_ROUTES.sendEmail, {
+    from: from || 'Eleven Views <noreply@elevenviews.io>',
+    to: [to],
+    subject,
+    html,
+  });
+
+  if (!result.success) {
+    return { success: false, error: result.error || 'Failed to send email' };
   }
 
-  try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: from || 'Eleven Views <noreply@elevenviews.io>',
-        to: [to],
-        subject,
-        html,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error('Resend API error:', data);
-      return { success: false, error: data.message || 'Failed to send email' };
-    }
-
-    return { success: true, messageId: data.id };
-  } catch (err) {
-    console.error('Email send error:', err);
-    return { success: false, error: 'Failed to send email' };
-  }
+  return { success: true, messageId: result.data?.id ?? result.data?.messageId };
 };
 
 // Email template for welcome/confirmation

@@ -1,8 +1,7 @@
 // Discord Webhook Service for Eleven Views
 // Sends notifications to Discord for key events
 
-const DISCORD_WEBHOOK_URL = import.meta.env.VITE_DISCORD_WEBHOOK_URL ||
-  'https://discord.com/api/webhooks/1458834238031007850/Bdckby8EdJPH48z-MMnXmgmQzS-RtW66TJ0olioaQRXOi7-PUa3e-x3CGrx5j53q6Hsy';
+import { proxyPost, SERVER_ROUTES } from './serverProxy';
 
 interface DiscordEmbed {
   title?: string;
@@ -28,36 +27,22 @@ const BRAND_INFO = 0x3B82F6;
 const BRAND_WARNING = 0xF59E0B;
 
 class DiscordService {
-  private webhookUrl: string;
-
-  constructor() {
-    this.webhookUrl = DISCORD_WEBHOOK_URL;
-  }
-
+  // Posts through the backend, which holds the webhook URL. A Discord webhook
+  // URL is itself the credential — anyone holding it can post to the channel —
+  // so it must never appear in browser-delivered JS.
   private async send(message: DiscordMessage): Promise<boolean> {
-    try {
-      const response = await fetch(this.webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: 'Eleven Views',
-          avatar_url: 'https://elevenviews.io/assets/icons/favicon.png',
-          ...message,
-        }),
-      });
+    const result = await proxyPost(SERVER_ROUTES.notifyDiscord, {
+      username: 'Eleven Views',
+      avatar_url: 'https://elevenviews.io/assets/icons/favicon.png',
+      ...message,
+    });
 
-      if (!response.ok) {
-        console.error('Discord webhook failed:', response.status);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Discord webhook error:', error);
+    if (!result.success) {
+      console.error('Discord notification failed:', result.error);
       return false;
     }
+
+    return true;
   }
 
   // New project inquiry notification

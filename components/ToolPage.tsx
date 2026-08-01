@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI } from '@google/genai';
 import { UserProfile, Tool, ChatMessage } from '../types.ts';
 import { ArrowLeft, Send, AILoader, Sparkles, AlertTriangle, User as UserIcon, Copy, Check, ThumbsUp, ThumbsDown, Paperclip, X, FileText, Save, Loader } from './icons.tsx';
 import HexGridBackground from './HexGridBackground.tsx';
 import { ALL_TOOLS } from '../constants.tsx';
 import { AI_MODELS } from '../services/aiConfig';
+import { proxyPost, SERVER_ROUTES } from '../services/serverProxy';
 
 interface ToolPageProps {
   user: UserProfile | null;
@@ -165,8 +165,6 @@ const ToolPage: React.FC<ToolPageProps> = ({ user, selectedTool, chatHistories, 
     setIsLoading(true);
     setError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
       const userContext = `
 [START AGENCY CONTEXT - "YOUR RECIPE"]
 The user's name is ${user.name} and their role is ${user.role}.
@@ -236,13 +234,22 @@ Examples of their past work: "${user.clientWorkExamples || 'Not provided'}".
       ];
 
       // Use centralized AI model configuration
-      const response = await ai.models.generateContent({
+      const result = await proxyPost<{ text?: string }>(SERVER_ROUTES.geminiGenerate, {
         model: AI_MODELS.text.advanced,
         contents: contents,
         config: { systemInstruction: personalizedSystemInstruction }
       });
 
-      onUseTool(selectedTool.id, prompt || `File: ${file?.name}`, response.text);
+      if (!result.success) {
+        throw new Error(result.error || 'Generation failed');
+      }
+
+      const text = result.data?.text;
+      if (typeof text !== 'string' || !text.trim()) {
+        throw new Error('The AI service returned an empty response.');
+      }
+
+      onUseTool(selectedTool.id, prompt || `File: ${file?.name}`, text);
       setPrompt('');
       setFile(null);
     } catch (e: any) {

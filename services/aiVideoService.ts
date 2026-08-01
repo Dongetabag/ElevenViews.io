@@ -9,7 +9,9 @@ import {
 } from '../types';
 
 // Initialize Google AI
-const API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY || '';
+// Proxied server-side — see services/serverProxy.ts. Never read a Google AI key
+// from client env: Vite compiles it into browser-delivered JS.
+const API_KEY = '';
 
 // Scene types for analysis
 const SCENE_TYPES = ['action', 'dialogue', 'transition', 'static'] as const;

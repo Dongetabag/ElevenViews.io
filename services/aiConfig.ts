@@ -62,11 +62,10 @@ export const GENERATION_CONFIG = {
   }
 } as const;
 
-// Helper to get the API key
-export const getGoogleAIKey = (): string => {
-  return (window as any).__ENV__?.VITE_GOOGLE_AI_API_KEY ||
-         import.meta.env?.VITE_GOOGLE_AI_API_KEY || '';
-};
+// Google AI calls are proxied by the backend, which holds the key. Nothing in
+// the browser may carry it, so this always returns empty and the callers below
+// fall through to their "not configured" paths.
+export const getGoogleAIKey = (): string => '';
 
 // Generate content URL for a specific model
 export const getGenerateContentUrl = (model: string): string => {
