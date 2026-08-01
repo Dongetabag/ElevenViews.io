@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, DashboardStats } from '../types.ts';
 import { Aperture, TrendingUp, Film, DollarSign, Camera, ArrowUpRight, Globe, Zap, Activity, MessageSquare, Play, MapPin } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
 import { leadsApiService, PipelineStats, HealthStatus } from '../services/leadsApiService.ts';
 import { AI_MODELS } from '../services/aiConfig';
+import { proxyPost, SERVER_ROUTES } from '../services/serverProxy';
 
 interface DashboardHomeProps {
   user: UserProfile;
@@ -50,14 +50,13 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ user, stats, onNavigate }
   useEffect(() => {
     const generateBriefing = async () => {
       try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const projectInfo = apiStats ? `Current pipeline: ${apiStats.total_leads} active projects.` : '';
         const { greeting, period } = getTimeOfDayGreeting();
-        const response = await ai.models.generateContent({
+        const result = await proxyPost<{ text?: string }>(SERVER_ROUTES.geminiGenerate, {
           model: AI_MODELS.text.default,
           contents: `Generate a short, cinematic "${period} Briefing" for ${user.name}, a ${user.role || 'creative'} at Eleven Views production company. Start with "${greeting}, ${user.name}." ${projectInfo} Reference their work in visual storytelling and global production. Company focus: ${user.agencyCoreCompetency || 'cinematic narratives'}. Use an inspiring, sophisticated tone. Keep it to 3 brief lines.`,
         });
-        setBriefing(response.text || 'Welcome back to the studio.');
+        setBriefing(result.data?.text || 'Welcome back to the studio.');
       } catch (err) {
         setBriefing('Studio systems online. Your next visual story awaits.');
       } finally {

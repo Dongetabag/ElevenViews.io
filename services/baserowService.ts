@@ -2,7 +2,9 @@
 // Manages Baserow database integration and data sync
 
 const BASEROW_API_URL = import.meta.env.VITE_BASEROW_API_URL || 'https://api.baserow.io/api';
-const BASEROW_API_KEY = import.meta.env.VITE_BASEROW_API_KEY || '';
+// Server-side only — a Baserow token grants database access. Proxy it rather
+// than reading it from client env, which Vite would publish.
+const BASEROW_API_KEY = '';
 const BASEROW_TABLE_ID = import.meta.env.VITE_BASEROW_TABLE_ID || '789729';
 
 export interface BaserowRecord {

@@ -12,7 +12,9 @@ import {
 } from '../types';
 
 // API Configuration
-const VORTEX_API_KEY = import.meta.env.VITE_VORTEX_API_KEY || 'AQ.Ab8RN6LyBlNS4iOEexGHeVgHtkHEQUDv2HTEUaKChmEvbqup7g';
+// Server-side only. The literal that used to sit here was a real credential
+// hardcoded into every build — see ELE-2620.
+const VORTEX_API_KEY = '';
 const VORTEX_API_URL = import.meta.env.VITE_VORTEX_API_URL || 'https://api.vortexmedia.ai/v1';
 const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n.srv1167160.hstgr.cloud/webhook';
 

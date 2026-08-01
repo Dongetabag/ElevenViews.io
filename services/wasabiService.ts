@@ -2,8 +2,12 @@
 // S3-compatible object storage with 1TB for $6.99/month
 // No OAuth needed - simple API key authentication
 
-const WASABI_ACCESS_KEY = import.meta.env.VITE_WASABI_ACCESS_KEY || '';
-const WASABI_SECRET_KEY = import.meta.env.VITE_WASABI_SECRET_KEY || '';
+// A Wasabi access/secret pair signs arbitrary object-storage requests, so it
+// cannot live in the browser. Request signing moves behind
+// SERVER_ROUTES.wasabiPresign; until that route exists this service reports
+// itself unconfigured rather than shipping a key.
+const WASABI_ACCESS_KEY = '';
+const WASABI_SECRET_KEY = '';
 const WASABI_REGION = import.meta.env.VITE_WASABI_REGION || 'us-east-1';
 const WASABI_BUCKET = import.meta.env.VITE_WASABI_BUCKET || 'eleven-views-media';
 const WASABI_ENDPOINT = `https://s3.${WASABI_REGION}.wasabisys.com`;

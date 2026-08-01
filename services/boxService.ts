@@ -2,9 +2,11 @@
 // Provides smart file management, AI-powered organization, and client sharing
 // With automatic OAuth token refresh for production use
 
+// Server-side only. A Box client secret or developer token must never reach a
+// browser; the OAuth exchange belongs behind a backend route.
 const BOX_CLIENT_ID = import.meta.env.VITE_BOX_CLIENT_ID || '';
-const BOX_CLIENT_SECRET = import.meta.env.VITE_BOX_CLIENT_SECRET || '';
-const BOX_DEVELOPER_TOKEN = import.meta.env.VITE_BOX_DEVELOPER_TOKEN || '';
+const BOX_CLIENT_SECRET = '';
+const BOX_DEVELOPER_TOKEN = '';
 const BOX_API_BASE = 'https://api.box.com/2.0';
 const BOX_UPLOAD_BASE = 'https://upload.box.com/api/2.0';
 const BOX_OAUTH_BASE = 'https://api.box.com/oauth2';

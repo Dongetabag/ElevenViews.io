@@ -2,7 +2,8 @@
 // Manages n8n workflow discovery, execution, and monitoring
 
 const N8N_API_URL = import.meta.env.VITE_N8N_API_URL || 'https://n8n.srv1167160.hstgr.cloud';
-const N8N_API_KEY = import.meta.env.VITE_N8N_API_KEY || '';
+// Server-side only — an n8n API key can execute workflows.
+const N8N_API_KEY = '';
 
 export interface Workflow {
   id: string;
